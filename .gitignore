@@ -1,0 +1,24 @@
+# Entornos y dependencias
+.venv/
+env/
+node_modules/
+__pycache__/
+*.pyc
+
+# Variables de entorno y secretos
+.env
+*.env
+
+# Archivos pesados y documentos (van al Drive)
+*.pdf
+*.docx
+*.xlsx
+data/
+pruebas_procesamiento_datos/manuales_entrada/
+
+# Temporales y Bases de Datos Locales
+.tmp/
+*.log
+*.sqlite3
+vector_db/
+chroma_db/
