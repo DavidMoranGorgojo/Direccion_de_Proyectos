@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 
-import fitz  # PyMuPDF
+import pymupdf as fitz
 
 TAM_TITULO = 13.5
 TAM_ENCABEZADO = 11.5
