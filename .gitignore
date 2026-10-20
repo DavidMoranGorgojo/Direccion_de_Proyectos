@@ -20,5 +20,5 @@ pruebas_procesamiento_datos/manuales_entrada/
 .tmp/
 *.log
 *.sqlite3
-vector_db/
-chroma_db/
+salida_ingesta/
+.pytest_cache/
