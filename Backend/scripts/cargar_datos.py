@@ -3,35 +3,24 @@ import os
 import psycopg2
 from psycopg2.extras import execute_values
 
-# Configuración de conexión (tomará las variables del entorno o valores por defecto del Docker)
+# Configuración de conexión (ajusta según tus variables de entorno o credenciales)
 DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "5432")
-DB_NAME = os.getenv("DB_NAME", "thermodrive_rag")
+DB_NAME = os.getenv("DB_NAME", "rag_db")
 DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
+DB_PASS = os.getenv("DB_PASS", "postgres")
+DB_PORT = os.getenv("DB_PORT", "5432")
 
-
-def conectar_db():
-    """Establece conexión con la base de datos PostgreSQL."""
-    return psycopg2.connect(
+def cargar_jsonl_a_db(ruta_jsonl):
+    conn = psycopg2.connect(
         host=DB_HOST,
-        port=DB_PORT,
-        dbname=DB_NAME,
+        database=DB_NAME,
         user=DB_USER,
-        password=DB_PASSWORD,
+        password=DB_PASS,
+        port=DB_PORT
     )
-
-
-def cargar_jsonl_a_postgres(ruta_jsonl):
-    """Lee un archivo JSONL e inserta los fragmentos en la tabla fragmentos_rag."""
-    if not os.path.exists(ruta_jsonl):
-        print(f"Error: El archivo {ruta_jsonl} no existe.")
-        return
-
-    conn = conectar_db()
     cursor = conn.cursor()
 
-    query = """
+    sql = """
         INSERT INTO fragmentos_rag (
             documento_id, 
             num_pagina, 
@@ -50,40 +39,37 @@ def cargar_jsonl_a_postgres(ruta_jsonl):
                 continue
             item = json.loads(linea)
 
-            # Extraer campos con valores por defecto por seguridad
-            doc_id = item.get("documento_id")
-            num_pag = item.get("num_pagina", 1)
+            # Mapeo compatible con el formato de Ingesta (doc_id, pagina, texto)
+            # manteniendo fallback por seguridad
+            doc_id = item.get("doc_id") or item.get("documento_id")
+            pagina = item.get("pagina") if "pagina" in item else item.get("num_pagina", 0)
             seccion = item.get("seccion", "")
-            contenido = item.get("contenido", "")
-            embedding = item.get("embedding", [])  # Lista de 384 flotantes
+            texto = item.get("texto") or item.get("contenido", "")
+            
+            embedding = item.get("embedding")
             metadata = json.dumps(item.get("metadata", {}))
             ids_ref = item.get("ids_referenciados", [])
 
-            registros.append(
-                (doc_id, num_pag, seccion, contenido, embedding, metadata, ids_ref)
-            )
+            registros.append((
+                doc_id,
+                pagina,
+                seccion,
+                texto,
+                embedding,
+                metadata,
+                ids_ref
+            ))
 
-    try:
-        # Inserción en lote para mayor eficiencia
-        for reg in registros:
-            cursor.execute(query, reg)
+    cursor.executemany(sql, registros)
+    conn.commit()
 
-        conn.commit()
-        print(
-            f"✅ Carga completada con éxito. Se insertaron {len(registros)} registros."
-        )
-
-    except Exception as e:
-        conn.rollback()
-        print(f"❌ Error durante la carga de datos: {e}")
-
-    finally:
-        cursor.close()
-        conn.close()
-
+    print(f"Cargados con éxito {len(registros)} registros en fragmentos_rag.")
+    cursor.close()
+    conn.close()
 
 if __name__ == "__main__":
-    # Archivo de prueba asignado por defecto
-    archivo_entrada = "datos_ingesta.jsonl"
-    print(f"Iniciando proceso de carga desde: {archivo_entrada}")
-    cargar_jsonl_a_postgres(archivo_entrada)
+    import sys
+    if len(sys.argv) > 1:
+        cargar_jsonl_a_db(sys.argv[1])
+    else:
+        print("Uso: python cargar_datos.py <ruta_al_archivo.jsonl>")

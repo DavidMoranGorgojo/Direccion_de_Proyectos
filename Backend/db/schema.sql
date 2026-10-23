@@ -8,17 +8,7 @@ CREATE TABLE IF NOT EXISTS fragmentos_rag (
     num_pagina INT NOT NULL,                     -- Número de página
     seccion VARCHAR(255),                        -- Sección o título
     contenido TEXT NOT NULL,                     -- Texto limpio del fragmento
-    embedding vector(384),                      -- Embedding de 384 dimensiones
-    metadata JSONB,                              -- Metadatos (versión, estado, aplicabilidad, prioridad)
-    ids_referenciados TEXT[],                    -- Referencias cruzadas
-    fecha_carga TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    embedding vector(1024),                     -- Embedding de 1024 dimensiones (BAAI/bge-m3)
+    metadata JSONB,                              -- Metadatos adicionales en formato JSON
+    ids_referenciados TEXT[]                     -- Array de IDs o referencias cruzadas
 );
-
--- 3. Índice para búsqueda semántica/vectorial usando HNSW
-CREATE INDEX IF NOT EXISTS idx_fragmentos_embedding 
-ON fragmentos_rag 
-USING hnsw (embedding vector_cosine_ops);
-
--- 4. Índice JSONB para filtrado rápido por metadatos (ej. filtro por versión o documento)
-CREATE INDEX IF NOT EXISTS idx_fragmentos_metadata 
-ON fragmentos_rag USING gin (metadata);
