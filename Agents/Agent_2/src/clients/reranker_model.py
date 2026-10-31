@@ -28,4 +28,4 @@ class RerankerModel:
         if not pairs:
             return []
 
-        return self.model.compute_score(pairs)
+        return self.model.compute_score(pairs, normalize=True)

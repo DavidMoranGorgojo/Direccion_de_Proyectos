@@ -6,10 +6,10 @@ class FakeModel:
         self.scores = scores
         self.received_pairs = None
 
-    def compute_score(self, pairs):
+    def compute_score(self, pairs, normalize=False):
         self.received_pairs = pairs
+        self.normalize = normalize
         return self.scores
-
 
 def test_predict_devuelve_scores_del_modelo():
     fake_model = FakeModel([0.90, 0.35])
@@ -48,3 +48,17 @@ def test_predict_lista_vacia():
     scores = reranker.predict([])
 
     assert scores == []
+
+
+def test_predict_solicita_scores_normalizados():
+    fake_model = FakeModel([0.90])
+
+    reranker = RerankerModel(model=fake_model)
+
+    pairs = [
+        ["fallo de batería", "Procedimiento para revisar la batería."]
+    ]
+
+    reranker.predict(pairs)
+
+    assert fake_model.normalize is True
