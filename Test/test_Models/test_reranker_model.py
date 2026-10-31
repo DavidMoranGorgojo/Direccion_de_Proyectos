@@ -1,0 +1,50 @@
+from Agents.Agent_2.src.clients.reranker_model import RerankerModel
+
+
+class FakeModel:
+    def __init__(self, scores):
+        self.scores = scores
+        self.received_pairs = None
+
+    def compute_score(self, pairs):
+        self.received_pairs = pairs
+        return self.scores
+
+
+def test_predict_devuelve_scores_del_modelo():
+    fake_model = FakeModel([0.90, 0.35])
+
+    reranker = RerankerModel(model=fake_model)
+
+    pairs = [
+        ["problema con el motor", "El motor presenta una avería."],
+        ["problema con el motor", "Información sobre los neumáticos."],
+    ]
+
+    scores = reranker.predict(pairs)
+
+    assert scores == [0.90, 0.35]
+
+
+def test_predict_envia_los_pares_al_modelo():
+    fake_model = FakeModel([0.80])
+
+    reranker = RerankerModel(model=fake_model)
+
+    pairs = [
+        ["fallo de batería", "Procedimiento para revisar la batería."]
+    ]
+
+    reranker.predict(pairs)
+
+    assert fake_model.received_pairs == pairs
+
+
+def test_predict_lista_vacia():
+    fake_model = FakeModel([])
+
+    reranker = RerankerModel(model=fake_model)
+
+    scores = reranker.predict([])
+
+    assert scores == []
