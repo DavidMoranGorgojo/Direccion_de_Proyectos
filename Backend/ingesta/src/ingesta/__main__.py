@@ -68,6 +68,9 @@ def main(argv=None) -> int:
     parser.add_argument("--database-url", default=os.getenv("DATABASE_URL"), help="Por defecto, $DATABASE_URL.")
     parser.add_argument("--crear-esquema", action="store_true", help="Aplica db/init/01_conocimiento.sql antes de cargar.")
     parser.add_argument("--no-activar", action="store_true", help="Carga la versión sin activarla.")
+    parser.add_argument("--incluir-sustituidos", action="store_true",
+                        help="Indexa también los documentos sustituidos, marcados como obsoletos "
+                             "(por defecto se excluyen, según el reparto de Backend del 27-10).")
     args = parser.parse_args(argv)
 
     if args.cargar and args.sin_embeddings:
@@ -88,6 +91,11 @@ def main(argv=None) -> int:
     for ruta in pdfs:
         try:
             doc = leer_documento(ruta)
+            if doc.obsoleto and not args.incluir_sustituidos:
+                excluidos.append({"archivo": ruta.name,
+                                  "motivo": f"Documento sustituido por {doc.sustituido_por}: no se indexa."})
+                print(f"[--] {doc.doc_id:22} excluido (sustituido por {doc.sustituido_por})")
+                continue
             fragmentos = troceador.trocear(doc)
         except Exception as error:  # PDF ilegible: se anota y se sigue con los demás
             rechazados_doc.append({"archivo": ruta.name, "motivo": f"{type(error).__name__}: {error}"})
