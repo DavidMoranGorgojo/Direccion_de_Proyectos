@@ -19,6 +19,7 @@ def apply_threshold(results, threshold=DEFAULT_THRESHOLD):
         if result["rerank_score"] >= threshold
     ]
 
+
 def sort_by_rerank_score(results):
     """
     Ordena los resultados por puntuación del reranker,
@@ -51,6 +52,10 @@ def rerank_results(query, results, model):
     Returns:
         Lista de resultados con 'rerank_score',
         ordenada de mayor a menor puntuación.
+
+    Raises:
+        ValueError: si el número de scores devuelto por el modelo
+        no coincide con el número de resultados.
     """
 
     if not results:
@@ -62,6 +67,12 @@ def rerank_results(query, results, model):
     ]
 
     scores = model.predict(pairs)
+
+    if len(scores) != len(results):
+        raise ValueError(
+            "El número de scores del reranker no coincide "
+            "con el número de resultados"
+        )
 
     reranked_results = []
 

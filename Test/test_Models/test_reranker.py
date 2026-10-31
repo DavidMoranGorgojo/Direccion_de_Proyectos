@@ -143,3 +143,23 @@ def test_rerank_results_no_modifica_originales():
     )
 
     assert "rerank_score" not in resultados[0]
+
+
+def test_rerank_results_detecta_numero_incorrecto_de_scores():
+    class FakeReranker:
+        def predict(self, pairs):
+            return [0.90]
+
+    resultados = [
+        {"chunk_id": "A", "texto": "Texto A"},
+        {"chunk_id": "B", "texto": "Texto B"},
+    ]
+
+    import pytest
+
+    with pytest.raises(ValueError):
+        rerank_results(
+            query="problema con el motor",
+            results=resultados,
+            model=FakeReranker(),
+        )
