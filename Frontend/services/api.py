@@ -1,21 +1,44 @@
-"""Llamadas HTTP al servicio (API JSON sobre HTTP, FastAPI en el Backend).
+"""Comunicación con el servicio (API JSON sobre HTTP, FastAPI en el Backend).
 
-En esta versión solo se usa para el inicio de sesión (CTR-005, ver services/auth.py).
-La URL base del Backend se lee de la variable de entorno ARSOFT_API_URL. Si no está definida
-se usa un MODO LOCAL SIMULADO solo para desarrollar la interfaz.
+Contratos que implementa este módulo:
+
+  CTR-001  Consulta al asistente. Cuerpo EXACTO (sin historial: la memoria de la conversación
+           la lleva Agentes por conversacion_id):
+               {"conversacion_id": "...", "pregunta": "texto tal y como se escribió"}
+           Respuesta (siempre los mismos campos; los errores controlados también son HTTP 200):
+               {"trace_id", "estado", "texto", "fuentes": [{"chunk_id", "documento", "seccion",
+                "pagina", "versiones", "obsoleto"}], "codigo_error"}
+           La ruta que expone el Backend al Frontend aún no está definida: se usa CONSULTA_PATH
+           (cámbiala solo aquí cuando se acuerde).
+  CTR-006  Historial:  GET /chats  ->  {"chats": [...], "total": n}
+  CTR-005  Login: ver services/auth.py
+
+La URL base del Backend se lee de la variable de entorno ARSOFT_API_URL. Si no está definida se
+usa un MODO SIMULADO solo para desarrollar la interfaz. NO es el asistente real.
 Fuera de entornos locales se exige HTTPS (ARSOFT_ALLOW_HTTP=1 lo desactiva, solo para pruebas).
 """
 from __future__ import annotations
 import json
 import os
+import time
 import urllib.error
 import urllib.request
+from dataclasses import dataclass, field
 from urllib.parse import urlparse
 
+from PySide6.QtCore import QThread, Signal
+
+from models.conversation import Conversation
+from models.response import (GENERIC_ERROR, Response, STATUS_CLARIFY, STATUS_NO_EVIDENCE,
+                             STATUS_OK, STATUS_OUT_OF_SCOPE)
+from models.source import Source
 from services import session
 
 API_URL = os.environ.get("ARSOFT_API_URL", "").rstrip("/")
 TIMEOUT_S = 60
+CONSULTA_PATH = "/agentes/consulta"          # ruta Frontend -> Backend: pendiente de contrato
+HISTORIAL_PATH = "/chats"                    # CTR-006 (ruta propuesta, por confirmar)
+SESSION_EXPIRED = "Tu sesión ha caducado. Cierra sesión y vuelve a entrar."
 
 
 def is_mock() -> bool:
@@ -65,3 +88,86 @@ def call(method: str, path: str, body: dict | None = None) -> tuple[int, dict | 
     except (ValueError, UnicodeDecodeError):
         parsed = None
     return status, parsed if isinstance(parsed, dict) else None
+
+
+# ------------------------------------------------------------ consulta (CTR-001)
+def send_message(conversation_id: str, pregunta: str) -> Response:
+    if is_mock():
+        return _mock_response(pregunta)
+    try:
+        status, data = call("POST", CONSULTA_PATH,
+                            {"conversacion_id": conversation_id, "pregunta": pregunta})
+    except ConnectionFailed:
+        return Response.error()
+    if status in (401, 403):
+        return Response.error(SESSION_EXPIRED, "sesion_caducada")
+    if status == 200 and data is not None:
+        return Response.from_dict(data)
+    return Response.error()                    # 5xx, 422, JSON no válido…: mensaje genérico
+
+
+class ChatWorker(QThread):
+    """Ejecuta la consulta fuera del hilo de la interfaz (no la congela)."""
+    finished_ok = Signal(object)  # Response
+
+    def __init__(self, conversation_id: str, pregunta: str):
+        super().__init__()
+        self._args = (conversation_id, pregunta)
+
+    def run(self) -> None:
+        self.finished_ok.emit(send_message(*self._args))
+
+
+# ------------------------------------------------------------ historial (CTR-006)
+@dataclass
+class HistoryResult:
+    ok: bool
+    conversations: list[Conversation] = field(default_factory=list)
+    error: str = ""
+    session_expired: bool = False
+
+
+def fetch_history() -> HistoryResult:
+    try:
+        status, data = call("GET", HISTORIAL_PATH)
+    except ConnectionFailed:
+        return HistoryResult(False, error="No se ha podido contactar con el servidor.")
+    if status in (401, 403):
+        return HistoryResult(False, error=SESSION_EXPIRED, session_expired=True)
+    if status == 200 and data is not None and isinstance(data.get("chats"), list):
+        try:
+            return HistoryResult(True, [Conversation.from_dict(c) for c in data["chats"]])
+        except (KeyError, TypeError, ValueError):
+            pass
+    return HistoryResult(False, error="No se ha podido recuperar el historial.")
+
+
+class HistoryWorker(QThread):
+    done = Signal(object)  # HistoryResult
+
+    def run(self) -> None:
+        self.done.emit(fetch_history())
+
+
+# ---------------------------------------------------------------- modo simulado
+def _mock_response(pregunta: str) -> Response:
+    time.sleep(1.2)
+    text = pregunta.lower()
+    if len(text.split()) <= 2:
+        return Response("¿Qué testigo o código aparece exactamente y en qué versión del vehículo?",
+                        STATUS_CLARIFY, trace_id="t-demo")
+    if "refrigerante" in text or "temperatura" in text:
+        return Response(
+            "**Causas posibles:** pérdida de refrigerante, termostato o sensor.\n\n"
+            "**Seguridad:** no abrir el circuito con el motor caliente.\n\n"
+            "**Procedimiento:** comprobar nivel en frío y fugas visibles.\n\n"
+            "*(Respuesta de ejemplo del modo simulado)*",
+            STATUS_OK,
+            [Source("Manual_ejemplo", "2.1", 128, ["V1.1", "V2.0"], False, "c45"),
+             Source("Boletin_ejemplo_014", "Comprobaciones previas", 3, ["V1.0"], True, "c12")],
+            trace_id="t-demo")
+    if "tiempo" in text or "receta" in text:
+        return Response("Solo puedo responder consultas sobre la documentación técnica del vehículo.",
+                        STATUS_OUT_OF_SCOPE, trace_id="t-demo")
+    return Response("No hay evidencia suficiente en la documentación para responder esto.",
+                    STATUS_NO_EVIDENCE, trace_id="t-demo")
