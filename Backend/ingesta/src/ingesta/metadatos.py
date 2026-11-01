@@ -30,16 +30,16 @@ def ids_referenciados(texto: str, codigo_propio: str) -> List[str]:
     return sorted(ids)
 
 
-def componente(seccion: str, texto: str) -> Optional[str]:
-    """Componente del fragmento: el CMP de la sección o, si el texto solo cita uno, ese.
+def componente(seccion: str, texto: str) -> str:
+    """Componente del fragmento con el nombre que usa Agentes (motor, bateria, …).
 
-    PROVISIONAL: CTR-002 no ha cerrado si el valor es un código CMP-xx o un nombre («refrigeracion»).
+    Se toma el CMP de la sección o, si no tiene, los CMP citados en el texto; si todos son del
+    mismo circuito, ese, y si no o no cita ninguno, «sistema». Los códigos CMP-xx siguen en
+    ids_referenciados. PROVISIONAL: punto abierto de CTR-002 (nombre o código).
     """
-    en_seccion = RE_CMP.findall(seccion)
-    if en_seccion:
-        return en_seccion[0]
-    citados = set(RE_CMP.findall(texto))
-    return citados.pop() if len(citados) == 1 else None
+    cmps = RE_CMP.findall(seccion)[:1] or RE_CMP.findall(texto)
+    nombres = {config.COMPONENTE_CMP.get(c, config.COMPONENTE_POR_DEFECTO) for c in cmps}
+    return nombres.pop() if len(nombres) == 1 else config.COMPONENTE_POR_DEFECTO
 
 
 def afectado_por(doc_id: str, codigo: str, seccion: str, ids: List[str]) -> List[str]:

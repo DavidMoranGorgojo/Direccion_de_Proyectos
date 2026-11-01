@@ -38,6 +38,19 @@ TIPO_DOCUMENTO = {
     "DIC": "diccionario",
 }
 
+# Valor de «componente» de cada CMP según su circuito (HTM240-CAT-001), con los nombres de la
+# muestra de Agentes (bbdd_sintetica). Los compartidos, de control o generales van a «sistema».
+# PROVISIONAL: CTR-002 no ha cerrado si el filtro usa nombres o códigos CMP-xx.
+COMPONENTE_POR_DEFECTO = "sistema"
+COMPONENTE_CMP = {
+    **dict.fromkeys(["CMP-01", "CMP-05", "CMP-07", "CMP-08", "CMP-11", "CMP-12",
+                     "CMP-14", "CMP-17", "CMP-19", "CMP-23"], "motor"),
+    **dict.fromkeys(["CMP-02", "CMP-10", "CMP-15", "CMP-18", "CMP-24"], "bateria"),
+    **dict.fromkeys(["CMP-03", "CMP-16"], "electronica_potencia"),
+    **dict.fromkeys(["CMP-04", "CMP-06", "CMP-09", "CMP-13", "CMP-20", "CMP-21",
+                     "CMP-22", "CMP-25", "CMP-26"], "sistema"),
+}
+
 # El compilado duplica los documentos individuales y mezcla obsoleto con vigente: no se indexa.
 COMPILADOS = {"HTM240_Documentacion_Completa_Alumnos"}
 

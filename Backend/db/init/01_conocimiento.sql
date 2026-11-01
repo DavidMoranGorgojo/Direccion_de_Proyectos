@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS conocimiento.chunk (
     pagina             INTEGER NOT NULL,
     orden_en_seccion   INTEGER NOT NULL,
     versiones          TEXT[] NOT NULL,
-    componente         TEXT,
+    componente         TEXT NOT NULL,
     tipo_documento     TEXT NOT NULL,
     obsoleto           BOOLEAN NOT NULL,
     sustituido_por     TEXT,

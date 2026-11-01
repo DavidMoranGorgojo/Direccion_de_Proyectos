@@ -28,9 +28,11 @@ def test_ids_referenciados_excluye_el_propio_documento():
 
 
 def test_componente():
-    assert componente("CMP-15 — Sensor de temperatura bateria", "texto con CMP-18") == "CMP-15"
-    assert componente("Objetivo", "Comprobar la bomba CMP-02 del circuito CIR-02") == "CMP-02"
-    assert componente("Pasos", "CMP-02 y CMP-18") is None
+    assert componente("CMP-15 — Sensor de temperatura bateria", "texto con CMP-05") == "bateria"
+    assert componente("Objetivo", "Comprobar la bomba CMP-02 del circuito CIR-02") == "bateria"
+    assert componente("Pasos", "CMP-02 y CMP-18") == "bateria"
+    assert componente("Pasos", "CMP-02 y CMP-05") == "sistema"
+    assert componente("Introducción", "sin componentes") == "sistema"
 
 
 def test_afectado_por_segun_reglas_de_boletines():
