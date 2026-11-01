@@ -12,6 +12,7 @@ from agente1_core import (
     PreprocesadorAutomocion,
     simulador_agente_2,
     validar_esquema_query_json,
+    verificar_citas,
 )
 
 
@@ -106,11 +107,48 @@ class TestSimuladorAgente2(unittest.TestCase):
         self.assertEqual(res, [])
 
     def test_simulador_recupera_evidencia_culata(self):
-        """Simulador devuelve evidencia cuando busca culata."""
+        """Caso 1: Simulador devuelve evidencia vigente cuando busca culata."""
         query = {"query_busqueda": "par apriete culata", "filtros": {"componente": "culata"}}
-        evidencias = simulador_agente_2(query)
-        self.assertEqual(len(evidencias), 1)
-        self.assertEqual(evidencias[0]["chunk_id"], "chunk_01")
+        res = simulador_agente_2(query)
+        self.assertEqual(res["estado"], "suficiente")
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0]["chunk_id"], "chunk_01")
+        self.assertEqual(res[0]["estado_documento"], "vigente")
+
+    def test_simulador_caso_sin_evidencia(self):
+        """Caso 2: Consulta sin manual devuelve estado sin_evidencia y lista vacía."""
+        query = {"texto_busqueda": "manual de instalacion aleron de titanio", "filtros": {}}
+        res = simulador_agente_2(query)
+        self.assertEqual(res["estado"], "sin_evidencia")
+        self.assertEqual(len(res["evidencias"]), 0)
+        self.assertIsNone(res["mensaje_error"])
+
+    def test_simulador_caso_varias_versiones(self):
+        """Caso 3: Varias versiones devuelve estado ambiguo y chunks de distintas versiones."""
+        query = {"texto_busqueda": "presion circuito primario", "filtros": {"version": None}}
+        res = simulador_agente_2(query)
+        self.assertEqual(res["estado"], "ambiguo")
+        self.assertEqual(res["campo_ambiguo"], "version")
+        versiones = [ev["metadata"]["version"] for ev in res["evidencias"]]
+        self.assertIn("V1.0", versiones)
+        self.assertIn("V1.1", versiones)
+
+    def test_simulador_caso_documentos_obsoletos(self):
+        """Caso 4: Devuelve documento obsoleto y vigente para que Agente 1 filtre."""
+        query = {"texto_busqueda": "procedimiento refrigerante htm-0142", "filtros": {"codigos": ["HTM-0142"]}}
+        res = simulador_agente_2(query)
+        self.assertEqual(res["estado"], "suficiente")
+        estados_doc = [ev["estado_documento"] for ev in res["evidencias"]]
+        self.assertIn("obsoleto", estados_doc)
+        self.assertIn("vigente", estados_doc)
+
+    def test_simulador_caso_error_tecnico(self):
+        """Caso 5: Error técnico devuelve estado error con mensaje y NUNCA se confunde con vacío."""
+        query = {"texto_busqueda": "simular_error en busqueda", "filtros": {}}
+        res = simulador_agente_2(query)
+        self.assertEqual(res["estado"], "error")
+        self.assertIsNotNone(res["mensaje_error"])
+        self.assertIn("Error", res["mensaje_error"])
 
 
 class TestValidacionEsquemaQueryJSON(unittest.TestCase):
@@ -178,6 +216,40 @@ class TestValidacionEsquemaQueryJSON(unittest.TestCase):
         self.assertTrue(es_valido)
         self.assertIsNone(error)
         self.assertEqual(data["texto_busqueda"], "Golf 7 fallo P0301")
+
+
+class TestVerificadorCitas(unittest.TestCase):
+    """Pruebas del verificador determinista de citas (A1-07)."""
+
+    def setUp(self):
+        self.evidencias = [
+            {"chunk_id": "chunk_01", "texto": "Apretar culata a 40 Nm"},
+            {"chunk_id": "chunk_02", "texto": "Fase 2 a 90 grados"}
+        ]
+
+    def test_citas_validas(self):
+        """El texto cita únicamente chunks presentes en las evidencias."""
+        texto = "Procedimiento: Fase 1 a 40 Nm [chunk_01] y luego 90° [chunk_02]."
+        res = verificar_citas(texto, self.evidencias)
+        self.assertTrue(res["valido"])
+        self.assertEqual(set(res["citas_validas"]), {"chunk_01", "chunk_02"})
+        self.assertEqual(res["citas_falsas"], [])
+
+    def test_citas_alucinadas_rechazadas(self):
+        """Si el LLM cita un chunk inexistente, debe ser detectado como alucinación."""
+        texto = "Procedimiento según manual [chunk_01] y apriete final [chunk_99]."
+        res = verificar_citas(texto, self.evidencias)
+        self.assertFalse(res["valido"])
+        self.assertEqual(res["citas_validas"], ["chunk_01"])
+        self.assertIn("chunk_99", res["citas_falsas"])
+
+    def test_sin_citas_rechazado(self):
+        """Si el texto no incluye ninguna cita entre corchetes, debe fallar."""
+        texto = "Procedimiento: apretar la culata a 40 Nm sin especificar fuente."
+        res = verificar_citas(texto, self.evidencias)
+        self.assertFalse(res["valido"])
+        self.assertEqual(res["citas_detectadas"], [])
+        self.assertEqual(res["citas_validas"], [])
 
 
 if __name__ == "__main__":
