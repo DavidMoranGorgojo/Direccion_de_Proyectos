@@ -32,11 +32,9 @@ class LoginWindow(QMainWindow):
 
         pix = QPixmap(image("logo.png"))
         self.logo.setPixmap(pix.scaledToHeight(260, Qt.SmoothTransformation))
-        """
         if api.is_mock():
             self.mode.setText("Modo local simulado: sin backend conectado.\n"
                               "Usuario de prueba: demo · contraseña: demo1234")
-        """
 
         self.btn_login.clicked.connect(self._submit)
         self.edit_user.returnPressed.connect(self.edit_pass.setFocus)
