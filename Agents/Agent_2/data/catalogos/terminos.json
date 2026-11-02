@@ -1,0 +1,679 @@
+﻿{
+  "version": "1.1-completa",
+  "total_terminos": 101,
+  "fuente": "HTM240-DIC-001 (Corpus oficial ThermoDrive)",
+  "terminos": [
+    {
+      "termino": "Se calienta",
+      "sinonimos": [],
+      "definicion": "El motor o la batería superan su temperatura normal de funcionamiento. Ver HTM-0101, HTM-0201.",
+      "referencias": [
+        "HTM-0101",
+        "HTM-0201"
+      ]
+    },
+    {
+      "termino": "Sube la aguja",
+      "sinonimos": [],
+      "definicion": "Expresión coloquial para el aumento de la temperatura de motor mostrada en el cuadro.",
+      "referencias": []
+    },
+    {
+      "termino": "Pierde líquido",
+      "sinonimos": [],
+      "definicion": "Fuga de refrigerante detectable por descenso del nivel en el vaso de expansión. Ver HTM240-PRC-008.",
+      "referencias": [
+        "PRC-008"
+      ]
+    },
+    {
+      "termino": "Ventilador a tope",
+      "sinonimos": [],
+      "definicion": "El electroventilador (CMP-09) funciona al 100% de su velocidad.",
+      "referencias": [
+        "CMP-09"
+      ]
+    },
+    {
+      "termino": "Modo tortuga",
+      "sinonimos": [],
+      "definicion": "Expresión coloquial para el modo Protección, que limita la potencia del vehículo (testigo TES-06).",
+      "referencias": [
+        "TES-06"
+      ]
+    },
+    {
+      "termino": "No da calefacción",
+      "sinonimos": [],
+      "definicion": "Calefacción insuficiente en el habitáculo. Ver árbol 4.6 de HTM240- DIA-001.",
+      "referencias": [
+        "DIA-001"
+      ]
+    },
+    {
+      "termino": "Se ha quedado sin batería",
+      "sinonimos": [],
+      "definicion": "Confusión habitual entre agotamiento de carga y avería del sistema térmico de la batería; deben distinguirse.",
+      "referencias": []
+    },
+    {
+      "termino": "El coche pita raro",
+      "sinonimos": [],
+      "definicion": "Expresión ambigua; puede referirse a alarmas de testigo o a ruido mecánico, requiere aclaración.",
+      "referencias": []
+    },
+    {
+      "termino": "Huele a quemado",
+      "sinonimos": [],
+      "definicion": "Posible indicio de sobrecalentamiento severo o fallo eléctrico; condi- ción de parada inmediata.",
+      "referencias": []
+    },
+    {
+      "termino": "Echa vapor",
+      "sinonimos": [],
+      "definicion": "Puede indicar fuga de refrigerante en contacto con superficie caliente; requiere inspección de fugas (HTM240-PRC-008).",
+      "referencias": [
+        "PRC-008"
+      ]
+    },
+    {
+      "termino": "La luz del motor",
+      "sinonimos": [],
+      "definicion": "Referencia coloquial al testigo TES-01 de temperatura de motor.",
+      "referencias": [
+        "TES-01"
+      ]
+    },
+    {
+      "termino": "La luz de la batería",
+      "sinonimos": [],
+      "definicion": "Referencia coloquial al testigo TES-02 de temperatura de batería de alta tensión.",
+      "referencias": [
+        "TES-02"
+      ]
+    },
+    {
+      "termino": "Se ha apagado solo",
+      "sinonimos": [],
+      "definicion": "Puede referirse a parada de emergencia del vehículo o a apagado normal tras contacto; requiere aclaración.",
+      "referencias": []
+    },
+    {
+      "termino": "Va como si tuviera el freno de mano puesto",
+      "sinonimos": [],
+      "definicion": "Expresión coloquial para el rendimiento reducido en modo Protección.",
+      "referencias": []
+    },
+    {
+      "termino": "El líquido está blanco",
+      "sinonimos": [],
+      "definicion": "Aspecto lechoso del refrigerante, indicio de contaminación cruzada con aceite. Ver HTM-0109.",
+      "referencias": [
+        "HTM-0109"
+      ]
+    },
+    {
+      "termino": "Burbujea el depósito",
+      "sinonimos": [],
+      "definicion": "Presencia de aire en el circuito, posible indicio de purga pendi- ente o fuga con entrada de aire.",
+      "referencias": []
+    },
+    {
+      "termino": "No arranca en frío",
+      "sinonimos": [],
+      "definicion": "Puede confundirse con un problema del sistema térmico cuando en realidad es del sistema de arranque; fuera de alcance de este corpus.",
+      "referencias": []
+    },
+    {
+      "termino": "Se queda pegado el ventilador",
+      "sinonimos": [],
+      "definicion": "El electroventilador no responde a las órdenes de parada; ver HTM-0404.",
+      "referencias": [
+        "HTM-0404"
+      ]
+    },
+    {
+      "termino": "Tarda mucho en calentar",
+      "sinonimos": [],
+      "definicion": "Tiempo de calentamiento del habitáculo o del motor superior al esperado; ver HTM240-DIA-001>4.3 y HTM240-BOL-007.",
+      "referencias": [
+        "BOL-007",
+        "DIA-001"
+      ]
+    },
+    {
+      "termino": "Pierde fuerza cuesta arriba",
+      "sinonimos": [],
+      "definicion": "Síntoma compatible con rendimiento reducido por so- bretemperatura, ver árbol 4.12.",
+      "referencias": []
+    },
+    {
+      "termino": "Se enciende una luz ámbar",
+      "sinonimos": [],
+      "definicion": "Testigo en color amarillo, urgencia media salvo combi- nación con otros testigos.",
+      "referencias": []
+    },
+    {
+      "termino": "Luz roja parpadeando",
+      "sinonimos": [],
+      "definicion": "Urgencia muy alta; exige detención inmediata del vehículo.",
+      "referencias": []
+    },
+    {
+      "termino": "El líquido refrigerante",
+      "sinonimos": [],
+      "definicion": "Fluido ThermoGlyc HX-40 (ficticio) que circula por los tres 1 circuitos térmicos.",
+      "referencias": []
+    },
+    {
+      "termino": "El agua del motor",
+      "sinonimos": [],
+      "definicion": "Expresión coloquial incorrecta pero habitual para referirse al re- frigerante del circuito motor.",
+      "referencias": []
+    },
+    {
+      "termino": "Bomba de agua",
+      "sinonimos": [],
+      "definicion": "Expresión coloquial para la bomba mecánica de refrigerante CMP-01.",
+      "referencias": [
+        "CMP-01"
+      ]
+    },
+    {
+      "termino": "Ventilador del radiador",
+      "sinonimos": [],
+      "definicion": "Expresión coloquial para el electroventilador CMP-09.",
+      "referencias": [
+        "CMP-09"
+      ]
+    },
+    {
+      "termino": "Termostato",
+      "sinonimos": [],
+      "definicion": "Componente CMP-08 que regula el paso de refrigerante hacia el radiador principal.",
+      "referencias": [
+        "CMP-08"
+      ]
+    },
+    {
+      "termino": "Vaso de expansión",
+      "sinonimos": [],
+      "definicion": "Componente CMP-07; depósito que compensa la dilatación del re- frigerante.",
+      "referencias": [
+        "CMP-07"
+      ]
+    },
+    {
+      "termino": "Radiador pequeño",
+      "sinonimos": [],
+      "definicion": "Expresión coloquial para el radiador auxiliar de baja temperatura CMP-06.",
+      "referencias": [
+        "CMP-06"
+      ]
+    },
+    {
+      "termino": "Radiador grande",
+      "sinonimos": [],
+      "definicion": "Expresión coloquial para el radiador principal CMP-05.",
+      "referencias": [
+        "CMP-05"
+      ]
+    },
+    {
+      "termino": "Válvula de agua",
+      "sinonimos": [],
+      "definicion": "Expresión coloquial imprecisa para la válvula distribuidora de cuatro vías CMP-04.",
+      "referencias": [
+        "CMP-04"
+      ]
+    },
+    {
+      "termino": "Ordenador del motor",
+      "sinonimos": [],
+      "definicion": "Expresión coloquial imprecisa; en este sistema corresponde a la TCU (CMP-13), no al motor en sí.",
+      "referencias": [
+        "CMP-13"
+      ]
+    },
+    {
+      "termino": "Sensor de temperatura",
+      "sinonimos": [],
+      "definicion": "Cualquiera de los sensores CMP-14, CMP-15, CMP-16 o CMP- 20 según el circuito.",
+      "referencias": [
+        "CMP-14",
+        "CMP-15",
+        "CMP-16"
+      ]
+    },
+    {
+      "termino": "Modo Eco",
+      "sinonimos": [],
+      "definicion": "Modo de funcionamiento que prioriza la eficiencia energética sobre el mar- gen térmico.",
+      "referencias": []
+    },
+    {
+      "termino": "Modo deportivo",
+      "sinonimos": [],
+      "definicion": "Expresión coloquial que suele corresponder al modo Alta Demanda del sistema térmico.",
+      "referencias": []
+    },
+    {
+      "termino": "Se ha estropeado la calefacción",
+      "sinonimos": [],
+      "definicion": "Expresión general que puede deberse a varias causas distintas; requiere diagnóstico según árbol 4.6.",
+      "referencias": []
+    },
+    {
+      "termino": "Chorrea líquido",
+      "sinonimos": [],
+      "definicion": "Fuga de refrigerante visible y de caudal apreciable; requiere inspec- ción urgente.",
+      "referencias": []
+    },
+    {
+      "termino": "Mancha verde/rosa en el suelo",
+      "sinonimos": [],
+      "definicion": "Indicio visual típico de fuga de refrigerante (el color depende del aditivo, no especificado para ThermoGlyc HX-40).",
+      "referencias": []
+    },
+    {
+      "termino": "El aire acondicionado no enfría",
+      "sinonimos": [],
+      "definicion": "Fuera del alcance de este corpus; el sistema Ther- moDrive gestiona la temperatura de motor, batería y electrónica de potencia, no el cir- cuito de A/C del habitáculo.",
+      "referencias": []
+    },
+    {
+      "termino": "Autonomía baja en invierno",
+      "sinonimos": [],
+      "definicion": "Consecuencia esperada del uso de energía para calen- tamiento en frío; no siempre indica avería.",
+      "referencias": []
+    },
+    {
+      "termino": "El coche pide parar",
+      "sinonimos": [],
+      "definicion": "Mensaje de detención inmediata mostrado ante condiciones de máxima urgencia (ver HTM240-ADV-001).",
+      "referencias": [
+        "ADV-001"
+      ]
+    },
+    {
+      "termino": "Testigo",
+      "sinonimos": [],
+      "definicion": "Icono luminoso del cuadro de instrumentos que informa de un estado o avería.",
+      "referencias": []
+    },
+    {
+      "termino": "DTC",
+      "sinonimos": [],
+      "definicion": "Código de diagnóstico de avería (Diagnostic Trouble Code).",
+      "referencias": []
+    },
+    {
+      "termino": "CAN",
+      "sinonimos": [],
+      "definicion": "Red de comunicación interna del vehículo utilizada por la TCU.",
+      "referencias": []
+    },
+    {
+      "termino": "Purgar el circuito",
+      "sinonimos": [],
+      "definicion": "Eliminar el aire acumulado en un circuito de refrigerante tras una intervención (HTM240-PRC-002).",
+      "referencias": [
+        "PRC-002"
+      ]
+    },
+    {
+      "termino": "Modo de mantenimiento",
+      "sinonimos": [],
+      "definicion": "Estado seguro del vehículo que deshabilita la alta tensión de tracción para permitir intervenciones.",
+      "referencias": []
+    },
+    {
+      "termino": "Alta tensión",
+      "sinonimos": [],
+      "definicion": "Sistema eléctrico de la batería de tracción y componentes asociados, de tensión elevada respecto al sistema de 12V.",
+      "referencias": []
+    },
+    {
+      "termino": "Circuito dedicado",
+      "sinonimos": [],
+      "definicion": "Circuito térmico que refrigera un único subsistema (batería o elec- trónica de potencia).",
+      "referencias": []
+    },
+    {
+      "termino": "Calor residual",
+      "sinonimos": [],
+      "definicion": "Calor generado por el motor de combustión que puede reaprovecharse para calentar otros circuitos.",
+      "referencias": []
+    },
+    {
+      "termino": "Intercambiador",
+      "sinonimos": [],
+      "definicion": "Componente que transfiere calor entre dos fluidos o entre un fluido y un sólido (batería, aceite, etc.).",
+      "referencias": []
+    },
+    {
+      "termino": "Caudal",
+      "sinonimos": [],
+      "definicion": "Cantidad de refrigerante que circula por unidad de tiempo, medido en l/min.",
+      "referencias": []
+    },
+    {
+      "termino": "Nivel de refrigerante",
+      "sinonimos": [],
+      "definicion": "Cantidad de fluido presente en el vaso de expansión, comparado con las marcas MIN y MAX. 2",
+      "referencias": []
+    },
+    {
+      "termino": "Presión de circuito",
+      "sinonimos": [],
+      "definicion": "Presión interna del circuito motor, medida por el sensor CMP-17.",
+      "referencias": [
+        "CMP-17"
+      ]
+    },
+    {
+      "termino": "Rendimiento reducido",
+      "sinonimos": [],
+      "definicion": "Limitación deliberada de potencia del vehículo por parte de la TCU ante una condición térmica no resuelta.",
+      "referencias": []
+    },
+    {
+      "termino": "Escalar la incidencia",
+      "sinonimos": [],
+      "definicion": "Derivar el caso a un técnico de mayor nivel de especialización cuando el diagnóstico no puede completarse.",
+      "referencias": []
+    },
+    {
+      "termino": "Boletín técnico",
+      "sinonimos": [],
+      "definicion": "Documento que actualiza, corrige o matiza información previa de man- uales o procedimientos.",
+      "referencias": []
+    },
+    {
+      "termino": "Documento sustituido",
+      "sinonimos": [],
+      "definicion": "Documento cuya versión vigente ha sido reemplazada; no debe usarse como fuente de respuesta.",
+      "referencias": []
+    },
+    {
+      "termino": "Procedimiento",
+      "sinonimos": [],
+      "definicion": "Documento que describe paso a paso cómo realizar una comprobación o intervención de mantenimiento.",
+      "referencias": []
+    },
+    {
+      "termino": "Árbol de diagnóstico",
+      "sinonimos": [],
+      "definicion": "Estructura de decisión que guía el diagnóstico de un síntoma a través de preguntas y comprobaciones sucesivas.",
+      "referencias": []
+    },
+    {
+      "termino": "Versión del sistema",
+      "sinonimos": [],
+      "definicion": "Identificador (V1.0, V1.1, V2.0) que distingue variantes del sis-",
+      "referencias": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ]
+    },
+    {
+      "termino": "Sensor de caudal",
+      "sinonimos": [],
+      "definicion": "Sensor que mide la cantidad de refrigerante que circula por un circuito (p. ej. CMP-18).",
+      "referencias": [
+        "CMP-18"
+      ]
+    },
+    {
+      "termino": "Rele",
+      "sinonimos": [],
+      "definicion": "Componente electromecánico que conmuta la alimentación de un actuador, como el relé CMP-25.",
+      "referencias": [
+        "CMP-25"
+      ]
+    },
+    {
+      "termino": "Filtro del circuito",
+      "sinonimos": [],
+      "definicion": "Elemento (CMP-24) que retiene partículas en el circuito de batería.",
+      "referencias": [
+        "CMP-24"
+      ]
+    },
+    {
+      "termino": "Actuador",
+      "sinonimos": [],
+      "definicion": "Componente que ejecuta una orden mecánica de la TCU, como la válvula de 4 vías o el electroventilador.",
+      "referencias": []
+    },
+    {
+      "termino": "Conector CAN",
+      "sinonimos": [],
+      "definicion": "Punto de conexión física de la red CAN, como el conector CMP-26 de la TCU.",
+      "referencias": [
+        "CMP-26"
+      ]
+    },
+    {
+      "termino": "Fallo intermitente",
+      "sinonimos": [],
+      "definicion": "Anomalía que aparece y desaparece de forma no constante, dificul- tando su reproducción.",
+      "referencias": []
+    },
+    {
+      "termino": "Deriva de sensor",
+      "sinonimos": [],
+      "definicion": "Desviación progresiva de la lectura de un sensor respecto al valor real.",
+      "referencias": []
+    },
+    {
+      "termino": "Rango nominal",
+      "sinonimos": [],
+      "definicion": "Intervalo de valores considerado normal para una magnitud determi- nada.",
+      "referencias": []
+    },
+    {
+      "termino": "Criterio de aceptación",
+      "sinonimos": [],
+      "definicion": "Condición que debe cumplirse para considerar conforme el resultado de una comprobación.",
+      "referencias": []
+    },
+    {
+      "termino": "Ciclo de conducción",
+      "sinonimos": [],
+      "definicion": "Periodo de uso del vehículo desde el arranque hasta la parada, usado como referencia temporal en comprobaciones. : Sinónimo formal del modo Protección descrito en el • Modo de proteccion térmica manual de operación.",
+      "referencias": []
+    },
+    {
+      "termino": "Testigo combinado",
+      "sinonimos": [],
+      "definicion": "Situación en la que dos o más testigos se activan a la vez, lo que puede cambiar el nivel de urgencia.",
+      "referencias": []
+    },
+    {
+      "termino": "PTC",
+      "sinonimos": [],
+      "definicion": "Calentador eléctrico (CMP-12) basado en un elemento de coeficiente de temper- atura positivo.",
+      "referencias": [
+        "CMP-12"
+      ]
+    },
+    {
+      "termino": "Inversor",
+      "sinonimos": [],
+      "definicion": "Componente de la electrónica de potencia que convierte corriente continua en alterna para el motor eléctrico.",
+      "referencias": []
+    },
+    {
+      "termino": "Convertidor DC-DC",
+      "sinonimos": [],
+      "definicion": "Componente de la electrónica de potencia que adapta la tensión entre distintos sistemas eléctricos del vehículo.",
+      "referencias": []
+    },
+    {
+      "termino": "Pack de batería",
+      "sinonimos": [],
+      "definicion": "Conjunto de módulos de celdas que forman la batería de alta tensión.",
+      "referencias": []
+    },
+    {
+      "termino": "Módulo de batería",
+      "sinonimos": [],
+      "definicion": "Subconjunto de celdas dentro del pack de batería, monitorizado individualmente por el sensor CMP-15.",
+      "referencias": [
+        "CMP-15"
+      ]
+    },
+    {
+      "termino": "Desequilibrio térmico",
+      "sinonimos": [],
+      "definicion": "Diferencia de temperatura relevante entre distintos módulos de la batería.",
+      "referencias": []
+    },
+    {
+      "termino": "Trazador de fugas",
+      "sinonimos": [],
+      "definicion": "Sustancia añadida al refrigerante para facilitar la localización de fugas mediante luz ultravioleta.",
+      "referencias": []
+    },
+    {
+      "termino": "Manguito",
+      "sinonimos": [],
+      "definicion": "Tubo flexible que conecta distintos elementos de un circuito de refrigerante.",
+      "referencias": []
+    },
+    {
+      "termino": "Abrazadera",
+      "sinonimos": [],
+      "definicion": "Elemento de sujeción que asegura la conexión de un manguito a su racor.",
+      "referencias": []
+    },
+    {
+      "termino": "Racor",
+      "sinonimos": [],
+      "definicion": "Punto de conexión roscada o a presión entre elementos de un circuito de fluido. 3",
+      "referencias": []
+    },
+    {
+      "termino": "Purga de aire",
+      "sinonimos": [],
+      "definicion": "Proceso de eliminación del aire atrapado en un circuito de refrigerante.",
+      "referencias": []
+    },
+    {
+      "termino": "Cavitación",
+      "sinonimos": [],
+      "definicion": "Formación de burbujas de vapor en el interior de una bomba por presión insuficiente, que reduce su rendimiento.",
+      "referencias": []
+    },
+    {
+      "termino": "Consigna",
+      "sinonimos": [],
+      "definicion": "Valor ordenado por la TCU a un actuador (por ejemplo, posición de la válvula o velocidad del ventilador).",
+      "referencias": []
+    },
+    {
+      "termino": "Retroalimentación (feedback)",
+      "sinonimos": [],
+      "definicion": "Señal devuelta por un sensor que informa a la TCU del estado real de un actuador.",
+      "referencias": []
+    },
+    {
+      "termino": "Umbral crítico",
+      "sinonimos": [],
+      "definicion": "Valor a partir del cual se activa una protección o una alarma.",
+      "referencias": []
+    },
+    {
+      "termino": "Histéresis térmica",
+      "sinonimos": [],
+      "definicion": "Diferencia entre el umbral de activación y el de desactivación de una estrategia, para evitar oscilaciones.",
+      "referencias": []
+    },
+    {
+      "termino": "Prueba funcional",
+      "sinonimos": [],
+      "definicion": "Comprobación activa de un componente mediante órdenes de prueba, en lugar de una simple observación pasiva.",
+      "referencias": []
+    },
+    {
+      "termino": "Autodiagnóstico",
+      "sinonimos": [],
+      "definicion": "Proceso mediante el cual la TCU revisa el estado de sensores y actu- adores al arrancar el vehículo.",
+      "referencias": []
+    },
+    {
+      "termino": "Checksum",
+      "sinonimos": [],
+      "definicion": "Mecanismo de verificación de integridad de datos utilizado por el software de la TCU.",
+      "referencias": []
+    },
+    {
+      "termino": "Watchdog",
+      "sinonimos": [],
+      "definicion": "Mecanismo de seguridad que reinicia un sistema electrónico si detecta que ha dejado de responder correctamente.",
+      "referencias": []
+    },
+    {
+      "termino": "Perfil autorizado",
+      "sinonimos": [],
+      "definicion": "Nivel de formación y habilitación requerido para realizar una inter- vención concreta.",
+      "referencias": []
+    },
+    {
+      "termino": "Consignación",
+      "sinonimos": [],
+      "definicion": "Proceso de bloqueo seguro de un sistema antes de una intervención, para evitar su activación accidental.",
+      "referencias": []
+    },
+    {
+      "termino": "Aislamiento eléctrico",
+      "sinonimos": [],
+      "definicion": "Barrera que impide el paso no deseado de corriente entre cir- cuitos de distinta tensión.",
+      "referencias": []
+    },
+    {
+      "termino": "Resistencia de aislamiento",
+      "sinonimos": [],
+      "definicion": "Magnitud que indica la calidad de la separación eléctrica entre un circuito de alta tensión y el chasis.",
+      "referencias": []
+    },
+    {
+      "termino": "Severidad",
+      "sinonimos": [],
+      "definicion": "Nivel de gravedad asignado a un código DTC según su impacto potencial.",
+      "referencias": []
+    },
+    {
+      "termino": "Nivel de confianza",
+      "sinonimos": [],
+      "definicion": "Grado de certeza con el que un documento asocia un síntoma o dato a una causa concreta.",
+      "referencias": []
+    },
+    {
+      "termino": "Referencia documental",
+      "sinonimos": [],
+      "definicion": "Documento y sección concretos que respaldan una afirmación técnica.",
+      "referencias": []
+    },
+    {
+      "termino": "Sección estable",
+      "sinonimos": [],
+      "definicion": "Identificador de apartado dentro de un documento Markdown que no depende de la paginación.",
+      "referencias": []
+    },
+    {
+      "termino": "Corpus documental",
+      "sinonimos": [],
+      "definicion": "Conjunto organizado de documentos relacionados entre sí, usado como base de conocimiento del asistente.",
+      "referencias": []
+    },
+    {
+      "termino": "Asistente RAG",
+      "sinonimos": [],
+      "definicion": "Sistema de inteligencia artificial que combina recuperación de docu- mentos con generación de texto para responder consultas. 4",
+      "referencias": []
+    }
+  ]
+}

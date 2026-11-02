@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "versiones": [
+    {
+      "version": "V1.0",
+      "descripcion": "Versión inicial del sistema ThermoDrive HTM-240.",
+      "sensor_bateria": "CMP-15 ref. ST-B100",
+      "potencia_ptc_kw": 3,
+      "software_tcu": "v1.0",
+      "notas": "Versión de referencia base."
+    },
+    {
+      "version": "V1.1",
+      "descripcion": "Actualización menor. Corriente nominal bomba CMP-02 actualizada por BOL-002. PRC-003 v1.0 sustituido.",
+      "sensor_bateria": "CMP-15 ref. ST-B100",
+      "potencia_ptc_kw": 3,
+      "software_tcu": "v1.1",
+      "notas": "Boletín BOL-002 obligatorio. PRC-003 v1.0 obsoleto para esta versión."
+    },
+    {
+      "version": "V2.0",
+      "descripcion": "Versión mayor. Sensor batería actualizado, PTC 5 kW, sensor de presión batería eliminado (fusionado en CMP-18), software TCU v2.0, cambio de significado HTM-0142.",
+      "sensor_bateria": "CMP-15 ref. ST-B200",
+      "potencia_ptc_kw": 5,
+      "software_tcu": "v2.0",
+      "notas": "HTM-0142 tiene distinto significado en V2.0. Ver BOL-003."
+    }
+  ]
+}
