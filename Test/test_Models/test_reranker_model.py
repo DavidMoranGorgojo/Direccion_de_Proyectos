@@ -1,7 +1,13 @@
 
+import os
+
 import pytest
 
 from Agents.Agent_2.src.clients.reranker_model import RerankerModel
+from Agents.Agent_2.src.services.reranker import (
+    apply_threshold,
+    rerank_results,
+)
 
 
 class FakeModel:
@@ -90,3 +96,48 @@ def test_predict_propaga_error_del_modelo():
         match="Error simulado del modelo de reranking"
     ):
         reranker.predict(pairs)
+
+
+@pytest.mark.skipif(
+    os.getenv("RUN_REAL_RERANKER_TEST") != "1",
+    reason="La prueba con el modelo real se ejecuta opcionalmente",
+)
+def test_integracion_con_modelo_real():
+    """
+    Comprueba el adaptador, el reranking y el umbral
+    utilizando BAAI/bge-reranker-v2-m3.
+
+    Requiere FlagEmbedding y los pesos del modelo.
+    """
+
+    from FlagEmbedding import FlagReranker
+
+    modelo_real = FlagReranker(
+        "BAAI/bge-reranker-v2-m3",
+        use_fp16=False,
+    )
+
+    reranker = RerankerModel(model=modelo_real)
+
+    query = "¿Cómo funciona la bomba auxiliar?"
+
+    resultados = [
+        {
+            "chunk_id": "C1",
+            "texto": "El calendario de vacaciones se publica en enero.",
+        },
+        {
+            "chunk_id": "C2",
+            "texto": "La bomba auxiliar suministra presión al sistema.",
+        },
+    ]
+
+    ordenados = rerank_results(query, resultados, reranker)
+
+    assert len(ordenados) == 2
+    assert ordenados[0]["chunk_id"] == "C2"
+    assert ordenados[0]["rerank_score"] > ordenados[1]["rerank_score"]
+
+    filtrados = apply_threshold(ordenados, threshold=0.45)
+
+    assert [resultado["chunk_id"] for resultado in filtrados] == ["C2"]
