@@ -1,21 +1,39 @@
 
 import math
 
+from Agents.Agent_2.src.core import config
 
-DEFAULT_THRESHOLD = 0.45
 
-
-def apply_threshold(results, threshold=DEFAULT_THRESHOLD):
+def apply_threshold(results, threshold=None):
     """
     Filtra los resultados del reranker según un umbral mínimo.
 
     Args:
         results: lista de resultados con un campo 'rerank_score'.
-        threshold: puntuación mínima necesaria para conservar el resultado.
+        threshold: puntuación mínima necesaria para conservar
+                   el resultado. Si no se indica, utiliza
+                   RERANK_THRESHOLD de la configuración.
 
     Returns:
         Lista de resultados cuya puntuación alcanza el umbral.
+
+    Raises:
+        ValueError: si el umbral no es un número finito
+                    comprendido entre 0 y 1.
     """
+
+    if threshold is None:
+        threshold = config.RERANK_THRESHOLD
+
+    if (
+        isinstance(threshold, bool)
+        or not isinstance(threshold, (int, float))
+        or not math.isfinite(threshold)
+        or not 0 <= threshold <= 1
+    ):
+        raise ValueError(
+            "El umbral del reranker debe ser un número finito entre 0 y 1"
+        )
 
     return [
         result
@@ -59,7 +77,8 @@ def rerank_results(query, results, model):
 
     Raises:
         ValueError: si el número de scores no coincide con
-        el número de resultados o si alguna puntuación no es finita.
+                    el número de resultados o si alguna
+                    puntuación no es finita.
     """
 
     if not results:

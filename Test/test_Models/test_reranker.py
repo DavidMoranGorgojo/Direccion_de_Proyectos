@@ -3,6 +3,7 @@ import math
 
 import pytest
 
+from Agents.Agent_2.src.core import config
 from Agents.Agent_2.src.services.reranker import (
     apply_threshold,
     rerank_results,
@@ -206,3 +207,78 @@ def test_rerank_results_rechaza_scores_no_finitos(score_invalido):
             results=resultados,
             model=FakeReranker(),
         )
+
+
+def test_threshold_utiliza_configuracion(monkeypatch):
+    """
+    Comprueba que apply_threshold utiliza config.RERANK_THRESHOLD
+    cuando no se indica un umbral explícito.
+    """
+
+    monkeypatch.setattr(config, "RERANK_THRESHOLD", 0.75)
+
+    resultados = [
+        {"chunk_id": "A", "rerank_score": 0.90},
+        {"chunk_id": "B", "rerank_score": 0.70},
+        {"chunk_id": "C", "rerank_score": 0.50},
+    ]
+
+    filtrados = apply_threshold(resultados)
+
+    assert len(filtrados) == 1
+    assert filtrados[0]["chunk_id"] == "A"
+
+
+def test_threshold_explicito_tiene_prioridad(monkeypatch):
+    """
+    Comprueba que un umbral explícito tiene prioridad
+    sobre el configurado en config.py.
+    """
+
+    monkeypatch.setattr(config, "RERANK_THRESHOLD", 0.80)
+
+    resultados = [
+        {"chunk_id": "A", "rerank_score": 0.90},
+        {"chunk_id": "B", "rerank_score": 0.60},
+        {"chunk_id": "C", "rerank_score": 0.30},
+    ]
+
+    filtrados = apply_threshold(resultados, threshold=0.50)
+
+    assert len(filtrados) == 2
+    assert filtrados[0]["chunk_id"] == "A"
+    assert filtrados[1]["chunk_id"] == "B"
+
+
+def test_threshold_incluye_puntuacion_igual_al_umbral():
+    """
+    Un resultado con puntuación exactamente igual
+    al umbral debe conservarse.
+    """
+
+    resultados = [
+        {"chunk_id": "A", "rerank_score": 0.60},
+        {"chunk_id": "B", "rerank_score": 0.59},
+    ]
+
+    filtrados = apply_threshold(resultados, threshold=0.60)
+
+    assert len(filtrados) == 1
+    assert filtrados[0]["chunk_id"] == "A"
+
+
+@pytest.mark.parametrize(
+    "threshold_invalido",
+    [-0.1, 1.1, "abc", True, math.nan, math.inf, -math.inf],
+)
+def test_threshold_rechaza_valores_invalidos(threshold_invalido):
+    """
+    El umbral debe ser un número finito entre 0 y 1.
+    """
+
+    resultados = [
+        {"chunk_id": "A", "rerank_score": 0.90},
+    ]
+
+    with pytest.raises(ValueError, match="umbral"):
+        apply_threshold(resultados, threshold=threshold_invalido)
