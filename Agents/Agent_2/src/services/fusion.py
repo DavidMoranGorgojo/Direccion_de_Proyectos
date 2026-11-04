@@ -16,6 +16,13 @@ def rrf(vector_results, bm25_results, k=60):
 
     for ranking in [vector_results, bm25_results]:
         for position, result in enumerate(ranking, start=1):
+
+            # Validar que el resultado tenga un identificador válido.
+            if not isinstance(result, dict) or not result.get("chunk_id"):
+                raise ValueError(
+                    "Resultado RRF inválido: falta el campo obligatorio 'chunk_id'"
+                )
+
             chunk_id = result["chunk_id"]
 
             chunks[chunk_id] = result

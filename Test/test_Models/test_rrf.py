@@ -122,3 +122,13 @@ def test_rrf_no_modifica_resultados_originales():
 
     assert "rrf_score" not in vector_results[0]
     assert "rrf_score" not in bm25_results[0]
+
+def test_rrf_rechaza_resultado_sin_chunk_id():
+    import pytest
+
+    resultados_invalidos = [
+        {"texto": "Fragmento sin identificador"}
+    ]
+
+    with pytest.raises(ValueError, match="chunk_id"):
+        rrf(resultados_invalidos, [])
