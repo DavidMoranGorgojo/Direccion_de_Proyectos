@@ -23,17 +23,16 @@ def crear_pipeline_local(agente_factory, agente2, *, simulado):
     un escenario revisado, es una lista de preguntas; no se inventa contexto.
     simulado declara si alguno de los participantes es un doble de prueba.
     """
-    from agente1_core import consultar_asistente
+    from Agents.agente1.core import consultar_asistente, normalizar_respuesta_agente2
 
     def pipeline(entrada):
         agente = agente_factory()
         capturada = {}
 
         def recuperar(query):
-            respuesta = agente2(query)
+            respuesta = normalizar_respuesta_agente2(agente2(query))
             capturada.clear()
-            if isinstance(respuesta, dict):
-                capturada.update(respuesta)
+            capturada.update(respuesta)
             return respuesta
 
         for pregunta in entrada.get('turnos_previos', []):

@@ -18,6 +18,9 @@ import json
 import time
 import uuid
 import logging
+import math
+import unicodedata
+from contextlib import contextmanager
 import urllib.request
 import urllib.error
 from typing import Dict, Any, List, Optional
@@ -245,7 +248,7 @@ class PreprocesadorAutomocion:
     PATRON_EXTRACCION_CODIGOS = re.compile(
         r'\b(?:HTM-\d{4}|REF-[A-Za-z0-9]*\d[A-Za-z0-9]*|[PCBU]\d{4})\b'
     )
-    PATRON_EXTRACCION_VERSIONES = re.compile(r'\bV\d+(?:\.\d+)*\b')
+    PATRON_EXTRACCION_VERSIONES = re.compile(r'\bV\d+(?:\.\d+)*\b', re.IGNORECASE)
 
     @classmethod
     def procesar(cls, texto_usuario: str) -> Dict[str, Any]:
@@ -362,24 +365,74 @@ Respuesta:
 # 4. AGENTE 1: CLIENTE LLM Y ORQUESTACIÓN (A1-02, A1-03, A1-04)
 # ============================================================================
 class Agente1:
-    def __init__(self, base_url: str = OLLAMA_URL, modelo: str = MODELO_LLM, max_turnos: int = 6, conversacion_id: str = "c-0001"):
+    def __init__(self, base_url: str = OLLAMA_URL, modelo: str = MODELO_LLM, max_turnos: int = 6, conversacion_id: str = "c-0001", timeout_s: Optional[float] = None):
         self.modelo = modelo
         self.base_url = base_url
         self.max_turnos = max_turnos
         self.conversacion_id = conversacion_id
-        self.cliente = OpenAI(base_url=base_url, api_key="ollama") if OpenAI else None
+        self.timeout_s = float(timeout_s if timeout_s is not None else os.environ.get("OLLAMA_TIMEOUT_S", "10"))
+        if not math.isfinite(self.timeout_s) or self.timeout_s <= 0:
+            raise ValueError("OLLAMA_TIMEOUT_S debe ser un número positivo y finito")
+        self.cliente = OpenAI(base_url=base_url, api_key="ollama", timeout=self.timeout_s,
+                              max_retries=0) if OpenAI else None
         self.historial: List[Dict[str, str]] = []
+        self.aclaraciones_consecutivas = 0
+        self.consulta_pendiente = False
+        self._query_pendiente = None
+        self._deadline_llm = None
 
     def reset(self):
         """Limpia el historial de la conversación para evitar mezclar sesiones."""
-        self.historial.clear()
+        self.finalizar_consulta()
         logger.info("Historial de conversación reiniciado.")
+
+    def finalizar_consulta(self):
+        """Solo memoria temporal; cada instancia sigue perteneciendo a una conversación."""
+        self.historial.clear()
+        self.aclaraciones_consecutivas = 0
+        self.consulta_pendiente = False
+        self._query_pendiente = None
+
+    def pedir_aclaracion(self, entrada: str, mensaje: str) -> dict:
+        """Dos repreguntas como máximo; después se abstiene y termina la consulta."""
+        if self.aclaraciones_consecutivas >= 2:
+            self.finalizar_consulta()
+            return {"estado": "sin_evidencia", "mensaje":
+                    "No puedo resolver la consulta tras dos aclaraciones. Inicia una nueva consulta con los datos técnicos necesarios."}
+        self.aclaraciones_consecutivas += 1
+        self.consulta_pendiente = True
+        if self.historial and self.historial[-1]["role"] == "assistant":
+            self.historial[-1]["content"] = mensaje
+        else:
+            self._guardar_turno(entrada, mensaje)
+        return {"estado": "aclaracion", "mensaje": mensaje}
+
+    @contextmanager
+    def presupuesto_llm(self):
+        """Presupuesto compartido por clasificación, fallbacks y redacción/reintento.
+
+        OLLAMA_TIMEOUT_S (10 s por defecto) limita los timeouts de E/S al tiempo
+        restante. No cancela el trabajo de inferencia que ya esté en el servidor.
+        """
+        propio = self._deadline_llm is None
+        if propio:
+            self._deadline_llm = time.monotonic() + self.timeout_s
+        try:
+            yield
+        finally:
+            if propio:
+                self._deadline_llm = None
 
     def _consultar_llm(self, mensajes: List[Dict[str, str]]) -> Optional[str]:
         """
         Realiza la inferencia contra Ollama en localhost con max_tokens=512 (BLOQUEANTE 5).
         Soporta el SDK oficial de OpenAI o fallback nativo con urllib (sin dependencias pip).
         """
+        deadline = self._deadline_llm or (time.monotonic() + self.timeout_s)
+        # El SDK no hace reintentos internos; todos los intentos comparten presupuesto.
+        restante = deadline - time.monotonic()
+        if restante <= 0:
+            return None
         # Intento 1: SDK de OpenAI si está instalado
         if self.cliente:
             try:
@@ -388,11 +441,13 @@ class Agente1:
                     messages=mensajes,
                     temperature=0.0,
                     max_tokens=512,  # BLOQUEANTE 5: aumentado para evitar truncar JSONs
-                    timeout=45
+                    timeout=restante
                 )
-                return respuesta.choices[0].message.content.strip()
+                texto = respuesta.choices[0].message.content
+                if time.monotonic() < deadline and isinstance(texto, str) and texto.strip():
+                    return texto.strip()
             except Exception as e:
-                logger.warning(f"Fallo en cliente OpenAI ({e}). Intentando fallback nativo HTTP...")
+                logger.warning("Fallo en cliente OpenAI (%s); se intenta fallback con el tiempo restante.", type(e).__name__)
 
         # Intento 2: Fallback nativo usando urllib (sin dependencias pip)
         # Probamos primero /v1/chat/completions (OpenAI-compatible) y luego /api/chat
@@ -402,6 +457,9 @@ class Agente1:
         ]
 
         for url, modo in endpoints:
+            restante = deadline - time.monotonic()
+            if restante <= 0:
+                break
             try:
                 if modo == "v1":
                     payload = {
@@ -428,31 +486,48 @@ class Agente1:
                     headers={"Content-Type": "application/json"},
                     method="POST"
                 )
-                with urllib.request.urlopen(req, timeout=50) as resp:
+                with urllib.request.urlopen(req, timeout=restante) as resp:
                     data = json.loads(resp.read().decode("utf-8"))
+                    if time.monotonic() >= deadline:
+                        return None
                     if modo == "v1":
-                        choices = data.get("choices") or []
-                        if choices:
-                            return choices[0].get("message", {}).get("content", "").strip()
+                        texto = data["choices"][0]["message"]["content"]
                     else:
-                        return data.get("message", {}).get("content", "").strip()
+                        texto = data["message"]["content"]
+                    if isinstance(texto, str) and texto.strip():
+                        return texto.strip()
 
             except urllib.error.HTTPError as e:
-                cuerpo = ""
-                try:
-                    cuerpo = e.read().decode("utf-8")
-                except Exception:
-                    pass
-                logger.warning(f"Intento en {url} falló con HTTP {e.code}: {cuerpo if cuerpo else e.reason}")
+                logger.warning("Endpoint LLM respondió HTTP %s.", e.code)
                 continue
             except Exception as e:
-                logger.warning(f"Error de conexión en {url}: {e}")
+                logger.warning("Fallo de conexión al modelo (%s).", type(e).__name__)
                 continue
 
-        logger.error(f"No se pudo conectar con Ollama en ninguno de los endpoints ({self.base_url}).")
+        logger.error("No se obtuvo respuesta del modelo dentro del presupuesto disponible.")
         return None
 
-    def procesar_consulta(self, entrada_usuario: str) -> Dict[str, Any]:
+    def procesar_consulta(self, entrada_usuario: str, *, nueva_consulta: bool = False) -> Dict[str, Any]:
+        """Conserva contexto solo mientras hay aclaración pendiente.
+
+        El llamador puede indicar nueva_consulta=True para separar una pregunta
+        independiente de una respuesta a una aclaración; también se reconocen
+        los marcadores explícitos «otra duda»/«nueva consulta».
+        """
+        nueva = isinstance(entrada_usuario, str) and re.match(
+            r"^(?:gracias[,!.]?\s*)?(?:ahora\s+)?(?:otra duda|otra consulta|nueva consulta|cambiando de tema)\b",
+            entrada_usuario.strip(), re.IGNORECASE)
+        if nueva_consulta or nueva or not self.consulta_pendiente:
+            self.finalizar_consulta()
+        with self.presupuesto_llm():
+            resultado = self._procesar_consulta(entrada_usuario)
+        if resultado["estado"] == "aclaracion":
+            return self.pedir_aclaracion(entrada_usuario, resultado["mensaje"])
+        if resultado["estado"] != "valida":
+            self.finalizar_consulta()
+        return resultado
+
+    def _procesar_consulta(self, entrada_usuario: str) -> Dict[str, Any]:
         """
         Flujo de procesamiento:
           1. Preprocesamiento determinista (limpieza, normalización y extracción de códigos).
@@ -466,6 +541,14 @@ class Agente1:
         texto_limpio = datos_prep["texto_procesado"]
         codigos_detectados = datos_prep["codigos_detectados"]
 
+        if self._query_pendiente and len(datos_prep["versiones_detectadas"]) == 1 and re.fullmatch(r"(?:es\s+)?(?:la\s+)?V\d+(?:\.\d+)*[.!]?", texto_limpio, re.IGNORECASE):
+            query = json.loads(json.dumps(self._query_pendiente))
+            query["filtros"]["version"] = datos_prep["versiones_detectadas"][0]
+            query["trace_id"] = f"t-{uuid.uuid4().hex[:6]}"
+            query["pregunta_original"] = entrada_usuario
+            self._guardar_turno(texto_limpio, json.dumps(query, ensure_ascii=False))
+            return {"estado": "valida", "query_json": query, "entidades_detectadas": datos_prep}
+
         # Paso 2: Preparar contexto para el LLM
         mensajes = [
             {"role": "system", "content": SYSTEM_PROMPT_AGENTE1}
@@ -475,7 +558,7 @@ class Agente1:
 
         # Paso 3: Invocación al LLM
         salida_llm = self._consultar_llm(mensajes)
-        if not salida_llm:
+        if not isinstance(salida_llm, str) or not salida_llm.strip():
             return {
                 "estado": "error",
                 "mensaje": "No se pudo conectar con Ollama. Verifica que 'ollama serve' esté activo."
@@ -536,6 +619,7 @@ class Agente1:
             if len(versiones) == 1:
                 filtros["version"] = versiones[0]
             elif len(versiones) > 1:
+                self._guardar_turno(texto_limpio, "¿Qué versión necesitas consultar?")
                 return {"estado": "aclaracion", "mensaje": "¿Qué versión necesitas consultar?"}
             query_dict["filtros"] = filtros
 
@@ -856,6 +940,10 @@ REGLAS ESTRICTAS DE CERO ALUCINACIÓN:
 2. Queda PROHIBIDO inventar valores, pares o pasos que no figuren en los textos.
 3. Si un dato no figura en las evidencias, escribe textualmente: "no indicado en la documentación".
 4. Cita ÚNICAMENTE identificadores que existan en la lista de evidencias.
+5. Para permitir una comprobación determinista, copia oraciones completas de los
+   fragmentos sin cambiar valores, negaciones, condiciones ni versiones. Cada
+   oración debe terminar en su cita. Omite introducciones, paráfrasis y conclusiones
+   que no puedan verificarse literalmente. Los encabezados anteriores son opcionales.
 """
 
 def extraer_citas(texto: str) -> List[str]:
@@ -887,7 +975,50 @@ def verificar_citas(texto_respuesta: str, evidencias_validas: List[Dict[str, Any
     }
 
 
-def redactar_respuesta_con_verificacion(
+def verificar_respaldo_extractivo(texto: str, evidencias: list) -> bool:
+    """Regla conservadora, no verificación semántica: cada afirmación debe ser
+    una oración literal de una de las evidencias que cita. Una paráfrasis no
+    comprobable se rechaza; se permiten únicamente los encabezados del prompt.
+    """
+    def normalizar(fragmento):
+        fragmento = fragmento.replace("[DOCUMENTO SUSTITUIDO]", "")
+        sin_tildes = unicodedata.normalize("NFKD", fragmento.casefold())
+        sin_tildes = "".join(c for c in sin_tildes if not unicodedata.combining(c)).replace("−", "-")
+        return " ".join(re.findall(r"[+-]?\d+(?:[.,]\d+)*|[^\W_]+|[°%≤≥<>±=/×*^+\-]", sin_tildes))
+
+    encabezados = {normalizar(h) for h in ("Causas y Diagnóstico", "Criticidad y Seguridad",
+                                         "Procedimiento técnico", "Fuentes consultadas")}
+    texto = "\n".join(linea for linea in texto.splitlines() if normalizar(linea.strip("*#: ")) not in encabezados)
+    por_id = {e["chunk_id"]: {normalizar(oracion) for oracion in re.split(
+        r"(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡])|\n+", e["texto"])} for e in evidencias}
+    posicion = 0
+    afirmaciones = 0
+    for cita in re.finditer(r"\[([^\]]+)\]", texto):
+        afirmacion = normalizar(texto[posicion:cita.start()])
+        ids = [c.strip() for c in cita.group(1).split(",")]
+        if any(cid not in por_id for cid in ids):
+            return False
+        if afirmacion:
+            if not all(afirmacion in por_id[cid] for cid in ids):
+                return False
+            afirmaciones += 1
+        posicion = cita.end()
+    return afirmaciones > 0 and not normalizar(texto[posicion:])
+
+
+def redactar_respuesta_con_verificacion(pregunta: str, evidencias: list, agente: Agente1,
+                                        aviso_obsoleto: Optional[str] = None) -> dict:
+    if not isinstance(evidencias, list) or any(not evidencia_valida(e) for e in evidencias):
+        return {"estado": "error", "texto": "Evidencias de Agente 2 inválidas.", "fuentes": []}
+    try:
+        with agente.presupuesto_llm():
+            return _redactar_respuesta_con_verificacion(pregunta, evidencias, agente, aviso_obsoleto)
+    except Exception as exc:
+        logger.error("Fallo del modelo redactor (%s).", type(exc).__name__)
+        return {"estado": "error", "texto": "Error de comunicación con el modelo redactor.", "fuentes": []}
+
+
+def _redactar_respuesta_con_verificacion(
     pregunta: str,
     evidencias: List[Dict[str, Any]],
     agente: Agente1,
@@ -935,6 +1066,8 @@ def redactar_respuesta_con_verificacion(
         }
 
     check_1 = verificar_citas(respuesta_1, evidencias)
+    check_1["respaldo_extractivo"] = verificar_respaldo_extractivo(respuesta_1, evidencias)
+    check_1["valido"] = check_1["valido"] and check_1["respaldo_extractivo"]
     if check_1["valido"]:
         texto_final = f"{aviso_obsoleto}\n\n{respuesta_1}" if aviso_obsoleto else respuesta_1
         return {
@@ -953,13 +1086,16 @@ def redactar_respuesta_con_verificacion(
         {
             "role": "user",
             "content": f"ALERTA: Has citado identificadores inexistentes: {check_1['citas_falsas']}. "
-                       f"Regenera la respuesta citando ÚNICAMENTE los chunks válidos de la lista: {chunks_validos_lista}."
+                       f"Regenera copiando oraciones completas de las evidencias, sin cambios ni afirmaciones adicionales, "
+                       f"y citando ÚNICAMENTE los chunks válidos: {chunks_validos_lista}."
         }
     ]
 
     respuesta_2 = agente._consultar_llm(mensajes_reintento)
     if respuesta_2:
         check_2 = verificar_citas(respuesta_2, evidencias)
+        check_2["respaldo_extractivo"] = verificar_respaldo_extractivo(respuesta_2, evidencias)
+        check_2["valido"] = check_2["valido"] and check_2["respaldo_extractivo"]
         if check_2["valido"]:
             texto_final = f"{aviso_obsoleto}\n\n{respuesta_2}" if aviso_obsoleto else respuesta_2
             return {
@@ -1017,14 +1153,44 @@ def evidencia_valida(ev: Any) -> bool:
     return isinstance(estado, str) and estado in {"vigente", "obsoleto", "sustituido"}
 
 
-def resolver_evidencias(pregunta: str, respuesta_a2: dict, agente: Agente1) -> dict:
+def normalizar_respuesta_agente2(respuesta: Any) -> dict:
+    """Validación antes de decidir, imprimir o adaptar el contrato de recuperación."""
+    error = {"estado": "error", "evidencias": [], "campo_ambiguo": None,
+             "mensaje_error": "Contrato de Agente 2 inválido."}
+    if not isinstance(respuesta, dict):
+        return error
+    try:
+        json.dumps(respuesta, allow_nan=False)
+    except (TypeError, ValueError, RecursionError):
+        return error
+    estado = respuesta.get("estado")
+    evidencias = respuesta.get("evidencias")
+    if (not isinstance(estado, str) or estado not in
+            {"error", "sin_evidencia", "insuficiente", "ambiguo", "suficiente", "solo_obsoleto"}
+            or not isinstance(evidencias, list) or any(not evidencia_valida(e) for e in evidencias)):
+        return error
+    if estado in {"suficiente", "solo_obsoleto"} and not evidencias:
+        return error
+    if estado in {"sin_evidencia", "insuficiente"} and evidencias:
+        return error
+    campo = respuesta.get("campo_ambiguo")
+    mensaje = respuesta.get("mensaje_error")
+    if (campo is not None and (not isinstance(campo, str) or not campo.strip())) or (mensaje is not None and not isinstance(mensaje, str)):
+        return error
+    por_id = {}
+    for ev in evidencias:
+        if ev["chunk_id"] in por_id and ev != por_id[ev["chunk_id"]]:
+            return error
+        por_id[ev["chunk_id"]] = ev
+    return {"estado": estado, "evidencias": list(por_id.values()),
+            "campo_ambiguo": campo, "mensaje_error": mensaje}
+
+
+def resolver_evidencias(pregunta: str, respuesta_a2: dict, agente: Agente1, *, version: Optional[str] = None) -> dict:
     """Decisión común a la consola y al adaptador CTR-001; no realiza transporte remoto."""
-    if not isinstance(respuesta_a2, dict):
-        return {"estado": "error", "texto": "Contrato de Agente 2 inválido.", "fuentes": []}
-    estado = respuesta_a2.get("estado")
-    evidencias = respuesta_a2.get("evidencias")
-    if not isinstance(estado, str) or estado not in {"error", "sin_evidencia", "insuficiente", "ambiguo", "suficiente", "solo_obsoleto"} or not isinstance(evidencias, list):
-        return {"estado": "error", "texto": "Contrato de Agente 2 inválido.", "fuentes": []}
+    respuesta_a2 = normalizar_respuesta_agente2(respuesta_a2)
+    estado = respuesta_a2["estado"]
+    evidencias = respuesta_a2["evidencias"]
     if estado == "error":
         mensaje = respuesta_a2.get("mensaje_error")
         return {"estado": "error", "texto": mensaje if isinstance(mensaje, str) and mensaje else "Error de recuperación.", "fuentes": []}
@@ -1038,146 +1204,104 @@ def resolver_evidencias(pregunta: str, respuesta_a2: dict, agente: Agente1) -> d
                 "fuentes": [], "campo_aclaracion": campo}
     if estado in {"sin_evidencia", "insuficiente"} or not evidencias:
         return {"estado": "sin_evidencia", "texto": "No se ha encontrado información en la documentación disponible.", "fuentes": []}
-    if any(not evidencia_valida(e) for e in evidencias):
-        return {"estado": "error", "texto": "Evidencias de Agente 2 inválidas.", "fuentes": []}
+    if version:
+        compatibles = [e for e in evidencias if version in e["metadata"].get("versiones", [])
+                       or e["metadata"].get("version") == version]
+        if not compatibles:
+            return {"estado": "error", "texto": "Las evidencias no corresponden a la versión solicitada.", "fuentes": []}
+        evidencias = compatibles
     vigentes = [e for e in evidencias if not es_obsoleta(e)]
+    if estado == "solo_obsoleto" and vigentes:
+        return {"estado": "error", "texto": "Estado de obsolescencia incoherente en Agente 2.", "fuentes": []}
     seleccion = vigentes or evidencias
+    versiones = {e["metadata"]["version"] for e in seleccion if e["metadata"].get("version")}
+    if not version and len(versiones) > 1 and len({e["texto"] for e in seleccion}) > 1:
+        return {"estado": "aclaracion", "texto": "¿Qué versión necesitas consultar (" + ", ".join(sorted(versiones)) + ")?",
+                "fuentes": [], "campo_aclaracion": "version"}
     aviso = None if vigentes else "AVISO: La documentación disponible es OBSOLETA / SUSTITUIDA."
     return redactar_respuesta_con_verificacion(pregunta, seleccion, agente, aviso)
 
 
-def consultar_asistente(pregunta: str, agente: Agente1, agente2=simulador_agente_2) -> dict:
-    """Entrada local CTR-001. Reutilizar un Agente1 por conversación; agente2 es un callable.
-
-    El llamador conserva/selecciona la instancia por conversacion_id. No añade rutas
-    al backend ni inicia servicios. El simulador es el valor por defecto para desarrollo.
-    """
-    resultado = agente.procesar_consulta(pregunta)
+def _ejecutar_turno(pregunta: str, agente: Agente1, agente2, nueva_consulta: bool) -> dict:
+    """Única ruta de decisión, ciclo de memoria y auditoría para API y consola."""
+    inicio = time.monotonic()
     trace = f"t-{uuid.uuid4().hex[:6]}"
+    respuesta_a2 = None
+    resultado = {"estado": "error", "mensaje": "No se pudo procesar la consulta."}
     evidencias = []
-    if resultado["estado"] != "valida":
-        final = {"estado": {"rechazo": "fuera_de_ambito"}.get(resultado["estado"], resultado["estado"]),
-                 "texto": resultado.get("mensaje", ""), "fuentes": []}
-    else:
-        query = resultado["query_json"]
-        trace = query["trace_id"]
-        try:
-            respuesta = agente2(query)
-        except Exception:
-            logger.exception("Fallo en la llamada local a Agente 2")
-            respuesta = {"estado": "error", "evidencias": [], "mensaje_error": "Error de comunicación con Agente 2."}
-        final = resolver_evidencias(pregunta, respuesta, agente)
-        if isinstance(respuesta, dict) and isinstance(respuesta.get("evidencias"), list):
-            evidencias = respuesta["evidencias"]
+    try:
+        with agente.presupuesto_llm():
+            resultado = agente.procesar_consulta(pregunta, nueva_consulta=nueva_consulta)
+            if resultado["estado"] != "valida":
+                final = {"estado": {"rechazo": "fuera_de_ambito"}.get(resultado["estado"], resultado["estado"]),
+                         "texto": resultado.get("mensaje", ""), "fuentes": []}
+            else:
+                query = resultado["query_json"]
+                trace = query["trace_id"]
+                try:
+                    respuesta_a2 = agente2(query)
+                except Exception as exc:
+                    logger.error("Fallo en la llamada local a Agente 2 (%s).", type(exc).__name__)
+                    respuesta_a2 = {"estado": "error", "evidencias": [], "mensaje_error": "Error de comunicación con Agente 2."}
+                respuesta_a2 = normalizar_respuesta_agente2(respuesta_a2)
+                evidencias = respuesta_a2["evidencias"]
+                final = resolver_evidencias(pregunta, respuesta_a2, agente, version=query["filtros"]["version"])
+                if final["estado"] == "aclaracion":
+                    agente._query_pendiente = query
+                    aclaracion = agente.pedir_aclaracion(pregunta, final["texto"])
+                    final.update(estado=aclaracion["estado"], texto=aclaracion["mensaje"])
+    except Exception as exc:
+        logger.error("Error controlado al procesar la consulta (%s).", type(exc).__name__)
+        final = {"estado": "error", "texto": "No se pudo procesar la consulta.", "fuentes": []}
     estado = final["estado"]
     codigo = ""
     if estado in {"error", "error_verificacion"}:
         codigo, estado = estado, "error"
+    if estado != "aclaracion":
+        agente.finalizar_consulta()
     fuentes = []
     for ev in evidencias:
-        if isinstance(ev, dict) and ev.get("chunk_id") in final["fuentes"]:
+        if ev["chunk_id"] in final["fuentes"]:
             meta = ev["metadata"]
-            versiones = meta.get("versiones")
-            if not isinstance(versiones, list):
-                versiones = [meta["version"]] if meta.get("version") else []
+            versiones = meta.get("versiones", [meta["version"]] if meta.get("version") else [])
             fuentes.append({"chunk_id": ev["chunk_id"], "documento": meta.get("documento", ""),
                             "seccion": meta.get("seccion", ""), "pagina": meta.get("pagina", 0),
                             "versiones": versiones, "obsoleto": es_obsoleta(ev)})
-    return {"trace_id": trace, "estado": estado, "texto": final["texto"],
-            "fuentes": fuentes, "codigo_error": codigo}
+    respuesta = {"trace_id": trace, "estado": estado, "texto": final["texto"],
+                 "fuentes": fuentes, "codigo_error": codigo}
+    # Lista cerrada: no se guardan pregunta, prompt, respuesta, configuración ni excepciones.
+    registrar_turno_auditoria({"trace_id": trace, "conversacion_id": agente.conversacion_id,
+                              "estado": estado, "codigo_error": codigo,
+                              "estado_agente2": respuesta_a2["estado"] if respuesta_a2 is not None else None,
+                              "fuentes": [f["chunk_id"] for f in fuentes],
+                              "latencia_ms": int((time.monotonic() - inicio) * 1000)})
+    return {"resultado_agente1": resultado, "respuesta_agente2": respuesta_a2,
+            "decision": final["estado"], "respuesta_final": final, "respuesta_ctr001": respuesta}
 
 
-def ejecutar_paso_a_paso(pregunta: str, agente: Optional[Agente1] = None, agente2=simulador_agente_2) -> Dict[str, Any]:
+def consultar_asistente(pregunta: str, agente: Agente1, agente2=simulador_agente_2,
+                        *, nueva_consulta: bool = False) -> dict:
+    """CTR-001 local; nueva_consulta separa una pregunta de una aclaración pendiente.
+
+    Se audita exactamente una vez por turno y se elimina la memoria al finalizar.
+    El llamador conserva una instancia de Agente1 por conversación.
     """
-    Comando que ejecuta una pregunta de principio a fin mostrando lo que hace cada paso
-    (Preprocesado -> LLM CTR-004 -> Mock Agente 2 -> Decisión -> Redacción -> Verificación -> Auditoría).
-    """
-    t0 = time.time()
+    return _ejecutar_turno(pregunta, agente, agente2, nueva_consulta)["respuesta_ctr001"]
+
+
+def ejecutar_paso_a_paso(pregunta: str, agente: Optional[Agente1] = None,
+                        agente2=simulador_agente_2, *, nueva_consulta: bool = False) -> dict:
+    """Misma ejecución y auditoría que CTR-001, mostrando la traza en consola."""
     if agente is None:
         agente = Agente1()
-
-    print("\n" + "=" * 70)
-    print("  EJECUCIÓN PASO A PASO (Agente 1 -> Agente 2 -> Decisión -> Redacción)")
-    print("=" * 70)
-
-    # PASO 1: Preprocesamiento y extracción determinista
-    print("\n[PASO 1: Preprocesamiento y Normalización (A1-01 / A1-10)]")
-    datos_prep = PreprocesadorAutomocion.procesar(pregunta)
-    print(f"  • Entrada original:      {pregunta}")
-    print(f"  • Texto normalizado:     {datos_prep['texto_procesado']}")
-    print(f"  • Códigos detectados:    {datos_prep['codigos_detectados']}")
-    print(f"  • Versiones detectadas:  {datos_prep['versiones_detectadas']}")
-
-    # PASO 2: Clasificación y Generación de Query JSON CTR-004
-    print("\n[PASO 2: Clasificación y Query JSON CTR-004 (A1-03 / A1-04)]")
-    resultado = agente.procesar_consulta(pregunta)
-    print(f"  • Estado de consulta:    {resultado['estado'].upper()}")
-
-    if resultado["estado"] != "valida":
-        print(f"  • Mensaje de salida:     {resultado.get('mensaje')}")
-        print("=" * 70)
-        registrar_turno_auditoria({
-            "trace_id": "sin_query",
-            "pregunta": pregunta,
-            "estado": resultado["estado"],
-            "mensaje": resultado.get("mensaje"),
-            "latencia_ms": int((time.time() - t0) * 1000)
-        })
-        return resultado
-
-    query_json = resultado["query_json"]
-    trace_id = query_json.get("trace_id", "t-000000")
-    print("  • Query JSON generado para Agente 2:")
-    print(json.dumps(query_json, ensure_ascii=False, indent=4))
-
-    # PASO 3: Invocación al Simulador del Agente 2
-    print("\n[PASO 3: Invocación al Simulador del Agente 2 (Mock CJ-01)]")
-    try:
-        respuesta_a2 = agente2(query_json)
-    except Exception:
-        logger.exception("Fallo en la llamada local a Agente 2")
-        respuesta_a2 = {"estado": "error", "evidencias": [], "mensaje_error": "Error de comunicación con Agente 2."}
-    if not isinstance(respuesta_a2, dict):
-        respuesta_a2 = {"estado": "error", "evidencias": [], "mensaje_error": "Contrato de Agente 2 inválido."}
-    estado_a2 = respuesta_a2.get("estado", "error")
-    evidencias = respuesta_a2.get("evidencias", [])
-    print(f"  • Estado devuelto por Agente 2:  {estado_a2.upper()}")
-    print(f"  • Cantidad de evidencias:        {len(evidencias)}")
-    if respuesta_a2.get("mensaje_error"):
-        print(f"  • Mensaje de error:              {respuesta_a2['mensaje_error']}")
-
-    for i, ev in enumerate(evidencias, 1):
-        print(f"    [{i}] ({ev.get('estado_documento', 'vigente')}) {ev['chunk_id']} (score: {ev.get('score', 0.0)}): {ev['texto'][:85]}...")
-
-    # PASO 4: Decisor del Agente 1 sobre lo devuelto
-    print("\n[PASO 4: Decisión del Agente 1 ante la respuesta del Agente 2]")
-    respuesta_final = resolver_evidencias(pregunta, respuesta_a2, agente)
-    decision = respuesta_final["estado"]
-    print(f"  • Acción del Agente 1: {decision}")
-    print(respuesta_final["texto"])
-
-    # PASO 6: Registro de auditoría local (A1-08)
-    latencia_total_ms = int((time.time() - t0) * 1000)
-    registrar_turno_auditoria({
-        "trace_id": trace_id,
-        "pregunta": pregunta,
-        "query_json": query_json,
-        "estado_agente2": estado_a2,
-        "decision": decision,
-        "respuesta_final": respuesta_final.get("texto"),
-        "fuentes": respuesta_final.get("fuentes"),
-        "latencia_ms": latencia_total_ms
-    })
-    print(f"\n[PASO 6: Auditoría JSONL (A1-08)] -> Turno registrado en 'agente1_registros.jsonl' (trace_id: {trace_id}, {latencia_total_ms} ms)")
-    print("=" * 70)
-
-    return {
-        "resultado_agente1": resultado,
-        "respuesta_agente2": respuesta_a2,
-        "decision": decision,
-        "respuesta_final": respuesta_final
-    }
-
+    print("\n=== Preprocesamiento → Query JSON → Agente 2 → Decisión → Redacción y verificación ===")
+    if isinstance(pregunta, str):
+        print(json.dumps(PreprocesadorAutomocion.procesar(pregunta), ensure_ascii=False, indent=2))
+    detalle = _ejecutar_turno(pregunta, agente, agente2, nueva_consulta)
+    print(json.dumps(detalle, ensure_ascii=False, indent=2))
+    if detalle["resultado_agente1"]["estado"] != "valida":
+        return detalle["resultado_agente1"]
+    return detalle
 
 
 # ============================================================================
@@ -1217,7 +1341,7 @@ def main():
     import sys
 
     # Si se pasa una pregunta por argumento de línea de comandos, ejecutar paso a paso y salir:
-    # Ej: python3 agente1_core.py "par de apriete culata Golf 7"
+    # Ej: python -m Agents.agente1.core "par de apriete culata Golf 7"
     if len(sys.argv) > 1:
         param = " ".join(sys.argv[1:]).strip()
         if param == "--test-casos" or param == "test_casos":
@@ -1261,38 +1385,7 @@ def main():
         if not pregunta:
             continue
 
-        resultado = agente.procesar_consulta(pregunta)
-
-        if resultado["estado"] == "valida":
-            query_json = resultado["query_json"]
-            print("\n[CONSULTA VÁLIDA — Query JSON validado CTR-004]:")
-            print(json.dumps(query_json, ensure_ascii=False, indent=2))
-
-            print("\n[Consultando Simulador Agente 2 (CJ-01)...]")
-            resp_a2 = simulador_agente_2(query_json)
-            estado_a2 = resp_a2.get("estado")
-            evidencias = resp_a2.get("evidencias", [])
-
-            print(f"-> Estado Agente 2: {estado_a2.upper()}")
-            if resp_a2.get("mensaje_error"):
-                print(f"-> Error técnico reportado: {resp_a2['mensaje_error']}")
-
-            if evidencias:
-                print(f"-> Se recuperaron {len(evidencias)} evidencia(s) simulada(s):")
-                for ev in evidencias:
-                    estado_doc = f"[{ev.get('estado_documento', 'vigente').upper()}]"
-                    print(f"   {estado_doc} [{ev['chunk_id']}] {ev['texto']} (Doc: {ev['metadata']['documento']}, pág. {ev['metadata']['pagina']})")
-            elif estado_a2 == "sin_evidencia":
-                print("-> El simulador no encontró datos para estos términos (sin evidencia).")
-
-        elif resultado["estado"] == "aclaracion":
-            print(f"\nAgente 1 (Aclaración): {resultado['mensaje']}")
-
-        elif resultado["estado"] == "rechazo":
-            print(f"\nAgente 1: {resultado['mensaje']}")
-
-        else:
-            print(f"\n[Error]: {resultado['mensaje']}")
+        ejecutar_paso_a_paso(pregunta, agente)
 
 
 if __name__ == "__main__":

@@ -2,13 +2,13 @@
 Batería de Tests Unitarios y Regresión — Agente 1 (Preprocesamiento y Contratos)
 ================================================================================
 Ejecución:
-    pytest test_agente1.py
+    pytest Test/test_Agents/test_agente1.py
 o bien:
-    python3 -m unittest test_agente1.py
+    python -m unittest Test.test_Agents.test_agente1
 """
 
 import unittest
-from agente1_core import (
+from Agents.agente1.core import (
     PreprocesadorAutomocion,
     simulador_agente_2,
     validar_esquema_query_json,
@@ -254,4 +254,3 @@ class TestVerificadorCitas(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

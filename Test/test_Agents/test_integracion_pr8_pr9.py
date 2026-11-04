@@ -8,10 +8,10 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch, mock_open
 
-import agente1_core as core
+from Agents.agente1 import core
 from Test.test_Models.evaluar_benchmark import EvaluadorBenchmarkCJ02, crear_pipeline_local
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
 DATASET = ROOT / 'Test/test_Models/benchmark_completo_CJ02_40_preguntas.json'
 
 
@@ -113,6 +113,11 @@ class ContratosIntegracion(unittest.TestCase):
 
 
 class OrquestacionIntegracion(unittest.TestCase):
+    def setUp(self):
+        self.parche_auditoria = patch.object(core, 'registrar_turno_auditoria')
+        self.parche_auditoria.start()
+        self.addCleanup(self.parche_auditoria.stop)
+
     def test_json_truncado_no_es_aclaracion(self):
         self.assertEqual(agente('{"texto_busqueda": "culata"').procesar_consulta('culata')['estado'], 'error')
 
@@ -162,7 +167,7 @@ class OrquestacionIntegracion(unittest.TestCase):
     def test_ctr001_compatible_frontend_y_agente2_sustituible(self):
         ev = evidencia()
         doble = Mock(return_value={'estado': 'suficiente', 'evidencias': [ev]})
-        obj = agente(json.dumps(consulta()), 'Valor 20 Nm [c_1].')
+        obj = agente(json.dumps(consulta()), 'Valor de prueba: 20 Nm [c_1].')
         res = core.consultar_asistente('par culata', obj, doble)
         self.assertEqual(res['estado'], 'respuesta')
         self.assertEqual(set(res), {'trace_id', 'estado', 'texto', 'fuentes', 'codigo_error'})
@@ -194,7 +199,7 @@ class OrquestacionIntegracion(unittest.TestCase):
         obj._consultar_llm.assert_not_called()
 
     def test_aclaracion_versiones_reales(self):
-        res = core.resolver_evidencias('presion', {'estado': 'ambiguo', 'evidencias': [evidencia(version='V3.0'), evidencia(version='V4.0')]}, agente())
+        res = core.resolver_evidencias('presion', {'estado': 'ambiguo', 'evidencias': [evidencia('c_3', version='V3.0'), evidencia('c_4', version='V4.0')]}, agente())
         self.assertIn('V3.0', res['texto'])
         self.assertIn('V4.0', res['texto'])
 
@@ -222,7 +227,7 @@ class OrquestacionIntegracion(unittest.TestCase):
 
     def test_solo_obsoleto_avisa_y_mixto_filtra(self):
         viejo = evidencia('old', estado_documento='sustituido')
-        for evidencias, texto, fuentes in (([viejo], 'Dato [old]', ['old']), ([viejo, evidencia()], 'Dato [c_1]', ['c_1'])):
+        for evidencias, texto, fuentes in (([viejo], 'Valor de prueba: 20 Nm [old]', ['old']), ([viejo, evidencia()], 'Valor de prueba: 20 Nm [c_1]', ['c_1'])):
             obj = agente(texto)
             res = core.resolver_evidencias('culata', {'estado': 'suficiente', 'evidencias': evidencias}, obj)
             self.assertEqual(res['fuentes'], fuentes)
@@ -237,13 +242,14 @@ class OrquestacionIntegracion(unittest.TestCase):
             self.assertTrue(core.es_obsoleta(ev))
 
     def test_consola_reutiliza_decision_sin_estado_documento(self):
-        obj = agente(json.dumps(consulta()), 'Dato [c_1]')
+        obj = agente(json.dumps(consulta()), 'Valor de prueba: 20 Nm [c_1]')
         with contextlib.redirect_stdout(io.StringIO()), patch.object(core, 'registrar_turno_auditoria') as auditoria:
             res = core.ejecutar_paso_a_paso('culata', obj, lambda q: {'estado': 'suficiente', 'evidencias': [evidencia()]})
         self.assertEqual(res['respuesta_final']['estado'], 'respuesta')
         auditoria.assert_called_once()
 
     def test_auditoria_tolerante_y_jsonl(self):
+        self.parche_auditoria.stop()
         with patch('builtins.open', mock_open()) as archivo:
             core.registrar_turno_auditoria({'trace_id': 't-test'})
             self.assertEqual(json.loads(archivo().write.call_args.args[0]), {'trace_id': 't-test'})
@@ -301,7 +307,7 @@ class CitasIntegracion(unittest.TestCase):
         self.assertTrue(core.verificar_citas('Dato [c_1, c_2]', [evidencia(), evidencia('c_2')])['valido'])
 
     def test_reintento_correcto(self):
-        obj = agente('Dato [c_999]', 'Dato [c_1]')
+        obj = agente('Dato [c_999]', 'Valor de prueba: 20 Nm [c_1]')
         res = core.redactar_respuesta_con_verificacion('culata', [evidencia()], obj)
         self.assertEqual(res['estado'], 'respuesta')
         self.assertEqual(res['reintentos'], 1)
@@ -323,11 +329,14 @@ class CitasIntegracion(unittest.TestCase):
 
 class BenchmarkIntegracion(unittest.TestCase):
     def setUp(self):
+        parche = patch.object(core, 'registrar_turno_auditoria')
+        parche.start()
+        self.addCleanup(parche.stop)
         self.evaluador = EvaluadorBenchmarkCJ02(DATASET)
         self.caso = self.evaluador.preguntas[1]
 
     def test_adaptador_local_vincula_pipeline_con_benchmark(self):
-        pipeline = crear_pipeline_local(lambda: agente(json.dumps(consulta()), 'Dato [c_1]'),
+        pipeline = crear_pipeline_local(lambda: agente(json.dumps(consulta()), 'Valor de prueba: 20 Nm [c_1]'),
                                        lambda q: {'estado': 'suficiente', 'evidencias': [evidencia()]},
                                        simulado=True)
         res = pipeline({'pregunta_usuario': 'par culata'})
