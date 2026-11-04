@@ -1,3 +1,6 @@
+
+import pytest
+
 from Agents.Agent_2.src.clients.reranker_model import RerankerModel
 
 
@@ -10,6 +13,14 @@ class FakeModel:
         self.received_pairs = pairs
         self.normalize = normalize
         return self.scores
+
+
+class FakeModelConError:
+    """Simula un fallo durante la ejecución del modelo."""
+
+    def compute_score(self, pairs, normalize=False):
+        raise RuntimeError("Error simulado del modelo de reranking")
+
 
 def test_predict_devuelve_scores_del_modelo():
     fake_model = FakeModel([0.90, 0.35])
@@ -62,3 +73,20 @@ def test_predict_solicita_scores_normalizados():
     reranker.predict(pairs)
 
     assert fake_model.normalize is True
+
+
+def test_predict_propaga_error_del_modelo():
+    """Un fallo del modelo no debe confundirse con cero resultados."""
+
+    fake_model = FakeModelConError()
+    reranker = RerankerModel(model=fake_model)
+
+    pairs = [
+        ["fallo de batería", "Procedimiento para revisar la batería."]
+    ]
+
+    with pytest.raises(
+        RuntimeError,
+        match="Error simulado del modelo de reranking"
+    ):
+        reranker.predict(pairs)
