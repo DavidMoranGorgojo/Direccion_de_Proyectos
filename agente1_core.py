@@ -63,7 +63,9 @@ MAPA_SINONIMOS_INTENCION = {
 
 def normalizar_intencion(v: Any) -> str:
     """Mapea de forma robusta intenciones sinónimas al conjunto estricto de CTR-004."""
-    v_clean = str(v).strip().lower() if v else "otro"
+    if not isinstance(v, str) or not v.strip():
+        raise ValueError("intencion debe ser una cadena no vacía")
+    v_clean = v.strip().lower()
     if v_clean in INTENCIONES_VALIDAS:
         return v_clean
     if v_clean in MAPA_SINONIMOS_INTENCION:
@@ -143,60 +145,49 @@ def validar_esquema_query_json(datos: Any) -> tuple[bool, Optional[str], Optiona
     if not isinstance(datos, dict):
         return False, "La respuesta no es un diccionario JSON.", None
 
-    if HAS_PYDANTIC:
-        try:
-            validado = QueryJSONSchema(**datos)
-            return True, None, validado.model_dump()
-        except Exception as e:
-            return False, f"Fallo de validación Pydantic: {e}", None
-    else:
-        # Validación de respaldo manual (idénticas reglas que Pydantic)
-        texto = datos.get("texto_busqueda") or datos.get("query_busqueda")
-        if not texto or not isinstance(texto, str) or not texto.strip():
-            return False, "El campo 'texto_busqueda' debe ser una cadena no vacía.", None
-
-        pregunta = datos.get("pregunta_original") or texto
-        trace_id = datos.get("trace_id") or f"t-{uuid.uuid4().hex[:6]}"
-        conv_id = datos.get("conversacion_id") or "c-0001"
-
-        try:
-            intencion = normalizar_intencion(datos.get("intencion"))
-        except ValueError as e:
-            return False, str(e), None
-
-        filtros = datos.get("filtros")
-        if filtros is not None and not isinstance(filtros, dict):
-            return False, "El campo 'filtros' debe ser un objeto o diccionario.", None
-
-        filtros = filtros or {}
-        tipo_doc = normalizar_tipo_documento(filtros.get("tipo_documento"))
-
-        codigos = filtros.get("codigos") or []
-        if not isinstance(codigos, list):
-            codigos = [str(codigos)]
-
-        opciones = datos.get("opciones") or {}
-        if not isinstance(opciones, dict):
-            opciones = {}
-
-        datos_limpios = {
-            "trace_id": trace_id,
-            "conversacion_id": conv_id,
-            "texto_busqueda": texto.strip(),
-            "pregunta_original": pregunta.strip(),
-            "intencion": intencion,
-            "filtros": {
-                "version": filtros.get("version"),
-                "componente": filtros.get("componente"),
-                "tipo_documento": str(tipo_doc).lower() if tipo_doc else None,
-                "codigos": codigos
-            },
-            "opciones": {
-                "top_k": int(opciones.get("top_k", 3)),
-                "incluir_obsoletos": bool(opciones.get("incluir_obsoletos", True))
-            }
+    # Una única normalización antes del validador opcional: mismo contrato sin SDK.
+    try:
+        texto = datos.get("texto_busqueda", datos.get("query_busqueda"))
+        if not isinstance(texto, str) or not texto.strip():
+            raise ValueError("texto_busqueda debe ser una cadena no vacía")
+        pregunta = datos.get("pregunta_original", texto)
+        trace = datos.get("trace_id", f"t-{uuid.uuid4().hex[:6]}")
+        conv = datos.get("conversacion_id", "c-0001")
+        for nombre, valor in (("pregunta_original", pregunta), ("trace_id", trace),
+                              ("conversacion_id", conv)):
+            if not isinstance(valor, str) or not valor.strip():
+                raise ValueError(f"{nombre} debe ser una cadena no vacía")
+        filtros = datos.get("filtros", {})
+        opciones = datos.get("opciones", {})
+        if not isinstance(filtros, dict) or not isinstance(opciones, dict):
+            raise ValueError("filtros y opciones deben ser objetos")
+        for nombre in ("version", "componente", "tipo_documento"):
+            if filtros.get(nombre) is not None and not isinstance(filtros[nombre], str):
+                raise ValueError(f"{nombre} debe ser cadena o null")
+        codigos = filtros.get("codigos", [])
+        if not isinstance(codigos, list) or any(not isinstance(c, str) or not c.strip() for c in codigos):
+            raise ValueError("codigos debe ser una lista de cadenas no vacías")
+        top_k = opciones.get("top_k", 3)
+        obsoletos = opciones.get("incluir_obsoletos", True)
+        if type(top_k) is not int or top_k < 1:
+            raise ValueError("top_k debe ser entero positivo")
+        if type(obsoletos) is not bool:
+            raise ValueError("incluir_obsoletos debe ser booleano")
+        limpio = {
+            "trace_id": trace, "conversacion_id": conv,
+            "texto_busqueda": texto.strip(), "pregunta_original": pregunta.strip(),
+            "intencion": normalizar_intencion(datos.get("intencion")),
+            "filtros": {"version": filtros.get("version"),
+                        "componente": filtros.get("componente"),
+                        "tipo_documento": normalizar_tipo_documento(filtros.get("tipo_documento")),
+                        "codigos": list(dict.fromkeys(codigos))},
+            "opciones": {"top_k": top_k, "incluir_obsoletos": obsoletos}
         }
-        return True, None, datos_limpios
+        if HAS_PYDANTIC:
+            limpio = QueryJSONSchema(**limpio).model_dump()
+        return True, None, limpio
+    except (ValueError, TypeError) as exc:
+        return False, f"Query JSON inválido: {exc}", None
 
 
 
@@ -223,7 +214,7 @@ class PreprocesadorAutomocion:
 
     # BLOQUEANTE 4: Alternativas largas primero y aceptación de días/dias
     PATRON_SALUDO_INICIO = re.compile(
-        r'^(?:buenos\s+d[ií]as|buenas\s+tardes|buenas\s+noches|saludos|buenas|hola|hey)[,\s!.]*',
+        r'^(?:buenos\s+d[ií]as|buenas\s+tardes|buenas\s+noches|saludos|buenas|hola|hey)(?!\w)[,\s!.]*',
         re.IGNORECASE
     )
     PATRON_CORTESIA_INICIO = re.compile(
@@ -248,19 +239,21 @@ class PreprocesadorAutomocion:
 
     # BLOQUEANTE 3: Solo normaliza versiones cuando van precedidas explícitamente de versión/version/ver.
     # No modifica 'Golf V 1.9 TDI' ni motores 'V6'/'V8'
-    RE_VERSION = re.compile(r'\b(?:versión|version|ver\.)\s*([vV]?\d+(?:\.\d+)?)\b', re.IGNORECASE)
+    RE_VERSION = re.compile(r'\b(?:versión|version|ver\.)\s*([vV]?\d+(?:\.\d+)*)\b', re.IGNORECASE)
 
     # Patrón para extracción determinista de códigos
     PATRON_EXTRACCION_CODIGOS = re.compile(
         r'\b(?:HTM-\d{4}|REF-[A-Za-z0-9]*\d[A-Za-z0-9]*|[PCBU]\d{4})\b'
     )
-    PATRON_EXTRACCION_VERSIONES = re.compile(r'\bV\d+(?:\.\d+)?\b')
+    PATRON_EXTRACCION_VERSIONES = re.compile(r'\bV\d+(?:\.\d+)*\b')
 
     @classmethod
     def procesar(cls, texto_usuario: str) -> Dict[str, Any]:
         """
         Ejecuta el pipeline de preprocesamiento sobre el texto.
         """
+        if not isinstance(texto_usuario, str):
+            raise ValueError('La consulta debe ser texto')
         texto = texto_usuario.strip()
 
         # 1. Limpieza de saludos iniciales y cortesía (BLOQUEANTE 4)
@@ -277,8 +270,10 @@ class PreprocesadorAutomocion:
         # 4. Normalización de DTCs pasando a mayúsculas sin tocar años (BLOQUEANTE 2)
         texto = cls.RE_DTC.sub(lambda m: m.group(1).upper(), texto)
 
+        versiones_explicitas = ["V" + m.group(1).lstrip("vV") for m in cls.RE_VERSION.finditer(texto)]
+
         # 5. Normalización de versión solo con prefijo explícito (BLOQUEANTE 3)
-        texto = cls.RE_VERSION.sub(r'V\1', texto)
+        texto = cls.RE_VERSION.sub(lambda m: 'V' + m.group(1).lstrip('vV'), texto)
 
         # 6. Mapeo no destructivo de síntomas
         for coloquial, formal in cls.DICCIONARIO_SINTOMAS.items():
@@ -297,7 +292,8 @@ class PreprocesadorAutomocion:
         codigos_detectados = list(dict.fromkeys(c.upper() for c in codigos_raw))
 
         versiones_raw = cls.PATRON_EXTRACCION_VERSIONES.findall(texto)
-        versiones_detectadas = list(dict.fromkeys(v.upper() for v in versiones_raw))
+        versiones_detectadas = list(dict.fromkeys(v.upper() for v in versiones_raw
+                                                  if v.upper() not in {"V6", "V8"} or v.upper() in versiones_explicitas))
 
         return {
             "texto_procesado": texto if texto else texto_usuario.strip(),
@@ -463,6 +459,8 @@ class Agente1:
           2. Consulta al LLM.
           3. Tratamiento de respuestas y validación estricta de JSON CTR-004.
         """
+        if not isinstance(entrada_usuario, str) or not entrada_usuario.strip():
+            return {"estado": "error", "mensaje": "La consulta debe ser texto no vacío."}
         # Paso 1: Preprocesamiento de texto
         datos_prep = PreprocesadorAutomocion.procesar(entrada_usuario)
         texto_limpio = datos_prep["texto_procesado"]
@@ -525,18 +523,23 @@ class Agente1:
             query_dict["pregunta_original"] = texto_limpio
 
             # Inyectar filtros estructurados
-            filtros = query_dict.get("filtros") or {}
+            filtros = query_dict.get("filtros", {})
             if not isinstance(filtros, dict):
-                filtros = {}
+                return {"estado": "error", "mensaje": "El campo filtros no cumple CTR-004."}
 
             # Incorporar códigos detectados por regex deterministamente
-            codigos_existentes = filtros.get("codigos") or []
-            if not isinstance(codigos_existentes, list):
-                codigos_existentes = [str(codigos_existentes)]
+            codigos_existentes = filtros.get("codigos", [])
+            if not isinstance(codigos_existentes, list) or any(not isinstance(c, str) for c in codigos_existentes):
+                return {"estado": "error", "mensaje": "El campo codigos no cumple CTR-004."}
             filtros["codigos"] = list(dict.fromkeys(codigos_existentes + codigos_detectados))
+            versiones = datos_prep["versiones_detectadas"]
+            if len(versiones) == 1:
+                filtros["version"] = versiones[0]
+            elif len(versiones) > 1:
+                return {"estado": "aclaracion", "mensaje": "¿Qué versión necesitas consultar?"}
             query_dict["filtros"] = filtros
 
-            if "opciones" not in query_dict or not isinstance(query_dict["opciones"], dict):
+            if "opciones" not in query_dict:
                 query_dict["opciones"] = {"top_k": 3, "incluir_obsoletos": True}
 
             # Validar esquema contractual CTR-004
@@ -605,7 +608,7 @@ class RespuestaSimuladorAgente2(dict):
         return super().__eq__(other)
 
 
-def simulador_agente_2(query_json: Dict[str, Any]) -> RespuestaSimuladorAgente2:
+def _simular_agente_2(query_json: Dict[str, Any]) -> RespuestaSimuladorAgente2:
     """
     Simulador del Agente 2 (Mock CJ-01) implementando los 5 casos de prueba
     requeridos por el plan de trabajo:
@@ -793,6 +796,48 @@ def simulador_agente_2(query_json: Dict[str, Any]) -> RespuestaSimuladorAgente2:
     )
 
 
+def es_obsoleta(evidencia: Dict[str, Any]) -> bool:
+    meta = evidencia.get("metadata", {})
+    return (evidencia.get("estado_documento") in {"obsoleto", "sustituido"}
+            or meta.get("obsoleto") is True or bool(meta.get("sustituido_por")))
+
+
+def simulador_agente_2(query_json: Dict[str, Any]) -> RespuestaSimuladorAgente2:
+    """Mock local sustituible; sus datos son ficticios, no un corpus documental."""
+    if not isinstance(query_json, dict):
+        return RespuestaSimuladorAgente2("error", [], mensaje_error="Query JSON inválido")
+    filtros = query_json.get("filtros", {})
+    opciones = query_json.get("opciones", {})
+    filtros = {} if filtros is None else filtros  # compatibilidad histórica CJ-01
+    opciones = {} if opciones is None else opciones
+    texto = query_json.get("texto_busqueda") or query_json.get("query_busqueda") or ""
+    if (not isinstance(filtros, dict) or not isinstance(opciones, dict)
+            or not isinstance(texto, str) or not isinstance(filtros.get("codigos", []), list)):
+        return RespuestaSimuladorAgente2("error", [], mensaje_error="Query JSON inválido")
+    top_k = opciones.get("top_k", 3)
+    if type(top_k) is not int or top_k < 1 or type(opciones.get("incluir_obsoletos", True)) is not bool:
+        return RespuestaSimuladorAgente2("error", [], mensaje_error="Opciones inválidas")
+    # Recuperar las variantes antes de aplicar el filtro explícito de versión.
+    sin_version = {**query_json, "filtros": {**filtros, "version": None}}
+    respuesta = _simular_agente_2(sin_version)
+    if respuesta["estado"] == "error":
+        return respuesta
+    evidencias = respuesta["evidencias"]
+    version = filtros.get("version")
+    if version:
+        evidencias = [e for e in evidencias if e.get("metadata", {}).get("version") == version]
+    if not opciones.get("incluir_obsoletos", True):
+        evidencias = [e for e in evidencias if not es_obsoleta(e)]
+    estado = respuesta["estado"]
+    if not evidencias:
+        estado = "sin_evidencia"
+    elif version or estado != "ambiguo":
+        estado = "solo_obsoleto" if all(es_obsoleta(e) for e in evidencias) else "suficiente"
+    # No truncar variantes antes de pedir aclaración.
+    return RespuestaSimuladorAgente2(estado, evidencias if estado == "ambiguo" else evidencias[:top_k],
+                                    "version" if estado == "ambiguo" else None)
+
+
 # ============================================================================
 # 5b. REDACTOR TÉCNICO CON CITAS Y VERIFICADOR CON REINTENTO (A1-06 y A1-07)
 # ============================================================================
@@ -813,18 +858,24 @@ REGLAS ESTRICTAS DE CERO ALUCINACIÓN:
 4. Cita ÚNICAMENTE identificadores que existan en la lista de evidencias.
 """
 
+def extraer_citas(texto: str) -> List[str]:
+    """Identificadores entre corchetes, individuales o separados por comas."""
+    return list(dict.fromkeys(
+        parte.strip() for bloque in re.findall(r'\[([^\]]+)\]', texto)
+        for parte in bloque.split(',')
+        if re.fullmatch(r'[A-Za-z0-9_@.\-]+', parte.strip())
+    ))
+
+
 def verificar_citas(texto_respuesta: str, evidencias_validas: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     A1-07: Comprueba que cada cita [chunk_id] en la respuesta exista realmente
     en las evidencias entregadas por el Agente 2. Detecta citas alucinadas.
     """
-    citas_detectadas = re.findall(r'\[([A-Za-z0-9_@.\-]+)\]', texto_respuesta)
-    citas_candidatas = [c for c in citas_detectadas if not c.isupper() or "_" in c or "@" in c or "-" in c or "chunk" in c.lower()]
-
+    citas_candidatas = extraer_citas(texto_respuesta)
     chunks_permitidos = {ev.get("chunk_id") for ev in evidencias_validas if ev.get("chunk_id")}
-
     citas_validas = [c for c in citas_candidatas if c in chunks_permitidos]
-    citas_falsas = [c for c in citas_candidatas if c not in chunks_permitidos and ("chunk" in c.lower() or "@" in c or "HTM" in c)]
+    citas_falsas = [c for c in citas_candidatas if c not in chunks_permitidos]
 
     es_valido = len(citas_falsas) == 0 and len(citas_validas) > 0
 
@@ -925,7 +976,7 @@ def redactar_respuesta_con_verificacion(
         "estado": "error_verificacion",
         "texto": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
         "fuentes": [],
-        "verificacion": check_1,
+        "verificacion": check_2 if respuesta_2 else check_1,
         "reintentos": 1
     }
 
@@ -941,7 +992,102 @@ def registrar_turno_auditoria(datos: Dict[str, Any]):
         logger.warning(f"No se pudo escribir registro de auditoría JSONL: {e}")
 
 
-def ejecutar_paso_a_paso(pregunta: str, agente: Optional[Agente1] = None) -> Dict[str, Any]:
+def evidencia_valida(ev: Any) -> bool:
+    """Tipos necesarios para citar y serializar fuentes de CTR-001 sin coerciones."""
+    if not isinstance(ev, dict) or not isinstance(ev.get("chunk_id"), str) or not ev["chunk_id"]:
+        return False
+    if not isinstance(ev.get("texto"), str) or not ev["texto"].strip():
+        return False
+    meta = ev.get("metadata")
+    if not isinstance(meta, dict):
+        return False
+    for campo in ("documento", "seccion", "version"):
+        if campo in meta and not isinstance(meta[campo], str):
+            return False
+    if "pagina" in meta and (type(meta["pagina"]) is not int or meta["pagina"] < 0):
+        return False
+    if "versiones" in meta and (not isinstance(meta["versiones"], list)
+                               or any(not isinstance(v, str) for v in meta["versiones"])):
+        return False
+    if "obsoleto" in meta and type(meta["obsoleto"]) is not bool:
+        return False
+    if meta.get("sustituido_por") is not None and not isinstance(meta["sustituido_por"], str):
+        return False
+    estado = ev.get("estado_documento", "vigente")
+    return isinstance(estado, str) and estado in {"vigente", "obsoleto", "sustituido"}
+
+
+def resolver_evidencias(pregunta: str, respuesta_a2: dict, agente: Agente1) -> dict:
+    """Decisión común a la consola y al adaptador CTR-001; no realiza transporte remoto."""
+    if not isinstance(respuesta_a2, dict):
+        return {"estado": "error", "texto": "Contrato de Agente 2 inválido.", "fuentes": []}
+    estado = respuesta_a2.get("estado")
+    evidencias = respuesta_a2.get("evidencias")
+    if not isinstance(estado, str) or estado not in {"error", "sin_evidencia", "insuficiente", "ambiguo", "suficiente", "solo_obsoleto"} or not isinstance(evidencias, list):
+        return {"estado": "error", "texto": "Contrato de Agente 2 inválido.", "fuentes": []}
+    if estado == "error":
+        mensaje = respuesta_a2.get("mensaje_error")
+        return {"estado": "error", "texto": mensaje if isinstance(mensaje, str) and mensaje else "Error de recuperación.", "fuentes": []}
+    if estado == "ambiguo":
+        campo = respuesta_a2.get("campo_ambiguo") or "version"
+        versiones = sorted({e.get("metadata", {}).get("version") for e in evidencias
+                            if isinstance(e, dict) and isinstance(e.get("metadata"), dict)
+                            and isinstance(e["metadata"].get("version"), str)})
+        detalle = " (" + ", ".join(versiones) + ")" if versiones else ""
+        return {"estado": "aclaracion", "texto": f"¿Qué {campo} necesitas consultar{detalle}?",
+                "fuentes": [], "campo_aclaracion": campo}
+    if estado in {"sin_evidencia", "insuficiente"} or not evidencias:
+        return {"estado": "sin_evidencia", "texto": "No se ha encontrado información en la documentación disponible.", "fuentes": []}
+    if any(not evidencia_valida(e) for e in evidencias):
+        return {"estado": "error", "texto": "Evidencias de Agente 2 inválidas.", "fuentes": []}
+    vigentes = [e for e in evidencias if not es_obsoleta(e)]
+    seleccion = vigentes or evidencias
+    aviso = None if vigentes else "AVISO: La documentación disponible es OBSOLETA / SUSTITUIDA."
+    return redactar_respuesta_con_verificacion(pregunta, seleccion, agente, aviso)
+
+
+def consultar_asistente(pregunta: str, agente: Agente1, agente2=simulador_agente_2) -> dict:
+    """Entrada local CTR-001. Reutilizar un Agente1 por conversación; agente2 es un callable.
+
+    El llamador conserva/selecciona la instancia por conversacion_id. No añade rutas
+    al backend ni inicia servicios. El simulador es el valor por defecto para desarrollo.
+    """
+    resultado = agente.procesar_consulta(pregunta)
+    trace = f"t-{uuid.uuid4().hex[:6]}"
+    evidencias = []
+    if resultado["estado"] != "valida":
+        final = {"estado": {"rechazo": "fuera_de_ambito"}.get(resultado["estado"], resultado["estado"]),
+                 "texto": resultado.get("mensaje", ""), "fuentes": []}
+    else:
+        query = resultado["query_json"]
+        trace = query["trace_id"]
+        try:
+            respuesta = agente2(query)
+        except Exception:
+            logger.exception("Fallo en la llamada local a Agente 2")
+            respuesta = {"estado": "error", "evidencias": [], "mensaje_error": "Error de comunicación con Agente 2."}
+        final = resolver_evidencias(pregunta, respuesta, agente)
+        if isinstance(respuesta, dict) and isinstance(respuesta.get("evidencias"), list):
+            evidencias = respuesta["evidencias"]
+    estado = final["estado"]
+    codigo = ""
+    if estado in {"error", "error_verificacion"}:
+        codigo, estado = estado, "error"
+    fuentes = []
+    for ev in evidencias:
+        if isinstance(ev, dict) and ev.get("chunk_id") in final["fuentes"]:
+            meta = ev["metadata"]
+            versiones = meta.get("versiones")
+            if not isinstance(versiones, list):
+                versiones = [meta["version"]] if meta.get("version") else []
+            fuentes.append({"chunk_id": ev["chunk_id"], "documento": meta.get("documento", ""),
+                            "seccion": meta.get("seccion", ""), "pagina": meta.get("pagina", 0),
+                            "versiones": versiones, "obsoleto": es_obsoleta(ev)})
+    return {"trace_id": trace, "estado": estado, "texto": final["texto"],
+            "fuentes": fuentes, "codigo_error": codigo}
+
+
+def ejecutar_paso_a_paso(pregunta: str, agente: Optional[Agente1] = None, agente2=simulador_agente_2) -> Dict[str, Any]:
     """
     Comando que ejecuta una pregunta de principio a fin mostrando lo que hace cada paso
     (Preprocesado -> LLM CTR-004 -> Mock Agente 2 -> Decisión -> Redacción -> Verificación -> Auditoría).
@@ -986,8 +1132,14 @@ def ejecutar_paso_a_paso(pregunta: str, agente: Optional[Agente1] = None) -> Dic
 
     # PASO 3: Invocación al Simulador del Agente 2
     print("\n[PASO 3: Invocación al Simulador del Agente 2 (Mock CJ-01)]")
-    respuesta_a2 = simulador_agente_2(query_json)
-    estado_a2 = respuesta_a2.get("estado")
+    try:
+        respuesta_a2 = agente2(query_json)
+    except Exception:
+        logger.exception("Fallo en la llamada local a Agente 2")
+        respuesta_a2 = {"estado": "error", "evidencias": [], "mensaje_error": "Error de comunicación con Agente 2."}
+    if not isinstance(respuesta_a2, dict):
+        respuesta_a2 = {"estado": "error", "evidencias": [], "mensaje_error": "Contrato de Agente 2 inválido."}
+    estado_a2 = respuesta_a2.get("estado", "error")
     evidencias = respuesta_a2.get("evidencias", [])
     print(f"  • Estado devuelto por Agente 2:  {estado_a2.upper()}")
     print(f"  • Cantidad de evidencias:        {len(evidencias)}")
@@ -999,64 +1151,10 @@ def ejecutar_paso_a_paso(pregunta: str, agente: Optional[Agente1] = None) -> Dic
 
     # PASO 4: Decisor del Agente 1 sobre lo devuelto
     print("\n[PASO 4: Decisión del Agente 1 ante la respuesta del Agente 2]")
-    aviso_obsoleto = None
-    evidencias_para_redactar = []
-
-    if estado_a2 == "error":
-        decision = f"ALERTA: Se detectó fallo técnico en Agente 2 ({respuesta_a2['mensaje_error']}). Se informa al usuario sin confundir con falta de datos."
-        respuesta_final = {
-            "estado": "error",
-            "texto": f"Error del sistema: {respuesta_a2['mensaje_error']}. Por favor, intente de nuevo más tarde.",
-            "fuentes": []
-        }
-    elif estado_a2 == "sin_evidencia" or len(evidencias) == 0:
-        decision = "SIN EVIDENCIA: No se encontraron manuales para la búsqueda. Se responde que no hay documentación disponible."
-        respuesta_final = {
-            "estado": "sin_evidencia",
-            "texto": "No se ha encontrado información sobre esta consulta en la documentación disponible.",
-            "fuentes": []
-        }
-    elif estado_a2 == "ambiguo":
-        campo = respuesta_a2.get("campo_ambiguo", "versión")
-        decision = f"AMBIGÜEDAD DETECTADA ({campo}): Hay resultados de varias versiones. Se solicita aclaración al usuario de qué versión exacta necesita."
-        respuesta_final = {
-            "estado": "aclaracion",
-            "texto": f"Se han encontrado especificaciones diferentes según la versión. ¿Te refieres a la versión V1.0 o V1.1?",
-            "fuentes": []
-        }
-    else:
-        # Filtrar si hay obsoletos coexistiendo con vigentes
-        obsoletos = [e for e in evidencias if e.get("estado_documento") == "obsoleto"]
-        vigentes = [e for e in evidencias if e.get("estado_documento") == "vigente"]
-        if obsoletos and vigentes:
-            decision = f"FILTRADO: Se descartan {len(obsoletos)} documento(s) obsoleto(s) porque existe versión vigente. Se redacta con las vigentes."
-            evidencias_para_redactar = vigentes
-        elif estado_a2 == "solo_obsoleto" or (obsoletos and not vigentes):
-            decision = "AVISO DE OBSOLETO: Solo existe documentación sustituida/obsoleta. Se redacta con advertencia explícita destacada al usuario."
-            aviso_obsoleto = "⚠️ [AVISO: Toda la información disponible corresponde a documentación OBSOLETA / DESCATALOGADA]."
-            evidencias_para_redactar = obsoletos
-        else:
-            decision = f"SUFICIENTE: Se dispone de {len(vigentes)} evidencia(s) vigentes para redactar la respuesta técnica final citando fuentes."
-            evidencias_para_redactar = vigentes
-
-    print(f"  • Acción del Agente 1:   {decision}")
-
-    if estado_a2 in ["error", "sin_evidencia", "ambiguo"] or not evidencias_para_redactar:
-        print(f"\n---> RESPUESTA FINAL AL USUARIO <---:\n{respuesta_final['texto']}")
-    else:
-        # PASO 5: Redacción con Citas y Verificación Estricta
-        print("\n[PASO 5: Redactor Técnico y Verificador de Citas (A1-06 / A1-07)]")
-        respuesta_final = redactar_respuesta_con_verificacion(
-            pregunta=pregunta,
-            evidencias=evidencias_para_redactar,
-            agente=agente,
-            aviso_obsoleto=aviso_obsoleto
-        )
-        verif = respuesta_final.get("verificacion", {})
-        print(f"  • Verificación de citas: {'APROBADA' if verif.get('valido') else 'RECHAZADA'}")
-        print(f"  • Citas válidas usadas:  {verif.get('citas_validas', [])}")
-        print(f"  • Reintentos requeridos: {respuesta_final.get('reintentos', 0)}")
-        print(f"\n---> RESPUESTA TÉCNICA FINAL AL USUARIO <---:\n{respuesta_final['texto']}")
+    respuesta_final = resolver_evidencias(pregunta, respuesta_a2, agente)
+    decision = respuesta_final["estado"]
+    print(f"  • Acción del Agente 1: {decision}")
+    print(respuesta_final["texto"])
 
     # PASO 6: Registro de auditoría local (A1-08)
     latencia_total_ms = int((time.time() - t0) * 1000)

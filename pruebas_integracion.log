@@ -1,0 +1,114 @@
+test_buenas_tardes_se_limpia_completamente (test_agente1.TestPreprocesadorRegresion)
+6. 'buenas tardes, ...' debe limpiarse por completo sin dejar 'tardes'. ... ok
+test_buenos_dias_se_limpia_completamente (test_agente1.TestPreprocesadorRegresion)
+'buenos días' y 'buenos dias' con o sin tilde se limpian. ... ok
+test_clase_c_2019_no_se_modifica (test_agente1.TestPreprocesadorRegresion)
+3. 'Clase C 2019' no debe convertirse en código DTC C2019. ... ok
+test_golf_v_19_tdi_no_se_pega (test_agente1.TestPreprocesadorRegresion)
+5. 'Golf V 1.9 TDI' no debe transformarse en 'Golf V1.9 TDI'. ... ok
+test_p0301_a_mayusculas (test_agente1.TestPreprocesadorRegresion)
+4. 'p0301' en minúsculas debe normalizarse a 'P0301'. ... ok
+test_ref_con_digitos_se_normaliza (test_agente1.TestPreprocesadorRegresion)
+2. 'ref 123' debe pasar a 'REF-123' y detectarse como código. ... ok
+test_referencia_no_se_modifica (test_agente1.TestPreprocesadorRegresion)
+Casos adicionales de palabras que empiezan por 'ref'. ... ok
+test_refrigerante_no_se_modifica (test_agente1.TestPreprocesadorRegresion)
+1. La palabra 'refrigerante' no debe convertirse en REF-rigerante. ... ok
+test_serie_b_2015_no_se_modifica (test_agente1.TestPreprocesadorRegresion)
+BMW Serie B 2015 no debe tratarse como código DTC B2015. ... ok
+test_version_explicita_se_normaliza (test_agente1.TestPreprocesadorRegresion)
+Versión explícita sí se normaliza. ... ok
+test_simulador_caso_documentos_obsoletos (test_agente1.TestSimuladorAgente2)
+Caso 4: Devuelve documento obsoleto y vigente para que Agente 1 filtre. ... ok
+test_simulador_caso_error_tecnico (test_agente1.TestSimuladorAgente2)
+Caso 5: Error técnico devuelve estado error con mensaje y NUNCA se confunde con vacío. ... 2026-11-04 23:26:34,124 [ERROR] Agente1: [Mock Agente 2] Simulación de error en motor vectorial BGE-M3.
+ok
+test_simulador_caso_sin_evidencia (test_agente1.TestSimuladorAgente2)
+Caso 2: Consulta sin manual devuelve estado sin_evidencia y lista vacía. ... ok
+test_simulador_caso_varias_versiones (test_agente1.TestSimuladorAgente2)
+Caso 3: Varias versiones devuelve estado ambiguo y chunks de distintas versiones. ... ok
+test_simulador_con_filtros_vacios (test_agente1.TestSimuladorAgente2)
+Simulador con filtros como dict vacío. ... ok
+test_simulador_con_valores_null (test_agente1.TestSimuladorAgente2)
+7. El simulador no debe lanzar AttributeError con filtros o query en null/None. ... ok
+test_simulador_recupera_evidencia_culata (test_agente1.TestSimuladorAgente2)
+Caso 1: Simulador devuelve evidencia vigente cuando busca culata. ... ok
+test_query_json_compatibilidad_query_busqueda (test_agente1.TestValidacionEsquemaQueryJSON)
+Soporta retrocompatibilidad si viene query_busqueda en vez de texto_busqueda. ... ok
+test_query_json_invalido_intencion_desconocida (test_agente1.TestValidacionEsquemaQueryJSON)
+Intención fuera del conjunto permitido debe fallar. ... ok
+test_query_json_invalido_texto_busqueda_vacio (test_agente1.TestValidacionEsquemaQueryJSON)
+Texto de búsqueda vacío debe fallar validación. ... ok
+test_query_json_valido_ctr004 (test_agente1.TestValidacionEsquemaQueryJSON)
+Valida que un JSON con la estructura oficial CTR-004 pase correctamente. ... ok
+test_citas_alucinadas_rechazadas (test_agente1.TestVerificadorCitas)
+Si el LLM cita un chunk inexistente, debe ser detectado como alucinación. ... ok
+test_citas_validas (test_agente1.TestVerificadorCitas)
+El texto cita únicamente chunks presentes en las evidencias. ... ok
+test_sin_citas_rechazado (test_agente1.TestVerificadorCitas)
+Si el texto no incluye ninguna cita entre corchetes, debe fallar. ... ok
+test_adaptador_local_normaliza_sin_evidencia (test_integracion_pr8_pr9.BenchmarkIntegracion) ... ok
+test_adaptador_local_vincula_pipeline_con_benchmark (test_integracion_pr8_pr9.BenchmarkIntegracion) ... ok
+test_ambiguo_no_acepta_citas_inventadas (test_integracion_pr8_pr9.BenchmarkIntegracion) ... ok
+test_cita_debe_haber_sido_recuperada (test_integracion_pr8_pr9.BenchmarkIntegracion) ... ok
+test_cita_falsa_no_se_compensa_con_correcta (test_integracion_pr8_pr9.BenchmarkIntegracion) ... ok
+test_contrato_de_respuesta_malformada (test_integracion_pr8_pr9.BenchmarkIntegracion) ... ok
+test_dataset_40_ids_unicos (test_integracion_pr8_pr9.BenchmarkIntegracion) ... ok
+test_informes_no_sobrescriben_dataset_o_ejecuciones (test_integracion_pr8_pr9.BenchmarkIntegracion) ... ok
+test_oraculo_no_se_admite_como_externo (test_integracion_pr8_pr9.BenchmarkIntegracion) ... ok
+test_pipeline_no_recibe_ground_truth_y_excepciones_cuentan (test_integracion_pr8_pr9.BenchmarkIntegracion) ... ok
+test_simulacion_debe_ser_explicita (test_integracion_pr8_pr9.BenchmarkIntegracion) ... ok
+test_cita_desconocida_no_se_ignora (test_integracion_pr8_pr9.CitasIntegracion) ... ok
+test_citas_agrupadas (test_integracion_pr8_pr9.CitasIntegracion) ... ok
+test_redactor_inaccesible_y_sin_evidencias (test_integracion_pr8_pr9.CitasIntegracion) ... ok
+test_reintento_correcto (test_integracion_pr8_pr9.CitasIntegracion) ... 2026-11-04 23:26:34,150 [WARNING] Agente1: Verificación de citas falló en intento 1 (citas falsas: ['c_999']). Regenerando con reintento...
+ok
+test_reintento_fallido_informa_ultima_verificacion (test_integracion_pr8_pr9.CitasIntegracion) ... 2026-11-04 23:26:34,150 [WARNING] Agente1: Verificación de citas falló en intento 1 (citas falsas: ['c_999']). Regenerando con reintento...
+2026-11-04 23:26:34,150 [ERROR] Agente1: Verificación de citas falló tras reintento. Abortando respuesta por seguridad.
+ok
+test_cliente_nativo_v1_configuracion (test_integracion_pr8_pr9.ClienteHTTPIntegracion) ... ok
+test_error_en_ambos_endpoints (test_integracion_pr8_pr9.ClienteHTTPIntegracion) ... 2026-11-04 23:26:34,152 [WARNING] Agente1: Error de conexión en http://localhost:11434/v1/chat/completions: prueba
+2026-11-04 23:26:34,152 [WARNING] Agente1: Error de conexión en http://localhost:11434/api/chat: prueba
+2026-11-04 23:26:34,152 [ERROR] Agente1: No se pudo conectar con Ollama en ninguno de los endpoints (http://localhost:11434/v1).
+ok
+test_fallback_ollama_nativo_sin_red (test_integracion_pr8_pr9.ClienteHTTPIntegracion) ... 2026-11-04 23:26:34,152 [WARNING] Agente1: Error de conexión en http://localhost:11434/v1/chat/completions: prueba
+ok
+test_alias_canonico (test_integracion_pr8_pr9.ContratosIntegracion) ... ok
+test_paridad_pydantic_y_respaldo (test_integracion_pr8_pr9.ContratosIntegracion) ... skipped 'Pydantic v2 opcional no instalado'
+test_rechaza_tipos_y_rangos (test_integracion_pr8_pr9.ContratosIntegracion) ... ok
+test_simulador_errores_entrada (test_integracion_pr8_pr9.ContratosIntegracion) ... ok
+test_simulador_excluye_obsoletos_y_serializa_json (test_integracion_pr8_pr9.ContratosIntegracion) ... ok
+test_simulador_filtra_version_explicita (test_integracion_pr8_pr9.ContratosIntegracion) ... ok
+test_simulador_no_oculta_ambiguedad_por_topk (test_integracion_pr8_pr9.ContratosIntegracion) ... ok
+test_aclaracion_dinamica_sin_evidencias (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_aclaracion_versiones_reales (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_auditoria_tolerante_y_jsonl (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_consola_reutiliza_decision_sin_estado_documento (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_ctr001_compatible_frontend_y_agente2_sustituible (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_entrada_vacia_no_invoca_modelo (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_estados_a2_sin_modelo (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_evidencias_malformadas (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_excepcion_agente2_no_es_sin_evidencia (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_fuentes_json_rechazan_metadatos_invalidos (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_historial_limitado_y_reset_aislado (test_integracion_pr8_pr9.OrquestacionIntegracion) ... 2026-11-04 23:26:34,170 [INFO] Agente1: Historial de conversación reiniciado.
+ok
+test_json_truncado_no_es_aclaracion (test_integracion_pr8_pr9.OrquestacionIntegracion) ... 2026-11-04 23:26:34,170 [WARNING] Agente1: Salida del modelo parece JSON pero no tiene delimitadores válidos (truncado).
+ok
+test_modelo_con_contrato_invalido (test_integracion_pr8_pr9.OrquestacionIntegracion) ... 2026-11-04 23:26:34,171 [WARNING] Agente1: Fallo de validación de contrato CTR-004: Query JSON inválido: filtros y opciones deben ser objetos
+ok
+test_modelo_inaccesible (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_obsoleto_metadata_y_sustitucion (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_rechazo_adaptado_ctr001 (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_solo_obsoleto_avisa_y_mixto_filtra (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_varias_versiones_piden_aclaracion (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_version_regex_prevalece_y_codigos_se_conservan (test_integracion_pr8_pr9.OrquestacionIntegracion) ... ok
+test_codigos_orden_y_duplicados (test_integracion_pr8_pr9.PreprocesadoIntegracion) ... ok
+test_motor_no_es_version (test_integracion_pr8_pr9.PreprocesadoIntegracion) ... ok
+test_saludo_no_corrompe_palabra (test_integracion_pr8_pr9.PreprocesadoIntegracion) ... ok
+test_version_completa (test_integracion_pr8_pr9.PreprocesadoIntegracion) ... ok
+test_version_prefijada_sin_doble_v (test_integracion_pr8_pr9.PreprocesadoIntegracion) ... ok
+
+----------------------------------------------------------------------
+Ran 74 tests in 0.049s
+
+OK (skipped=1)

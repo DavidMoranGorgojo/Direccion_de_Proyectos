@@ -1,0 +1,764 @@
+{
+  "fecha_evaluacion": "2026-11-04T22:23:41.673803+00:00",
+  "modo": "simulacion_oraculo",
+  "procedencia": null,
+  "certifica_modelo_real": false,
+  "alcance": "Contratos, citas y regla histórica limitada de obsolescencia; no corrección técnica.",
+  "limitaciones": [
+    "Faltan turnos previos explícitos de CJ02-033 a CJ02-036.",
+    "Ground truth y documentos fuente no verificados contra un corpus.",
+    "Versiones, valores técnicos y criterios semánticos requieren revisión humana."
+  ],
+  "total_preguntas": 40,
+  "total_pasadas": 39,
+  "accuracy_contractual_pct": 97.5,
+  "precision_citas_pct": 86.25,
+  "recall_citas_pct": 78.75,
+  "desglose_por_categoria": {
+    "valida_tecnica": {
+      "total": 10,
+      "pasados": 9
+    },
+    "trampa_version": {
+      "total": 8,
+      "pasados": 8
+    },
+    "sustituido_obsoleto": {
+      "total": 5,
+      "pasados": 5
+    },
+    "codigo_cruzado": {
+      "total": 4,
+      "pasados": 4
+    },
+    "ambigua_aclaracion": {
+      "total": 5,
+      "pasados": 5
+    },
+    "dependiente_multiturno": {
+      "total": 4,
+      "pasados": 4
+    },
+    "fuera_de_ambito": {
+      "total": 1,
+      "pasados": 1
+    },
+    "sin_evidencia": {
+      "total": 2,
+      "pasados": 2
+    },
+    "error_simulado": {
+      "total": 1,
+      "pasados": 1
+    }
+  },
+  "detalle_casos": [
+    {
+      "id_pregunta": "CJ02-001",
+      "categoria": "valida_tecnica",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 0.5,
+      "citas_detectadas": [
+        "HTM240-MAN-001@1.1_p1_man_001_01"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.136
+    },
+    {
+      "id_pregunta": "CJ02-002",
+      "categoria": "valida_tecnica",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-MAN-001@1.1_p1_man_001_02"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.009
+    },
+    {
+      "id_pregunta": "CJ02-003",
+      "categoria": "valida_tecnica",
+      "pasado": false,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": false,
+      "obsoleto_ok": true,
+      "precision_citas": 0.5,
+      "recall_citas": 0.5,
+      "citas_detectadas": [
+        "HTM240-CAT-001@1.0_p1_cat_001_04",
+        "HTM240-ESQ-001@1.0_p1_flujo_calentamiento_frio"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.008
+    },
+    {
+      "id_pregunta": "CJ02-004",
+      "categoria": "valida_tecnica",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-SEG-001@1.0_p2_parada_inmediata_escalado"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.005
+    },
+    {
+      "id_pregunta": "CJ02-005",
+      "categoria": "valida_tecnica",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-MNT-001@1.0_p1_mnt_001_02"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.004
+    },
+    {
+      "id_pregunta": "CJ02-006",
+      "categoria": "valida_tecnica",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-DTC-001@1.0_p1_htm0201"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.005
+    },
+    {
+      "id_pregunta": "CJ02-007",
+      "categoria": "valida_tecnica",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-DIA-001@1.1_p1_dia_001_01"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.005
+    },
+    {
+      "id_pregunta": "CJ02-008",
+      "categoria": "valida_tecnica",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-ESQ-001@1.0_p1_arquitectura_general"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.004
+    },
+    {
+      "id_pregunta": "CJ02-009",
+      "categoria": "valida_tecnica",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-HIS-001@1.0_p1_caso_002"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.005
+    },
+    {
+      "id_pregunta": "CJ02-010",
+      "categoria": "valida_tecnica",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-ADV-001@1.1_p1_testigos",
+        "HTM240-OPE-001@1.0_p2_ope_001_02"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.006
+    },
+    {
+      "id_pregunta": "CJ02-011",
+      "categoria": "trampa_version",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.004
+    },
+    {
+      "id_pregunta": "CJ02-012",
+      "categoria": "trampa_version",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.005
+    },
+    {
+      "id_pregunta": "CJ02-013",
+      "categoria": "trampa_version",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-BOL-007@1.0_p1_calentador_ptc_5kw_v20",
+        "HTM240-MAN-001@1.1_p1_man_001_02"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.005
+    },
+    {
+      "id_pregunta": "CJ02-014",
+      "categoria": "trampa_version",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 0.5,
+      "citas_detectadas": [
+        "HTM240-BOL-007@1.0_p1_calentador_ptc_5kw_v20"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.005
+    },
+    {
+      "id_pregunta": "CJ02-015",
+      "categoria": "trampa_version",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-BOL-005@1.0_p1_sensor_temp_bateria_stb200"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.004
+    },
+    {
+      "id_pregunta": "CJ02-016",
+      "categoria": "trampa_version",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-BOL-003@1.0_p1_significado_HTM0142_v20",
+        "HTM240-MAN-001@1.1_p1_man_001_03b"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.006
+    },
+    {
+      "id_pregunta": "CJ02-017",
+      "categoria": "trampa_version",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 0.5,
+      "citas_detectadas": [
+        "HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.005
+    },
+    {
+      "id_pregunta": "CJ02-018",
+      "categoria": "trampa_version",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-MAN-001@1.1_p1_man_001_03"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.004
+    },
+    {
+      "id_pregunta": "CJ02-019",
+      "categoria": "sustituido_obsoleto",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 0.5,
+      "citas_detectadas": [
+        "HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.047
+    },
+    {
+      "id_pregunta": "CJ02-020",
+      "categoria": "sustituido_obsoleto",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k"
+      ],
+      "estado_obtenido": "solo_obsoleto",
+      "estado_esperado": "solo_obsoleto",
+      "duracion_evaluador_ms": 0.009
+    },
+    {
+      "id_pregunta": "CJ02-021",
+      "categoria": "sustituido_obsoleto",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A"
+      ],
+      "estado_obtenido": "solo_obsoleto",
+      "estado_esperado": "solo_obsoleto",
+      "duracion_evaluador_ms": 0.006
+    },
+    {
+      "id_pregunta": "CJ02-022",
+      "categoria": "sustituido_obsoleto",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 0.5,
+      "citas_detectadas": [
+        "HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.006
+    },
+    {
+      "id_pregunta": "CJ02-023",
+      "categoria": "sustituido_obsoleto",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.008
+    },
+    {
+      "id_pregunta": "CJ02-024",
+      "categoria": "codigo_cruzado",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-BOL-003@1.0_p1_significado_HTM0142_v20"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.004
+    },
+    {
+      "id_pregunta": "CJ02-025",
+      "categoria": "codigo_cruzado",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 0.5,
+      "citas_detectadas": [
+        "HTM240-BOL-003@1.0_p1_significado_HTM0142_v20"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.004
+    },
+    {
+      "id_pregunta": "CJ02-026",
+      "categoria": "codigo_cruzado",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.004
+    },
+    {
+      "id_pregunta": "CJ02-027",
+      "categoria": "codigo_cruzado",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-ADV-001@1.1_p2_combinaciones",
+        "HTM240-DTC-001@1.0_p1_htm0405"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.006
+    },
+    {
+      "id_pregunta": "CJ02-028",
+      "categoria": "ambigua_aclaracion",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 0.0,
+      "recall_citas": 0.0,
+      "citas_detectadas": [],
+      "estado_obtenido": "ambiguo",
+      "estado_esperado": "ambiguo",
+      "duracion_evaluador_ms": 0.004
+    },
+    {
+      "id_pregunta": "CJ02-029",
+      "categoria": "ambigua_aclaracion",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 0.0,
+      "recall_citas": 0.0,
+      "citas_detectadas": [],
+      "estado_obtenido": "ambiguo",
+      "estado_esperado": "ambiguo",
+      "duracion_evaluador_ms": 0.005
+    },
+    {
+      "id_pregunta": "CJ02-030",
+      "categoria": "ambigua_aclaracion",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 0.0,
+      "recall_citas": 0.0,
+      "citas_detectadas": [],
+      "estado_obtenido": "ambiguo",
+      "estado_esperado": "ambiguo",
+      "duracion_evaluador_ms": 0.003
+    },
+    {
+      "id_pregunta": "CJ02-031",
+      "categoria": "ambigua_aclaracion",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 0.0,
+      "recall_citas": 0.0,
+      "citas_detectadas": [],
+      "estado_obtenido": "ambiguo",
+      "estado_esperado": "ambiguo",
+      "duracion_evaluador_ms": 0.003
+    },
+    {
+      "id_pregunta": "CJ02-032",
+      "categoria": "ambigua_aclaracion",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 0.0,
+      "recall_citas": 0.0,
+      "citas_detectadas": [],
+      "estado_obtenido": "ambiguo",
+      "estado_esperado": "ambiguo",
+      "duracion_evaluador_ms": 0.003
+    },
+    {
+      "id_pregunta": "CJ02-033",
+      "categoria": "dependiente_multiturno",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-PRC-011@1.0_p1_pasos"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.005
+    },
+    {
+      "id_pregunta": "CJ02-034",
+      "categoria": "dependiente_multiturno",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-BOL-003@1.0_p1_significado_HTM0142_v20"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.004
+    },
+    {
+      "id_pregunta": "CJ02-035",
+      "categoria": "dependiente_multiturno",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-CAT-001@1.0_p1_cat_001_02"
+      ],
+      "estado_obtenido": "suficiente",
+      "estado_esperado": "suficiente",
+      "duracion_evaluador_ms": 0.004
+    },
+    {
+      "id_pregunta": "CJ02-036",
+      "categoria": "dependiente_multiturno",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [],
+      "estado_obtenido": "insuficiente",
+      "estado_esperado": "insuficiente",
+      "duracion_evaluador_ms": 0.004
+    },
+    {
+      "id_pregunta": "CJ02-037",
+      "categoria": "fuera_de_ambito",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [
+        "HTM240-DIC-001@1.0_p1_terminos_p1"
+      ],
+      "estado_obtenido": "insuficiente",
+      "estado_esperado": "insuficiente",
+      "duracion_evaluador_ms": 0.005
+    },
+    {
+      "id_pregunta": "CJ02-038",
+      "categoria": "sin_evidencia",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [],
+      "estado_obtenido": "insuficiente",
+      "estado_esperado": "insuficiente",
+      "duracion_evaluador_ms": 0.003
+    },
+    {
+      "id_pregunta": "CJ02-039",
+      "categoria": "sin_evidencia",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [],
+      "estado_obtenido": "insuficiente",
+      "estado_esperado": "insuficiente",
+      "duracion_evaluador_ms": 0.003
+    },
+    {
+      "id_pregunta": "CJ02-040",
+      "categoria": "error_simulado",
+      "pasado": true,
+      "contrato_ok": true,
+      "estado_ok": true,
+      "aclaracion_ok": true,
+      "citas_ok": true,
+      "obsoleto_ok": true,
+      "precision_citas": 1.0,
+      "recall_citas": 1.0,
+      "citas_detectadas": [],
+      "estado_obtenido": "error",
+      "estado_esperado": "error",
+      "duracion_evaluador_ms": 0.003
+    }
+  ]
+}
