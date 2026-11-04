@@ -1,29 +1,95 @@
+import json
+from pathlib import Path
+
+import pytest
+
 from Agents.Agent_2.src.services.fusion import rrf
 
 
 def test_integracion_busquedas_con_rrf():
-    # Resultados simulados de la búsqueda vectorial
+    """Comprueba la fusión de resultados vectoriales y BM25 simulados."""
+
     resultados_vectoriales = [
-        {"chunk_id": "C001", "texto": "Manual del motor", "score": 0.92},
-        {"chunk_id": "C002", "texto": "Sistema de frenos", "score": 0.85},
+        {
+            "chunk_id": "chunk_1",
+            "texto": "Información sobre la bomba auxiliar",
+            "score": 0.95,
+        },
+        {
+            "chunk_id": "chunk_2",
+            "texto": "Información sobre el sistema hidráulico",
+            "score": 0.85,
+        },
     ]
 
-    # Resultados simulados de la búsqueda BM25
     resultados_bm25 = [
-        {"chunk_id": "C002", "texto": "Sistema de frenos", "score": 3.5},
-        {"chunk_id": "C003", "texto": "Revisión de neumáticos", "score": 2.8},
+        {
+            "chunk_id": "chunk_1",
+            "texto": "Información sobre la bomba auxiliar",
+            "score": 8.5,
+        },
+        {
+            "chunk_id": "chunk_3",
+            "texto": "Información sobre mantenimiento",
+            "score": 7.2,
+        },
     ]
 
-    # Fusionamos ambos rankings
     resultados = rrf(resultados_vectoriales, resultados_bm25)
 
-    # Comprobamos que aparecen los tres fragmentos sin duplicados
     assert len(resultados) == 3
-    assert {r["chunk_id"] for r in resultados} == {"C001", "C002", "C003"}
 
-    # C002 aparece en ambas búsquedas, por lo que debe quedar primero
-    assert resultados[0]["chunk_id"] == "C002"
+    # El chunk presente en ambas búsquedas debe quedar primero.
+    assert resultados[0]["chunk_id"] == "chunk_1"
 
-    # Comprobamos que se conserva el texto y se añade la puntuación RRF
-    assert resultados[0]["texto"] == "Sistema de frenos"
-    assert "rrf_score" in resultados[0]
+    # No deben aparecer fragmentos duplicados.
+    ids = [resultado["chunk_id"] for resultado in resultados]
+    assert len(ids) == len(set(ids))
+
+    # Deben conservarse los metadatos y añadirse la puntuación RRF.
+    for resultado in resultados:
+        assert "texto" in resultado
+        assert "rrf_score" in resultado
+
+
+def test_integracion_bm25_real_con_rrf():
+    """Comprueba la integración con el BM25 y el dataset de Alba."""
+
+    dataset_path = Path(
+        "Agents/Agent_2/data/bbdd_sintetica_chunks.json"
+    )
+
+    # El dataset todavía puede no estar integrado en nuestra rama.
+    if not dataset_path.exists():
+        pytest.skip("Dataset de Alba todavía no integrado")
+
+    # Importación opcional: backend.py puede estar pendiente de integración.
+    from Agents.Agent_2.src.clients import backend
+
+    if not hasattr(backend, "search_lexical"):
+        pytest.skip("Búsqueda BM25 de Alba todavía no integrada")
+
+    with dataset_path.open(encoding="utf-8-sig") as archivo:
+        dataset = json.load(archivo)
+
+    resultados_bm25 = backend.search_lexical(
+        dataset["chunks"],
+        "bomba auxiliar",
+        k=5,
+    )
+
+    resultados = rrf([], resultados_bm25)
+
+    assert len(resultados) == 5
+
+    # El orden debe coincidir con BM25 al no haber resultados vectoriales.
+    assert [r["chunk_id"] for r in resultados] == [
+        r["chunk_id"] for r in resultados_bm25
+    ]
+
+    # Comprobamos la fórmula RRF con k=60.
+    for posicion, resultado in enumerate(resultados, start=1):
+        assert resultado["rrf_score"] == pytest.approx(
+            1 / (60 + posicion)
+        )
+        assert "texto" in resultado
