@@ -1,3 +1,7 @@
+
+import math
+
+
 DEFAULT_THRESHOLD = 0.45
 
 
@@ -54,8 +58,8 @@ def rerank_results(query, results, model):
         ordenada de mayor a menor puntuación.
 
     Raises:
-        ValueError: si el número de scores devuelto por el modelo
-        no coincide con el número de resultados.
+        ValueError: si el número de scores no coincide con
+        el número de resultados o si alguna puntuación no es finita.
     """
 
     if not results:
@@ -77,8 +81,17 @@ def rerank_results(query, results, model):
     reranked_results = []
 
     for result, score in zip(results, scores):
+        score = float(score)
+
+        # Rechazar NaN e infinito para evitar resultados
+        # incorrectos durante la ordenación y el filtrado.
+        if not math.isfinite(score):
+            raise ValueError(
+                "El reranker ha devuelto una puntuación no finita"
+            )
+
         reranked_result = result.copy()
-        reranked_result["rerank_score"] = float(score)
+        reranked_result["rerank_score"] = score
         reranked_results.append(reranked_result)
 
     return sort_by_rerank_score(reranked_results)

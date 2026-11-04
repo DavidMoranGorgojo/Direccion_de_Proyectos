@@ -1,7 +1,14 @@
+
+import math
+
+import pytest
+
 from Agents.Agent_2.src.services.reranker import (
     apply_threshold,
     rerank_results,
+    sort_by_rerank_score,
 )
+
 
 def test_threshold_mantiene_resultados_validos():
     resultados = [
@@ -47,8 +54,6 @@ def test_reranker_ordena_por_score_descendente():
         {"chunk_id": "C", "rerank_score": 0.60},
     ]
 
-    from Agents.Agent_2.src.services.reranker import sort_by_rerank_score
-
     ordenados = sort_by_rerank_score(resultados)
 
     assert ordenados[0]["chunk_id"] == "B"
@@ -83,7 +88,6 @@ def test_rerank_results_asigna_scores_y_ordena():
     assert resultado[2]["rerank_score"] == 0.30
 
 
-
 def test_rerank_y_threshold():
     class FakeReranker:
         def predict(self, pairs):
@@ -110,7 +114,6 @@ def test_rerank_y_threshold():
 
     assert filtrados[1]["chunk_id"] == "C"
     assert filtrados[1]["rerank_score"] == 0.60
-
 
 
 def test_rerank_results_lista_vacia():
@@ -155,9 +158,49 @@ def test_rerank_results_detecta_numero_incorrecto_de_scores():
         {"chunk_id": "B", "texto": "Texto B"},
     ]
 
-    import pytest
-
     with pytest.raises(ValueError):
+        rerank_results(
+            query="problema con el motor",
+            results=resultados,
+            model=FakeReranker(),
+        )
+
+
+def test_rerank_results_propaga_error_del_modelo():
+    """Un fallo del modelo debe propagarse al llamador."""
+
+    class FakeReranker:
+        def predict(self, pairs):
+            raise RuntimeError("Fallo simulado del reranker")
+
+    resultados = [
+        {"chunk_id": "A", "texto": "Texto A"},
+    ]
+
+    with pytest.raises(RuntimeError, match="Fallo simulado"):
+        rerank_results(
+            query="problema con el motor",
+            results=resultados,
+            model=FakeReranker(),
+        )
+
+
+@pytest.mark.parametrize(
+    "score_invalido",
+    [math.nan, math.inf, -math.inf],
+)
+def test_rerank_results_rechaza_scores_no_finitos(score_invalido):
+    """NaN e infinito no deben aceptarse como puntuaciones válidas."""
+
+    class FakeReranker:
+        def predict(self, pairs):
+            return [score_invalido]
+
+    resultados = [
+        {"chunk_id": "A", "texto": "Texto A"},
+    ]
+
+    with pytest.raises(ValueError, match="no finita"):
         rerank_results(
             query="problema con el motor",
             results=resultados,
