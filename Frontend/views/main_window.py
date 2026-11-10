@@ -1,19 +1,16 @@
-from PySide6.QtCore import QEvent, QObject, Qt, QTimer, Signal
-from PySide6.QtGui import QIcon
+from datetime import datetime
+
+from PySide6.QtCore import QEvent, QObject, QSize, Qt, QTimer, Signal
+from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import (QHBoxLayout, QLabel, QListWidgetItem, QMainWindow, QMessageBox,
-                               QPlainTextEdit, QPushButton, QScrollArea, QVBoxLayout, QWidget,
-                               QFrame, QListWidget)
-from PySide6.QtCore import QSize
-from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import (QLabel, QListWidget, QListWidgetItem, QMainWindow, QMessageBox,
+                               QPlainTextEdit, QPushButton, QScrollArea, QVBoxLayout, QWidget)
 
 from components.chat_message import ChatMessage
 from components.conversation_item import ConversationItem
-from datetime import datetime
-
 from models.conversation import Conversation
 from models.dates import parse
-from models.message import ROLE_BOT, ROLE_USER, Message
+from models.message import ROLE_USER, Message
 from models.response import Response
 from paths import UI_FILE, icon, image
 from services import api
@@ -78,7 +75,8 @@ class MainWindow(QMainWindow):
                                     "Define ARSOFT_API_URL para usar el asistente real.")
 
         # --- estado ---
-        # Tanto el modo real como el simulado obtienen el historial mediante GET /chats.
+        # Modo real y simulado obtienen el historial por la misma vía: GET /chats (CTR-006).
+        # El Frontend no guarda nada en local ni borra chats: el contrato no lo cubre.
         self.conversations = []
         self.current: Conversation | None = None
         self._rows: list[ChatMessage] = []
@@ -149,8 +147,7 @@ class MainWindow(QMainWindow):
         for c in self.conversations:
             item = QListWidgetItem()
             item.setData(Qt.UserRole, c.id)
-            w = ConversationItem(c, deletable=False)        # CTR-006 no cubre borrar
-            w.delete_requested.connect(self.delete_chat)
+            w = ConversationItem(c)
             item.setSizeHint(QSize(0, 52))
             self.conversation_list.addItem(item)
             self.conversation_list.setItemWidget(item, w)
@@ -180,25 +177,6 @@ class MainWindow(QMainWindow):
         self.current = None
         self._select(empty.id)
         self.prompt.setFocus()
-
-    def delete_chat(self, conv_id: str) -> None:
-        conv = next((c for c in self.conversations if c.id == conv_id), None)
-        if conv is None:
-            return
-        if conv.messages and QMessageBox.question(
-                self, "Eliminar conversación", f"¿Eliminar «{conv.title}»?") != QMessageBox.Yes:
-            return
-        self.conversations.remove(conv)
-        was_current = self.current is conv
-        self._save()
-        if was_current:
-            self.current = None
-            if self.conversations:
-                self._select(self.conversations[0].id)
-            else:
-                self.new_chat()
-        else:
-            self._refresh_list()
 
     # ---------------------------------------------------------------- chat
     def _clear_chat(self) -> None:
@@ -308,7 +286,6 @@ class MainWindow(QMainWindow):
         conv.touch()
         self._add_bubble(user_msg)
         self.prompt.clear()
-        self._save()
         self._refresh_list()
 
         self._typing = ChatMessage(None)
@@ -331,7 +308,6 @@ class MainWindow(QMainWindow):
         msg = Message.from_response(resp)
         conv.messages.append(msg)
         conv.touch()
-        self._save()
         if self.current is conv:                 # solo se pinta si sigue abierta
             self._add_bubble(msg)
             self._scroll_bottom()
@@ -341,10 +317,6 @@ class MainWindow(QMainWindow):
 
     def _set_busy(self, busy: bool) -> None:
         self.btn_send.setEnabled(not busy)
-
-    def _save(self) -> None:
-        # El historial lo persiste el servicio; el Frontend solo lo consulta por CTR-006.
-        return
 
     def _logout(self) -> None:
         if self._worker is not None or self._hist_worker is not None:
