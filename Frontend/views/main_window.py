@@ -310,7 +310,17 @@ class MainWindow(QMainWindow):
         self._refresh_list()
 
         self._scroll_bottom()
-        # Respuestas del asistente: pendientes de una próxima subida.
+        self._set_busy(True)
+        self._typing = ChatMessage()
+        self._insert_row(self._typing)
+        self._scroll_bottom()
+
+        self._worker = api.ChatWorker(conv.id, text)
+        self._worker.finished_ok.connect(
+            lambda response, conversation=conv:
+                self._on_response(conversation, response)
+        )
+        self._worker.start()
 
     def _on_response(self, conv: Conversation, resp: Response) -> None:
         worker, self._worker = self._worker, None
