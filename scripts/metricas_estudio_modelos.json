@@ -1,0 +1,146 @@
+{
+  "fecha": "2026-11-10T09:18:02.385049+00:00",
+  "entorno": "Local Ollama (MacBook Air Apple Silicon / M-series)",
+  "modelos_evaluados": [
+    {
+      "modelo": "qwen2.5:3b",
+      "metadata": {
+        "formato": "gguf",
+        "familia": "qwen2",
+        "num_parametros": "3.1B",
+        "cuantizacion": "Q4_K_M"
+      },
+      "throughput": {
+        "tokens_generados": 39,
+        "tokens_prompt": 47,
+        "tokens_por_segundo": 45.28,
+        "prompt_tokens_por_segundo": 264.72,
+        "latencia_total_s": 3.168
+      },
+      "total_casos": 5,
+      "casos_pasados": 3,
+      "precision_porcentaje": 60.0,
+      "latencia_promedio_s": 2.88,
+      "latencia_concurrente_2req_s": 3.99,
+      "concurrencia_exitosa": true,
+      "detalle_casos": [
+        {
+          "id": "CASO-01",
+          "tipo": "clasificacion_especificacion",
+          "pasado": true,
+          "estado_obtenido": "valida",
+          "estado_esperado": "valida",
+          "latencia_s": 3.84
+        },
+        {
+          "id": "CASO-02",
+          "tipo": "clasificacion_diagnostico_codigos",
+          "pasado": true,
+          "estado_obtenido": "valida",
+          "estado_esperado": "valida",
+          "latencia_s": 2.527
+        },
+        {
+          "id": "CASO-03",
+          "tipo": "pregunta_incompleta_aclaracion",
+          "pasado": false,
+          "estado_obtenido": "valida",
+          "estado_esperado": "aclaracion",
+          "latencia_s": 1.629
+        },
+        {
+          "id": "CASO-04",
+          "tipo": "fuera_de_ambito_rechazo",
+          "pasado": true,
+          "estado_obtenido": "rechazo",
+          "estado_esperado": "rechazo",
+          "latencia_s": 0.148
+        },
+        {
+          "id": "CASO-05",
+          "tipo": "redaccion_con_citas",
+          "pasado": false,
+          "latencia_s": 6.263,
+          "citas_detectadas": [
+            "chunk_01"
+          ],
+          "citas_validas": [
+            "chunk_01"
+          ],
+          "citas_falsas": [],
+          "reintentos": 1
+        }
+      ]
+    },
+    {
+      "modelo": "qwen2.5:14b",
+      "metadata": {
+        "formato": "gguf",
+        "familia": "qwen2",
+        "num_parametros": "14.8B",
+        "cuantizacion": "Q4_K_M"
+      },
+      "throughput": {
+        "tokens_generados": 75,
+        "tokens_prompt": 47,
+        "tokens_por_segundo": 10.81,
+        "prompt_tokens_por_segundo": 62.67,
+        "latencia_total_s": 14.315
+      },
+      "total_casos": 5,
+      "casos_pasados": 5,
+      "precision_porcentaje": 100.0,
+      "latencia_promedio_s": 11.66,
+      "latencia_concurrente_2req_s": 28.1,
+      "concurrencia_exitosa": true,
+      "detalle_casos": [
+        {
+          "id": "CASO-01",
+          "tipo": "clasificacion_especificacion",
+          "pasado": true,
+          "estado_obtenido": "valida",
+          "estado_esperado": "valida",
+          "latencia_s": 17.86
+        },
+        {
+          "id": "CASO-02",
+          "tipo": "clasificacion_diagnostico_codigos",
+          "pasado": true,
+          "estado_obtenido": "valida",
+          "estado_esperado": "valida",
+          "latencia_s": 12.346
+        },
+        {
+          "id": "CASO-03",
+          "tipo": "pregunta_incompleta_aclaracion",
+          "pasado": true,
+          "estado_obtenido": "aclaracion",
+          "estado_esperado": "aclaracion",
+          "latencia_s": 2.609
+        },
+        {
+          "id": "CASO-04",
+          "tipo": "fuera_de_ambito_rechazo",
+          "pasado": true,
+          "estado_obtenido": "rechazo",
+          "estado_esperado": "rechazo",
+          "latencia_s": 0.755
+        },
+        {
+          "id": "CASO-05",
+          "tipo": "redaccion_con_citas",
+          "pasado": true,
+          "latencia_s": 24.74,
+          "citas_detectadas": [
+            "chunk_01"
+          ],
+          "citas_validas": [
+            "chunk_01"
+          ],
+          "citas_falsas": [],
+          "reintentos": 1
+        }
+      ]
+    }
+  ]
+}
