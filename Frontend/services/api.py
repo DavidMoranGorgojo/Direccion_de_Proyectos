@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import os
 import time
+from copy import deepcopy
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
@@ -61,6 +62,8 @@ def _insecure() -> bool:
 
 
 def auth_headers() -> dict:
+    if session.token:
+        return {"Authorization": "Bearer " + session.token}
     """Identificación del usuario. El mecanismo de sesión no está definido en CTR-005:
     si el Backend devuelve un token se envía; si no, no se envía nada."""
     return {"Authorization": f"Bearer {session.token}"} if session.token else {}
@@ -68,6 +71,8 @@ def auth_headers() -> dict:
 
 def call(method: str, path: str, body: dict | None = None) -> tuple[int, dict | None]:
     """Devuelve (código HTTP, JSON o None). Solo lanza ConnectionFailed si no hay respuesta."""
+    if is_mock():
+        return _mock_call(method, path, body)
     if _insecure():
         raise ConnectionFailed("Conexión no segura: fuera de un entorno local se exige HTTPS.")
     headers = {"Accept": "application/json", **auth_headers()}
@@ -92,8 +97,6 @@ def call(method: str, path: str, body: dict | None = None) -> tuple[int, dict | 
 
 # ------------------------------------------------------------ consulta (CTR-001)
 def send_message(conversation_id: str, pregunta: str) -> Response:
-    if is_mock():
-        return _mock_response(pregunta)
     try:
         status, data = call("POST", CONSULTA_PATH,
                             {"conversacion_id": conversation_id, "pregunta": pregunta})
@@ -150,6 +153,78 @@ class HistoryWorker(QThread):
 
 
 # ---------------------------------------------------------------- modo simulado
+_MOCK_EMPTY_HISTORY = os.environ.get("ARSOFT_MOCK_EMPTY_HISTORY") == "1"
+_MOCK_CHATS = [
+    {
+        "conversacion_id": "demo-chat-001",
+        "titulo": "Temperatura del motor",
+        "created_at": "2026-01-15T10:00:00Z",
+        "updated_at": "2026-01-15T10:03:00Z",
+        "mensajes": [
+            {
+                "message_id": "demo-msg-001",
+                "trace_id": "t-demo-001",
+                "role": "user",
+                "contenido": "¿Qué hago si sube la temperatura?",
+                "estado": "respuesta",
+                "timestamp": "2026-01-15T10:00:00Z",
+                "fuentes": [],
+            },
+            {
+                "message_id": "demo-msg-002",
+                "trace_id": "t-demo-001",
+                "role": "assistant",
+                "contenido": "Comprueba el nivel de refrigerante en frío y busca fugas visibles.",
+                "estado": "respuesta",
+                "timestamp": "2026-01-15T10:03:00Z",
+                "fuentes": [
+                    {
+                        "chunk_id": "c45",
+                        "documento": "Manual_ejemplo",
+                        "seccion": "2.1",
+                        "pagina": 128,
+                        "versiones": ["V1.1", "V2.0"],
+                        "obsoleto": False,
+                    }
+                ],
+            },
+        ],
+    }
+]
+
+
+def _mock_call(method: str, path: str, body: dict | None) -> tuple[int, dict | None]:
+    """Simula el servidor conservando los mismos cuerpos que el modo real."""
+    if method == "POST" and path == "/auth/login":
+        if body and body.get("usuario") == "rate_limit":
+            return 429, {"estado": "error", "mensaje": "Demasiados intentos."}
+        if body and body.get("usuario") == "demo" and body.get("contrasena") == "demo1234":
+            return 200, {
+                "estado": "autenticado",
+                "mensaje": "Inicio de sesión correcto.",
+                "usuario": {"id": "demo", "nombre_usuario": "demo"},
+                "token": "mock-token",
+            }
+        return 401, {
+            "estado": "no_autenticado",
+            "mensaje": "Usuario o contraseña incorrectos.",
+            "codigo_error": "credenciales_invalidas",
+        }
+    if method == "GET" and path == HISTORIAL_PATH:
+        chats = [] if _MOCK_EMPTY_HISTORY else deepcopy(_MOCK_CHATS)
+        return 200, {"chats": chats, "total": len(chats)}
+    if method == "POST" and path == CONSULTA_PATH and body:
+        response = _mock_response(body.get("pregunta", ""))
+        return 200, {
+            "trace_id": response.trace_id,
+            "estado": response.estado,
+            "texto": response.texto,
+            "fuentes": [source.to_dict() for source in response.fuentes],
+            "codigo_error": response.codigo_error,
+        }
+    return 404, {"estado": "error", "mensaje": "Ruta no disponible en el simulador."}
+
+
 def _mock_response(pregunta: str) -> Response:
     time.sleep(1.2)
     text = pregunta.lower()

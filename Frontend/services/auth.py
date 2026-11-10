@@ -9,29 +9,14 @@ CONTRATO CTR-005 (Backend es la única autoridad que concede el acceso):
     También: 422 (datos incompletos), 429 (demasiados intentos), 500.
 La contraseña solo viaja en el cuerpo (nunca en la URL), no se guarda ni se registra.
 El contrato aún no define token ni cookie de sesión: si la respuesta trae "token" se usará.
-
-Sin ARSOFT_API_URL se usa un MODO LOCAL SIMULADO solo para desarrollo: los usuarios se guardan
-en ~/.arsoft_asistente/users.json con la contraseña cifrada (PBKDF2 + sal), nunca en claro.
-Para crear usuarios:  python tools/create_user.py
+Sin ARSOFT_API_URL, api.call proporciona las respuestas del MODO SIMULADO.
 """
 from __future__ import annotations
-import hashlib
-import hmac
-import json
-import os
-import secrets
-import time
 from dataclasses import dataclass
-from pathlib import Path
 
 from PySide6.QtCore import QThread, Signal
 
 from services import api
-from services.storage import DATA_DIR
-
-USERS_FILE = DATA_DIR / "users.json"
-ITERATIONS = 200_000
-DEMO_USER, DEMO_PASS = "demo", "demo1234"   # solo modo local; se crea si no hay usuarios
 
 
 @dataclass
@@ -41,41 +26,6 @@ class AuthResult:
     token: str | None = None
     user_id: str = ""
     error: str = ""
-
-
-# ------------------------------------------------------------- usuarios locales
-def _hash(password: str, salt: bytes, iters: int = ITERATIONS) -> str:
-    return hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iters).hex()
-
-
-def _load_users(path: Path = USERS_FILE) -> dict:
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
-
-
-def add_user(username: str, password: str, path: Path = USERS_FILE) -> None:
-    users = _load_users(path)
-    salt = secrets.token_bytes(16)
-    users[username.strip().lower()] = {"salt": salt.hex(), "iters": ITERATIONS,
-                                       "hash": _hash(password, salt)}
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(users, indent=2), encoding="utf-8")
-
-
-def _local_login(username: str, password: str) -> AuthResult:
-    users = _load_users()
-    if not users:
-        add_user(DEMO_USER, DEMO_PASS)
-        users = _load_users()
-    rec = users.get(username.strip().lower())
-    salt = bytes.fromhex(rec["salt"]) if rec else b"\0" * 16   # mismo coste exista o no
-    candidate = _hash(password, salt, rec["iters"] if rec else ITERATIONS)
-    if rec and hmac.compare_digest(candidate, rec["hash"]):
-        return AuthResult(True, username.strip().lower(), token=None)
-    time.sleep(0.6)                                          # frena la fuerza bruta
-    return AuthResult(False, error="Usuario o contraseña incorrectos")
 
 
 # --------------------------------------------------------------------- backend
@@ -103,8 +53,6 @@ def _remote_login(username: str, password: str) -> AuthResult:
 
 
 def login(username: str, password: str) -> AuthResult:
-    if api.is_mock():
-        return _local_login(username, password)
     return _remote_login(username, password)
 
 

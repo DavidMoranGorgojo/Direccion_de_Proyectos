@@ -16,7 +16,7 @@ from models.dates import parse
 from models.message import ROLE_BOT, ROLE_USER, Message
 from models.response import Response
 from paths import UI_FILE, icon, image
-from services import api, storage
+from services import api
 
 MAX_BUBBLE_RATIO = 0.80
 MAX_BUBBLE_PX = 780
@@ -42,7 +42,6 @@ class MainWindow(QMainWindow):
     def __init__(self, username: str = "anon"):
         super().__init__()
         self.username = username
-        self._store = storage.path_for(username)
         self.setWindowTitle("MR BOT by ARSOFT · Asistente técnico")
         self.setWindowIcon(QIcon(image("logo.png")))
         self.resize(1100, 720)
@@ -79,9 +78,8 @@ class MainWindow(QMainWindow):
                                     "Define ARSOFT_API_URL para usar el asistente real.")
 
         # --- estado ---
-        # Con el Backend conectado, el historial lo aporta él (CTR-006); en modo simulado
-        # se guarda en un JSON local.
-        self.conversations = storage.load_conversations(self._store) if self._mock else []
+        # Tanto el modo real como el simulado obtienen el historial mediante GET /chats.
+        self.conversations = []
         self.current: Conversation | None = None
         self._rows: list[ChatMessage] = []
         self._typing: ChatMessage | None = None
@@ -97,12 +95,8 @@ class MainWindow(QMainWindow):
         self.prompt.textChanged.connect(self._autosize_prompt)
 
         self._refresh_list()
-        if self.conversations:
-            self._select(self.conversations[0].id)
-        else:
-            self.new_chat()
-        if not self._mock:
-            self._load_history()
+        self.new_chat()
+        self._load_history()
 
     # ------------------------------------------------------------ historial
     def _load_history(self) -> None:
@@ -118,7 +112,12 @@ class MainWindow(QMainWindow):
         if worker:
             worker.wait()
         if res.ok:
-            self.mode_label.setText("" if res.conversations else "Todavía no tienes conversaciones.")
+            if self._mock:
+                self.mode_label.setText("⚠ Modo simulado: sin backend conectado.\n"
+                                        "Define ARSOFT_API_URL para usar el asistente real.")
+            else:
+                self.mode_label.setText(
+                    "" if res.conversations else "Todavía no tienes conversaciones.")
             self.conversations = res.conversations
             self.current = None
             if self.conversations:
@@ -150,7 +149,7 @@ class MainWindow(QMainWindow):
         for c in self.conversations:
             item = QListWidgetItem()
             item.setData(Qt.UserRole, c.id)
-            w = ConversationItem(c, deletable=self._mock)   # CTR-006 no cubre borrar
+            w = ConversationItem(c, deletable=False)        # CTR-006 no cubre borrar
             w.delete_requested.connect(self.delete_chat)
             item.setSizeHint(QSize(0, 52))
             self.conversation_list.addItem(item)
@@ -344,9 +343,8 @@ class MainWindow(QMainWindow):
         self.btn_send.setEnabled(not busy)
 
     def _save(self) -> None:
-        if not self._mock:                        # el historial real lo guarda el Backend
-            return
-        storage.save_conversations([c for c in self.conversations if c.messages], self._store)
+        # El historial lo persiste el servicio; el Frontend solo lo consulta por CTR-006.
+        return
 
     def _logout(self) -> None:
         if self._worker is not None or self._hist_worker is not None:
