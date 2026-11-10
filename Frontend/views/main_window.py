@@ -73,7 +73,9 @@ class MainWindow(QMainWindow):
         self.btn_send.setIcon(QIcon(icon("send.svg")))
         self.btn_send.setIconSize(QSize(20, 20))
         self._mock = api.is_mock()
-        
+        if self._mock:
+            self.mode_label.setText("⚠ Modo simulado: sin backend conectado.\n"
+                                    "Define ARSOFT_API_URL para usar el asistente real.")
 
         # --- estado ---
         # Tanto el modo real como el simulado obtienen el historial mediante GET /chats.
@@ -309,7 +311,11 @@ class MainWindow(QMainWindow):
         self._save()
         self._refresh_list()
 
+        self._typing = ChatMessage(None)
+        self._insert_row(self._typing)
+        self._set_busy(True)
         self._scroll_bottom()
+<<<<<<< HEAD
         self._set_busy(True)
         self._typing = ChatMessage()
         self._insert_row(self._typing)
@@ -320,6 +326,11 @@ class MainWindow(QMainWindow):
             lambda response, conversation=conv:
                 self._on_response(conversation, response)
         )
+=======
+
+        self._worker = api.ChatWorker(conv.id, text)   # sin historial: lo guarda Agentes
+        self._worker.finished_ok.connect(lambda r, c=conv: self._on_response(c, r))
+>>>>>>> origin/main
         self._worker.start()
 
     def _on_response(self, conv: Conversation, resp: Response) -> None:

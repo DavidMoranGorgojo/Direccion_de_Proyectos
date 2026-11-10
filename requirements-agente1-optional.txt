@@ -1,0 +1,4 @@
+# Opcionales; el cliente urllib y la validación manual funcionan sin instalar nada.
+# Rangos de API soportada; no constituyen un lock validado en este entorno.
+openai>=1,<2
+pydantic>=2,<3
