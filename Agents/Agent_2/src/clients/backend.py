@@ -6,6 +6,7 @@ from collections import Counter
 import math
 import re
 import unicodedata
+import requests
 
 from ..services.filters import filter_chunks
 
@@ -28,7 +29,63 @@ REQUIRED_CHUNK_FIELDS = {
     "ids_referenciados",
 }
 
+class BackendAPIClient:
+    def __init__(
+        self,
+        base_url,
+        model_embeddings,
+        session=None,
+        timeout=5,
+    ):
+        self.base_url = base_url.rstrip("/")
+        self.model_embeddings = model_embeddings
+        self.timeout = timeout
 
+        if session is None:
+            session = requests.Session()
+
+        self.session = session
+
+    def search_vector(self, vector, filtros=None, k=30):
+        if hasattr(vector, "tolist"):
+            vector = vector.tolist()
+
+        if not isinstance(vector, (list, tuple)) or len(vector) != 1024:
+            raise ValueError("El vector debe contener exactamente 1024 valores.")
+
+        payload = {
+            "vector": list(vector),
+            "modelo_embeddings": self.model_embeddings,
+            "filtros": filtros or {},
+            "k": k,
+        }
+
+        response = self.session.post(
+            f"{self.base_url}/conocimiento/vectorial",
+            json=payload,
+            timeout=self.timeout,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def search_lexical(self, text, filtros=None, k=30):
+        if not isinstance(text, str) or not text.strip():
+            raise ValueError("text debe ser texto no vacío.")
+
+        payload = {
+            "texto": text,
+            "filtros": filtros or {},
+            "k": k,
+        }
+
+        response = self.session.post(
+            f"{self.base_url}/conocimiento/lexica",
+            json=payload,
+            timeout=self.timeout,
+        )
+        response.raise_for_status()
+        return response.json()
+    
 def _invalid_chunk_fields(chunk):
     problems = []
 
@@ -330,3 +387,4 @@ def search_vector(
 
     scored_chunks.sort(key=lambda chunk: chunk["score"], reverse=True)
     return scored_chunks[:k]
+
