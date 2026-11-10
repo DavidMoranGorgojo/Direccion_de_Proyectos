@@ -27,8 +27,7 @@ from pathlib import Path
 from PySide6.QtCore import QThread, Signal
 
 from services import api
-
-DATA_DIR = Path.home() / ".arsoft_asistente"
+from services.storage import DATA_DIR
 
 USERS_FILE = DATA_DIR / "users.json"
 ITERATIONS = 200_000

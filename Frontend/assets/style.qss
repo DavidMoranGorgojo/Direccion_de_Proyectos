@@ -114,6 +114,3 @@ QPushButton#btnLogin:pressed { background: #0679d1; }
 QPushButton#btnLogin:disabled { background: #25324a; color: #7f8da3; }
 QLabel#labelMode { color: #e0a93b; font-size: 11px; background: transparent; padding-top: 10px; }
 QLabel#labelFooter { color: #5f6a7d; font-size: 11px; background: transparent; }
-
-/* Botones desactivados en la vista previa */
-QPushButton#btnNewChat:disabled { background: #25324a; color: #7f8da3; }
