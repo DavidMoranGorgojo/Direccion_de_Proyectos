@@ -2,12 +2,72 @@
 from Agents.Agent_2.src.core import config
 
 
+def _valor_vacio(valor):
+    """
+    Comprueba si un metadato no contiene información útil.
+
+    Considera vacíos None, cadenas sin contenido y
+    colecciones vacías.
+    """
+
+    if valor is None:
+        return True
+
+    if isinstance(valor, str):
+        return not valor.strip()
+
+    if isinstance(valor, (list, tuple, dict, set)):
+        return len(valor) == 0
+
+    return False
+
+
+def _validar_chunk_id(result):
+    """
+    Valida el identificador de un resultado RRF.
+
+    Admite cadenas no vacías y números enteros,
+    incluido el identificador 0.
+
+    Rechaza booleanos, listas y otros tipos
+    que no representan identificadores válidos.
+    """
+
+    if not isinstance(result, dict) or "chunk_id" not in result:
+        raise ValueError(
+            "Resultado RRF inválido: falta el campo obligatorio 'chunk_id'"
+        )
+
+    chunk_id = result["chunk_id"]
+
+    if isinstance(chunk_id, bool):
+        raise ValueError(
+            "Resultado RRF inválido: 'chunk_id' no puede ser booleano"
+        )
+
+    if isinstance(chunk_id, str):
+        if not chunk_id.strip():
+            raise ValueError(
+                "Resultado RRF inválido: 'chunk_id' no puede estar vacío"
+            )
+
+    elif not isinstance(chunk_id, int):
+        raise ValueError(
+            "Resultado RRF inválido: 'chunk_id' "
+            "debe ser una cadena no vacía o un entero"
+        )
+
+    return chunk_id
+
+
 def rrf(vector_results, bm25_results, k=None):
     """
     Fusiona dos rankings mediante Reciprocal Rank Fusion (RRF).
 
-    Conserva los metadatos de ambas fuentes y mantiene
-    separadas las puntuaciones vectorial, BM25 y RRF.
+    Cada chunk contribuye como máximo una vez por ranking.
+    Conserva los metadatos útiles de ambas fuentes y
+    mantiene separadas las puntuaciones vectorial,
+    BM25 y RRF.
 
     No exige el campo 'texto': su validación corresponde
     a la etapa de reranking.
@@ -21,7 +81,7 @@ def rrf(vector_results, bm25_results, k=None):
         Resultados fusionados y ordenados por rrf_score.
 
     Raises:
-        ValueError: si k es inválido o falta chunk_id.
+        ValueError: si k o algún chunk_id son inválidos.
     """
 
     if k is None:
@@ -41,46 +101,75 @@ def rrf(vector_results, bm25_results, k=None):
     ]
 
     for fuente, ranking in rankings:
-        for position, result in enumerate(ranking, start=1):
 
-            if not isinstance(result, dict) or not result.get("chunk_id"):
-                raise ValueError(
-                    "Resultado RRF inválido: falta el campo obligatorio 'chunk_id'"
-                )
+        # Evitar que un chunk sume varias veces
+        # dentro de un mismo motor de búsqueda.
+        ids_vistos = set()
 
-            chunk_id = result["chunk_id"]
+        # La posición RRF se calcula entre resultados
+        # únicos para que los duplicados no desplacen
+        # artificialmente al resto de candidatos.
+        posicion_unica = 0
+
+        for result in ranking:
+
+            chunk_id = _validar_chunk_id(result)
 
             if chunk_id not in chunks:
                 chunks[chunk_id] = {}
 
             fusionado = chunks[chunk_id]
 
-            # Incorporar campos de ambas fuentes sin sobrescribir
-            # metadatos existentes con valores vacíos.
+            # Conservar los metadatos útiles de ambas fuentes.
+            # Un valor vacío puede sustituirse por otro
+            # que sí contenga información.
             for campo, valor in result.items():
                 if campo == "score":
                     continue
 
-                if campo not in fusionado or fusionado[campo] is None:
+                if (
+                    campo not in fusionado
+                    or (
+                        _valor_vacio(fusionado[campo])
+                        and not _valor_vacio(valor)
+                    )
+                ):
                     fusionado[campo] = valor
 
-            # Guardar la puntuación original con un nombre
-            # específico para cada motor de búsqueda.
+            # Guardar la puntuación original de cada motor.
+            # En caso de duplicados, conservar la primera
+            # puntuación válida de esa fuente.
             if fuente == "vectorial":
-                if "score_vectorial" in result:
-                    fusionado["score_vectorial"] = result["score_vectorial"]
-                elif "score" in result:
-                    fusionado["score_vectorial"] = result["score"]
+                campo_score = "score_vectorial"
+            else:
+                campo_score = "score_bm25"
 
-            elif fuente == "bm25":
-                if "score_bm25" in result:
-                    fusionado["score_bm25"] = result["score_bm25"]
-                elif "score" in result:
-                    fusionado["score_bm25"] = result["score"]
+            if chunk_id not in ids_vistos:
+                if campo_score in result:
+                    score_original = result[campo_score]
+                else:
+                    score_original = result.get("score")
+
+                if (
+                    score_original is not None
+                    and (
+                        campo_score not in fusionado
+                        or _valor_vacio(fusionado[campo_score])
+                    )
+                ):
+                    fusionado[campo_score] = score_original
+
+            # Los duplicados pueden completar metadatos,
+            # pero nunca sumar otra contribución RRF.
+            if chunk_id in ids_vistos:
+                continue
+
+            ids_vistos.add(chunk_id)
+            posicion_unica += 1
 
             scores[chunk_id] = (
                 scores.get(chunk_id, 0.0)
-                + 1 / (k + position)
+                + 1 / (k + posicion_unica)
             )
 
     fused_results = []

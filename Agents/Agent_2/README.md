@@ -13,12 +13,13 @@ El flujo previsto es:
 2. Aplicación de filtros obligatorios.
 3. Búsqueda vectorial y búsqueda léxica BM25.
 4. Fusión de resultados mediante Reciprocal Rank Fusion (RRF).
-5. Reordenación de candidatos mediante un modelo reranker.
-6. Aplicación de un umbral mínimo de relevancia.
-7. Comprobación de vigencia y recuperación de chunks vecinos.
-8. Generación del JSON de evidencias para el Agente 1.
+5. Selección de un máximo configurable de candidatos para el reranker.
+6. Reordenación de candidatos mediante un modelo reranker.
+7. Aplicación de un umbral mínimo de relevancia.
+8. Comprobación de vigencia y recuperación de chunks vecinos.
+9. Generación del JSON de evidencias para el Agente 1.
 
-**Estado:** los componentes RRF, reranker, configuración, carga reutilizable del modelo y pruebas de resiliencia están implementados y probados. La integración completa del pipeline sigue pendiente.
+**Estado:** los componentes RRF, reranker, configuración, carga reutilizable del modelo y pruebas de resiliencia están implementados y probados. Se han añadido validaciones, control de concurrencia y limitación de candidatos. La integración completa del pipeline sigue pendiente.
 
 ## 2. Requisitos
 
@@ -27,13 +28,26 @@ El flujo previsto es:
 - Espacio suficiente para almacenar los pesos del modelo.
 - Dependencias indicadas en `Agents/Agent_2/requirements.txt`.
 
-La dependencia declarada actualmente es:
+Las dependencias principales declaradas son:
 
 ```text
 FlagEmbedding==1.4.2
+torch==2.14.1
+transformers==5.20.2
+pytest==9.1.1
 ```
 
-La instalación de esta biblioteca puede incorporar dependencias adicionales.
+Estas versiones corresponden al entorno utilizado para las pruebas y el benchmark real.
+
+La comprobación `python -m pip check` finalizó con:
+
+```text
+No broken requirements found.
+```
+
+Esto confirma que no se detectaron incompatibilidades declaradas entre los paquetes instalados. No se ha verificado todavía una instalación limpia desde cero en otro equipo.
+
+La instalación de estas bibliotecas puede incorporar dependencias adicionales.
 
 ## 3. Instalación
 
@@ -66,13 +80,16 @@ Los parámetros pueden modificarse mediante variables de entorno.
 | `AGENT2_RRF_K` | `60` | Constante utilizada en la fusión RRF |
 | `AGENT2_RERANKER_MODEL` | `BAAI/bge-reranker-v2-m3` | Identificador del modelo de reranking |
 | `AGENT2_RERANK_THRESHOLD` | `0.45` | Umbral mínimo de relevancia |
-| `AGENT2_SEARCH_TOP_K` | `30` | Número configurado de candidatos de búsqueda |
+| `AGENT2_SEARCH_TOP_K` | `30` | Número configurado de candidatos por búsqueda |
+| `AGENT2_RERANK_TOP_K` | `20` | Número máximo de candidatos enviados al reranker |
 
-`AGENT2_RRF_K` y `AGENT2_SEARCH_TOP_K` deben ser enteros positivos.
+Las variables `AGENT2_RRF_K`, `AGENT2_SEARCH_TOP_K` y `AGENT2_RERANK_TOP_K` deben ser enteros positivos.
 
 `AGENT2_RERANK_THRESHOLD` debe ser un número finito entre 0 y 1.
 
-Los valores no válidos producen errores explícitos.
+`AGENT2_RERANKER_MODEL` debe contener un identificador no vacío. Los espacios iniciales y finales se eliminan.
+
+Los valores no válidos producen errores explícitos que identifican la variable de configuración correspondiente.
 
 ### Ejemplo de configuración en PowerShell
 
@@ -81,6 +98,7 @@ $env:AGENT2_RRF_K = "60"
 $env:AGENT2_RERANK_THRESHOLD = "0.45"
 $env:AGENT2_RERANKER_MODEL = "BAAI/bge-reranker-v2-m3"
 $env:AGENT2_SEARCH_TOP_K = "30"
+$env:AGENT2_RERANK_TOP_K = "20"
 ```
 
 Estas variables se aplican a la sesión actual de PowerShell y a los procesos que se inicien desde ella.
@@ -106,10 +124,26 @@ El algoritmo:
 
 - Identifica los resultados mediante `chunk_id`.
 - Combina las aportaciones de ambos rankings.
-- Conserva los metadatos disponibles.
+- Conserva los metadatos disponibles y las puntuaciones originales.
+- Completa metadatos vacíos cuando la otra fuente aporta información válida.
 - Ordena por puntuación RRF descendente.
 - No modifica las listas de entrada.
 - Valida la constante `k` y los identificadores de los resultados.
+- Evita sumar dos veces la contribución de un mismo `chunk_id` dentro de un mismo ranking.
+
+### Tratamiento de duplicados
+
+Si un mismo `chunk_id` aparece repetido en la búsqueda vectorial o en BM25, únicamente aporta una vez a la puntuación RRF de esa fuente.
+
+Los duplicados pueden utilizarse para completar metadatos, pero no para aumentar artificialmente la relevancia.
+
+Las posiciones utilizadas para calcular RRF corresponden al orden de los resultados únicos de cada ranking.
+
+### Validación de identificadores
+
+Se aceptan identificadores de tipo cadena no vacía o entero, incluido `0`.
+
+Se rechazan identificadores ausentes, cadenas vacías o formadas únicamente por espacios, booleanos y otros tipos no admitidos.
 
 ## 6. Reranker y umbral (A2-05)
 
@@ -132,7 +166,46 @@ Los candidatos se ordenan por su puntuación de reranking y posteriormente se ap
 
 El umbral inicial configurado es `0.45`. Este valor todavía debe validarse mediante las métricas y consultas de evaluación del proyecto.
 
-El código comprueba puntuaciones inválidas y propaga los errores del modelo, evitando ocultar fallos como si fueran resultados válidos.
+### Validación de entradas
+
+Antes de ejecutar la inferencia se comprueba que:
+
+- La consulta sea una cadena de texto no vacía.
+- Cada candidato tenga una estructura válida.
+- Cada candidato incluya un campo `texto` con contenido no vacío.
+- Las puntuaciones devueltas por el modelo sean numéricas y finitas.
+- El número de puntuaciones recibidas coincida con el número de candidatos evaluados.
+
+Las entradas inválidas producen errores explícitos en lugar de aceptarse silenciosamente.
+
+Los errores del modelo se propagan para que puedan gestionarse desde la capa de orquestación.
+
+### Límite de candidatos
+
+La variable `AGENT2_RERANK_TOP_K` establece un límite predeterminado de **20 candidatos**.
+
+Cuando la fusión RRF devuelve más candidatos que ese límite:
+
+1. Se validan sus puntuaciones RRF.
+2. Se ordenan por puntuación RRF descendente.
+3. Se seleccionan los candidatos mejor posicionados hasta alcanzar el límite.
+4. Se ejecuta el reranker únicamente sobre los candidatos seleccionados.
+
+Este límite reduce el número de pares que procesa el modelo y evita enviar automáticamente todos los resultados de ambas búsquedas a la inferencia.
+
+La selección previa se basa en RRF; la ordenación final se basa en las puntuaciones del reranker.
+
+### Protección de inferencias concurrentes
+
+`RerankerModel` incorpora un bloqueo de inferencia mediante `threading.Lock`.
+
+El bloqueo protege la llamada a `compute_score()` para impedir que varios hilos utilicen simultáneamente la misma instancia del modelo.
+
+Esto evita errores de acceso concurrente como `RuntimeError: Already borrowed`.
+
+El bloqueo se libera también cuando la inferencia produce una excepción.
+
+Esta protección se ha verificado mediante pruebas con llamadas concurrentes. No implica que el rendimiento bajo carga concurrente esté validado para producción.
 
 ## 7. Carga reutilizable del modelo (A2-09)
 
@@ -151,6 +224,8 @@ Esto permite:
 - Retrasar la carga hasta que se necesite el modelo.
 - Propagar errores de inicialización.
 
+La carga del modelo está protegida frente a accesos concurrentes y la inferencia dispone de su propio bloqueo.
+
 La caché es local al proceso. Si se utilizan varios procesos, cada uno puede necesitar su propia instancia del modelo.
 
 El modelo se ha probado en CPU con `use_fp16=False`.
@@ -159,26 +234,49 @@ El modelo se ha probado en CPU con `use_fp16=False`.
 
 Los siguientes comandos se ejecutan desde la raíz del repositorio.
 
-### Pruebas unitarias y de resiliencia
+### Pruebas unitarias, resiliencia e integración disponible
 
 ```powershell
-python -m pytest Test/test_Models/test_rrf.py Test/test_Models/test_reranker.py Test/test_Models/test_reranker_model.py Test/test_Models/test_reranker_loader.py Test/test_Models/test_config_agent2.py Test/test_Models/test_reranker_resiliencia.py -v
+python -m pytest Test/test_Models/test_rrf.py Test/test_Models/test_config_agent2.py Test/test_Models/test_reranker.py Test/test_Models/test_reranker_resiliencia.py Test/test_Models/test_reranker_model.py Test/test_Models/test_integracion_rrf.py Test/test_Performance/test_latency_reranker.py -v
 ```
 
-En la última ejecución conjunta se obtuvieron:
+En la última ejecución conjunta, realizada con Python 3.10.11 y pytest 9.1.1, se obtuvieron:
 
-- **72 pruebas superadas.**
-- **1 prueba omitida**, correspondiente a la integración opcional con el modelo real.
+- **132 pruebas recopiladas.**
+- **129 pruebas superadas.**
+- **3 pruebas omitidas.**
 - **0 pruebas fallidas.**
 
-Las pruebas de resiliencia comprueban, entre otros casos:
+Resultado:
 
-- Candidatos sin texto.
-- Candidatos con tipos incorrectos.
-- Resultados sin puntuación de reranking.
+```text
+129 passed, 3 skipped in 0.69s
+```
+
+Las tres pruebas omitidas corresponden a:
+
+1. Integración opcional con el modelo real, desactivada por defecto.
+2. Integración BM25 real con RRF, pendiente del dataset de Alba.
+3. Benchmark del reranker real, desactivado por defecto.
+
+El benchmark real se ejecutó y superó por separado.
+
+Las pruebas incluyen comprobaciones de:
+
+- Fusión RRF y conservación de metadatos.
+- Duplicados dentro de un mismo ranking.
+- Identificadores inválidos y aceptación del identificador `0`.
+- Validación de parámetros de configuración.
+- Restauración de la configuración entre pruebas.
+- Consultas y textos vacíos o de tipos incorrectos.
+- Resultados sin puntuaciones válidas.
 - Respuestas `None` del modelo.
-- Puntuaciones no numéricas.
-- Errores de carga y recuperación tras fallos del cargador.
+- Puntuaciones no numéricas o no finitas.
+- Límite configurable de candidatos.
+- Selección de candidatos mediante puntuación RRF.
+- Protección de inferencias concurrentes.
+- Liberación del bloqueo después de una excepción.
+- Conservación de las entradas originales.
 
 Estas pruebas comprueban que los errores no se acepten silenciosamente como resultados válidos.
 
@@ -189,6 +287,7 @@ En PowerShell:
 ```powershell
 $env:RUN_REAL_RERANKER_TEST = "1"
 python -m pytest Test/test_Models/test_reranker_model.py -v
+Remove-Item Env:RUN_REAL_RERANKER_TEST
 ```
 
 Esta prueba requiere disponer de las dependencias y los pesos del modelo.
@@ -204,13 +303,23 @@ python -m pytest Test/test_Performance/test_latency_rrf.py -v -s
 ```powershell
 $env:RUN_REAL_RERANKER_TEST = "1"
 python -m pytest Test/test_Performance/test_latency_reranker.py -v -s
+Remove-Item Env:RUN_REAL_RERANKER_TEST
 ```
 
-El benchmark compara 1, 5, 10 y 20 candidatos, realizando 20 mediciones y 2 calentamientos por tamaño.
+El benchmark utiliza `get_reranker()` y la función `rerank_results()` del Agente 2.
+
+Compara 1, 5, 10 y 20 candidatos con fragmentos de texto de longitud más representativa que los empleados en el benchmark anterior.
+
+Durante la última ejecución verificada se configuraron temporalmente:
+
+- 2 mediciones por tamaño.
+- 1 calentamiento por tamaño.
+
+Estas cantidades permiten comprobar el funcionamiento del benchmark con un coste de ejecución menor, pero no son suficientes para establecer percentiles de latencia robustos.
 
 El modelo se carga una sola vez y se reutiliza en todas las mediciones.
 
-Los resultados pueden variar según el hardware, la carga del sistema y el número de candidatos.
+Los resultados pueden variar según el hardware, la carga del sistema, la longitud de los textos y el número de candidatos.
 
 ## 9. Resultados de rendimiento
 
@@ -227,7 +336,53 @@ Mediciones realizadas durante el desarrollo:
 
 El benchmark RRF utilizó 100 resultados vectoriales y 100 BM25, con 150 candidatos únicos, tras un calentamiento de 100 ejecuciones y 1.000 mediciones.
 
-### 9.2. Benchmark comparativo del reranker real
+Estos resultados corresponden a una medición anterior a las últimas modificaciones de validación y tratamiento de duplicados. Deben considerarse una referencia histórica hasta repetir el benchmark con el código actualizado.
+
+### 9.2. Benchmark actualizado del reranker real
+
+Modelo: `BAAI/bge-reranker-v2-m3`.
+
+Entorno: Python 3.10.11, ejecución en CPU con `use_fp16=False`.
+
+Se utilizaron fragmentos de aproximadamente 78 a 95 palabras de media, según el tamaño del conjunto.
+
+Tiempo de obtención inicial del modelo: **20.984,25 ms**, aproximadamente **20,98 segundos**.
+
+Se realizaron 2 mediciones y 1 calentamiento por cantidad de candidatos.
+
+| Candidatos | Media | Mediana | P95 calculado | Máximo |
+|---|---:|---:|---:|---:|
+| 1 | 1.272,05 ms | 1.272,05 ms | 1.284,61 ms | 1.284,61 ms |
+| 5 | 6.895,32 ms | 6.895,32 ms | 6.945,34 ms | 6.945,34 ms |
+| 10 | 12.443,00 ms | 12.443,00 ms | 12.542,88 ms | 12.542,88 ms |
+| 20 | 17.207,92 ms | 17.207,92 ms | 17.285,25 ms | 17.285,25 ms |
+
+**Resultado de ejecución:** `1 passed in 135.77s`.
+
+La prueba completó 12 inferencias, contando los calentamientos, sin errores.
+
+**Limitación:** con solo dos mediciones por tamaño, el P95 calculado coincide con el máximo. No debe interpretarse como una estimación estadísticamente fiable del percentil 95.
+
+### 9.3. Interpretación de resultados
+
+Los resultados muestran que:
+
+- La inicialización del modelo es costosa, por lo que conviene cargarlo una vez y reutilizarlo.
+- La inferencia en CPU tiene un coste significativo.
+- El tiempo de inferencia aumenta al procesar conjuntos mayores de candidatos en esta ejecución.
+- Limitar los candidatos enviados al reranker es importante para controlar la latencia.
+- Los textos de mayor longitud pueden incrementar el coste de inferencia.
+- El bloqueo de inferencia protege el acceso al modelo, pero puede hacer que las solicitudes concurrentes esperen su turno.
+
+Las mediciones no incluyen búsqueda vectorial, BM25, filtros, generación de evidencias ni comunicación con el Agente 1.
+
+**Importante:** estos resultados corresponden a componentes individuales. No representan la latencia extremo a extremo del Agente 2.
+
+El número de mediciones sigue siendo insuficiente para establecer garantías de rendimiento en producción.
+
+### 9.4. Benchmark comparativo anterior del reranker
+
+Antes de ampliar los textos del benchmark se realizó una ejecución con fragmentos más cortos.
 
 Modelo: `BAAI/bge-reranker-v2-m3`.
 
@@ -250,23 +405,11 @@ La prueba completó 88 inferencias, contando los calentamientos, sin errores.
 
 El percentil 95 se calculó mediante el método de rango más cercano.
 
-### 9.3. Interpretación de resultados
+Estos resultados se conservan como referencia histórica. No son directamente comparables con el benchmark actualizado, debido a las diferencias de longitud de los textos y metodología.
 
-Los resultados muestran que:
+### 9.5. Benchmark inicial del reranker
 
-- La inicialización del modelo es costosa, por lo que conviene cargarlo una vez y reutilizarlo.
-- La inferencia en CPU tiene un coste significativo.
-- La latencia depende del número de candidatos, aunque no necesariamente de forma lineal.
-- En esta ejecución, 20 candidatos presentaron una media ligeramente inferior a 10 candidatos. Esto puede deberse a variaciones del entorno de ejecución y no permite concluir que 20 candidatos sean siempre más rápidos.
-- Las mediciones no incluyen búsqueda vectorial, BM25, filtros, generación de evidencias ni comunicación con el Agente 1.
-
-**Importante:** estos resultados corresponden a componentes individuales. No representan la latencia extremo a extremo del Agente 2.
-
-El número de mediciones sigue siendo limitado para establecer garantías de rendimiento en producción.
-
-### 9.4. Benchmark anterior del reranker
-
-Antes de ampliar el benchmark se realizó una medición inicial con 10 candidatos y 10 ejecuciones:
+Antes del benchmark comparativo se realizó una medición inicial con 10 candidatos y 10 ejecuciones:
 
 | Métrica | Resultado |
 |---|---:|
@@ -275,9 +418,9 @@ Antes de ampliar el benchmark se realizó una medición inicial con 10 candidato
 | Mediana | 1.381,75 ms |
 | P95 | 1.445,29 ms |
 
-Estos resultados se conservan como referencia histórica.
+Estos resultados se conservan únicamente como referencia histórica.
 
-Las diferencias respecto al benchmark comparativo pueden deberse a variaciones del entorno, condiciones de ejecución o características de las mediciones. No deben interpretarse directamente como una regresión confirmada.
+Las diferencias entre las mediciones pueden deberse a las características de los textos, las condiciones del entorno y la metodología. No deben interpretarse directamente como una regresión confirmada.
 
 ## 10. Resiliencia y consideraciones de despliegue
 
@@ -288,11 +431,15 @@ Para el despliegue se recomienda:
 - Inicializar el reranker una vez por proceso y reutilizarlo.
 - Asegurar que los pesos del modelo estén disponibles antes de atender consultas que los requieran.
 - Dimensionar memoria y CPU según el número de procesos concurrentes.
-- Configurar explícitamente los parámetros mediante variables de entorno cuando sea necesario.
+- Mantener el bloqueo de inferencia cuando se comparta una instancia del modelo entre hilos.
+- Configurar explícitamente `AGENT2_RERANK_TOP_K` según los objetivos de latencia.
+- Configurar los demás parámetros mediante variables de entorno cuando sea necesario.
 - Registrar y gestionar los errores en la capa de orquestación, sin convertir fallos internos en respuestas vacías aparentemente válidas.
 - Medir la latencia completa una vez integrado el pipeline.
-- Considerar la limitación del número de candidatos enviados al reranker cuando se establezcan los objetivos de latencia.
 - Evaluar el comportamiento bajo concurrencia antes de un despliegue real.
+- Verificar la instalación de dependencias en un entorno limpio antes del despliegue.
+
+La limitación de candidatos reduce el trabajo de inferencia, pero no garantiza por sí sola el cumplimiento de un objetivo de latencia.
 
 No se ha validado todavía un despliegue de producción ni el comportamiento del pipeline completo ante fallos.
 
@@ -307,5 +454,7 @@ Para completar la integración del Agente 2 quedan pendientes:
 5. Ejecutar pruebas de resiliencia del flujo integrado.
 6. Validar el JSON de evidencias entregado al Agente 1.
 7. Evaluar el rendimiento y la estabilidad con consultas concurrentes.
+8. Repetir los benchmarks con el código definitivo y un número suficiente de mediciones.
+9. Comprobar la instalación de dependencias en un entorno limpio.
 
 Las pruebas de los componentes individuales no sustituyen las pruebas de integración del sistema completo.

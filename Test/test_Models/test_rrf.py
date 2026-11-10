@@ -377,3 +377,231 @@ def test_rrf_reranker_conserva_todas_las_puntuaciones():
     assert resultado[0]["rrf_score"] == pytest.approx(2 / 61)
     assert resultado[0]["rerank_score"] == 0.95
     assert resultado[0]["documento"] == "manual_sensor"
+
+
+# ----------------------------------------------------------
+# Pruebas de resiliencia: duplicados, metadatos e IDs
+# ----------------------------------------------------------
+
+
+def test_rrf_duplicado_vectorial_no_suma_dos_veces():
+    """
+    Un chunk repetido en el ranking vectorial solo
+    aporta una contribución RRF.
+    """
+
+    vector_results = [
+        {"chunk_id": "A"},
+        {"chunk_id": "A"},
+        {"chunk_id": "B"},
+    ]
+
+    resultado = rrf(vector_results, [], k=60)
+    por_id = {chunk["chunk_id"]: chunk for chunk in resultado}
+
+    assert len(resultado) == 2
+    assert por_id["A"]["rrf_score"] == pytest.approx(1 / 61)
+    assert por_id["B"]["rrf_score"] == pytest.approx(1 / 62)
+
+
+def test_rrf_duplicado_bm25_no_suma_dos_veces():
+    """Los duplicados de BM25 tampoco deben sumar varias veces."""
+
+    bm25_results = [
+        {"chunk_id": "B"},
+        {"chunk_id": "B"},
+        {"chunk_id": "C"},
+    ]
+
+    resultado = rrf([], bm25_results, k=60)
+    por_id = {chunk["chunk_id"]: chunk for chunk in resultado}
+
+    assert len(resultado) == 2
+    assert por_id["B"]["rrf_score"] == pytest.approx(1 / 61)
+    assert por_id["C"]["rrf_score"] == pytest.approx(1 / 62)
+
+
+def test_rrf_duplicado_en_ambos_rankings_suma_una_vez_por_fuente():
+    """
+    El mismo chunk puede sumar una vez en vectorial
+    y otra vez en BM25, pero nunca dos en la misma fuente.
+    """
+
+    vector_results = [
+        {"chunk_id": "A"},
+        {"chunk_id": "A"},
+    ]
+
+    bm25_results = [
+        {"chunk_id": "A"},
+        {"chunk_id": "A"},
+    ]
+
+    resultado = rrf(vector_results, bm25_results, k=60)
+
+    assert len(resultado) == 1
+    assert resultado[0]["rrf_score"] == pytest.approx(2 / 61)
+
+
+def test_rrf_duplicado_completa_metadatos_sin_sumar_score():
+    """
+    Un duplicado puede aportar un texto ausente
+    sin alterar la puntuación RRF.
+    """
+
+    vector_results = [
+        {"chunk_id": "A", "texto": ""},
+        {"chunk_id": "A", "texto": "Texto recuperado"},
+    ]
+
+    resultado = rrf(vector_results, [], k=60)
+
+    assert len(resultado) == 1
+    assert resultado[0]["texto"] == "Texto recuperado"
+    assert resultado[0]["rrf_score"] == pytest.approx(1 / 61)
+
+
+@pytest.mark.parametrize(
+    "valor_vacio",
+    [None, "", "   ", []],
+)
+def test_rrf_completa_metadato_vacio_desde_bm25(valor_vacio):
+    """
+    Un metadato vacío de la búsqueda vectorial
+    debe sustituirse por información útil de BM25.
+    """
+
+    vector_results = [
+        {
+            "chunk_id": "A",
+            "texto": valor_vacio,
+        }
+    ]
+
+    bm25_results = [
+        {
+            "chunk_id": "A",
+            "texto": "Instrucciones de mantenimiento",
+        }
+    ]
+
+    resultado = rrf(vector_results, bm25_results)
+
+    assert resultado[0]["texto"] == "Instrucciones de mantenimiento"
+    assert resultado[0]["rrf_score"] == pytest.approx(2 / 61)
+
+
+def test_rrf_no_sobrescribe_metadato_valido_con_vacio():
+    """
+    Si la búsqueda vectorial aporta información útil,
+    BM25 no debe sustituirla por un valor vacío.
+    """
+
+    vector_results = [
+        {
+            "chunk_id": "A",
+            "texto": "Texto vectorial válido",
+            "versiones": ["v2"],
+        }
+    ]
+
+    bm25_results = [
+        {
+            "chunk_id": "A",
+            "texto": "",
+            "versiones": [],
+        }
+    ]
+
+    resultado = rrf(vector_results, bm25_results)
+
+    assert resultado[0]["texto"] == "Texto vectorial válido"
+    assert resultado[0]["versiones"] == ["v2"]
+
+
+def test_rrf_completa_lista_vacia_desde_bm25():
+    """Una lista vacía debe sustituirse por una lista con datos."""
+
+    vector_results = [
+        {
+            "chunk_id": "A",
+            "versiones": [],
+        }
+    ]
+
+    bm25_results = [
+        {
+            "chunk_id": "A",
+            "versiones": ["v1", "v2"],
+        }
+    ]
+
+    resultado = rrf(vector_results, bm25_results)
+
+    assert resultado[0]["versiones"] == ["v1", "v2"]
+
+
+def test_rrf_acepta_chunk_id_cero():
+    """El identificador entero 0 debe ser válido."""
+
+    resultado = rrf([{"chunk_id": 0}], [], k=60)
+
+    assert len(resultado) == 1
+    assert resultado[0]["chunk_id"] == 0
+    assert resultado[0]["rrf_score"] == pytest.approx(1 / 61)
+
+
+@pytest.mark.parametrize(
+    "chunk_id_invalido",
+    [
+        None,
+        "",
+        "   ",
+        [],
+        ["A"],
+        {},
+        True,
+        False,
+        1.5,
+    ],
+)
+def test_rrf_rechaza_chunk_id_invalido(chunk_id_invalido):
+    """
+    Los identificadores inválidos deben provocar ValueError,
+    no TypeError ni otros errores inesperados.
+    """
+
+    with pytest.raises(ValueError, match="chunk_id"):
+        rrf([{"chunk_id": chunk_id_invalido}], [])
+
+
+def test_rrf_acepta_chunk_id_entero_positivo():
+    """Los identificadores enteros también son válidos."""
+
+    resultado = rrf([{"chunk_id": 42}], [])
+
+    assert resultado[0]["chunk_id"] == 42
+
+
+def test_rrf_no_modifica_entradas_con_duplicados_y_metadatos():
+    """
+    La eliminación de duplicados y la recuperación
+    de metadatos no deben alterar las entradas originales.
+    """
+
+    vector_results = [
+        {"chunk_id": "A", "texto": ""},
+        {"chunk_id": "A", "texto": "Texto válido"},
+    ]
+
+    bm25_results = [
+        {"chunk_id": "A", "versiones": ["v2"]},
+    ]
+
+    copia_vectorial = [item.copy() for item in vector_results]
+    copia_bm25 = [item.copy() for item in bm25_results]
+
+    rrf(vector_results, bm25_results)
+
+    assert vector_results == copia_vectorial
+    assert bm25_results == copia_bm25

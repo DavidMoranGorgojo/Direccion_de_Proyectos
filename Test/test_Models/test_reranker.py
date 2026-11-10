@@ -282,3 +282,146 @@ def test_threshold_rechaza_valores_invalidos(threshold_invalido):
 
     with pytest.raises(ValueError, match="umbral"):
         apply_threshold(resultados, threshold=threshold_invalido)
+
+
+class FakeRerankerConRegistro:
+    """
+    Modelo simulado que registra los pares recibidos.
+
+    Permite comprobar el límite de candidatos sin cargar
+    el modelo real.
+    """
+
+    def __init__(self):
+        self.pares_recibidos = None
+        self.llamadas = 0
+
+    def predict(self, pairs):
+        self.llamadas += 1
+        self.pares_recibidos = pairs
+        return [0.9] * len(pairs)
+
+
+def crear_candidatos_rrf(cantidad):
+    """Genera candidatos con puntuaciones RRF distintas."""
+
+    return [
+        {
+            "chunk_id": f"C{indice}",
+            "texto": f"Texto del candidato {indice}",
+            "rrf_score": (cantidad - indice) / 1000,
+        }
+        for indice in range(cantidad)
+    ]
+
+
+def test_rerank_limita_60_candidatos_a_20(monkeypatch):
+    """El modelo no debe recibir más de 20 candidatos."""
+
+    monkeypatch.setattr(config, "RERANK_TOP_K", 20)
+
+    resultados = crear_candidatos_rrf(60)
+    modelo = FakeRerankerConRegistro()
+
+    ordenados = rerank_results(
+        query="problema con el motor",
+        results=resultados,
+        model=modelo,
+    )
+
+    assert modelo.llamadas == 1
+    assert len(modelo.pares_recibidos) == 20
+    assert len(ordenados) == 20
+
+    ids = {resultado["chunk_id"] for resultado in ordenados}
+    assert ids == {f"C{indice}" for indice in range(20)}
+
+
+def test_rerank_selecciona_mejores_rrf_desordenados(monkeypatch):
+    """El límite debe aplicarse por puntuación RRF, no por posición."""
+
+    monkeypatch.setattr(config, "RERANK_TOP_K", 3)
+
+    resultados = crear_candidatos_rrf(8)
+    resultados.reverse()
+
+    modelo = FakeRerankerConRegistro()
+
+    ordenados = rerank_results(
+        query="problema con el motor",
+        results=resultados,
+        model=modelo,
+    )
+
+    ids = {resultado["chunk_id"] for resultado in ordenados}
+
+    assert ids == {"C0", "C1", "C2"}
+    assert len(modelo.pares_recibidos) == 3
+
+
+def test_rerank_respeta_limite_configurable(monkeypatch):
+    """RERANK_TOP_K debe poder cambiarse desde la configuración."""
+
+    monkeypatch.setattr(config, "RERANK_TOP_K", 5)
+
+    resultados = crear_candidatos_rrf(15)
+    modelo = FakeRerankerConRegistro()
+
+    ordenados = rerank_results(
+        query="problema con el motor",
+        results=resultados,
+        model=modelo,
+    )
+
+    assert len(ordenados) == 5
+    assert len(modelo.pares_recibidos) == 5
+
+
+@pytest.mark.parametrize(
+    "score_invalido",
+    [None, "abc", math.nan, math.inf, True],
+)
+def test_rerank_rechaza_rrf_invalido_al_limitar(
+    monkeypatch,
+    score_invalido,
+):
+    """
+    Si es necesario limitar candidatos, las puntuaciones
+    RRF deben ser numéricas y finitas.
+    """
+
+    monkeypatch.setattr(config, "RERANK_TOP_K", 2)
+
+    resultados = crear_candidatos_rrf(3)
+    resultados[0]["rrf_score"] = score_invalido
+
+    modelo = FakeRerankerConRegistro()
+
+    with pytest.raises(ValueError, match="rrf_score"):
+        rerank_results(
+            query="problema con el motor",
+            results=resultados,
+            model=modelo,
+        )
+
+    assert modelo.llamadas == 0
+
+
+def test_rerank_limite_no_modifica_originales(monkeypatch):
+    """Aplicar el límite no debe modificar los candidatos originales."""
+
+    monkeypatch.setattr(config, "RERANK_TOP_K", 3)
+
+    resultados = crear_candidatos_rrf(10)
+    copia_original = [resultado.copy() for resultado in resultados]
+
+    modelo = FakeRerankerConRegistro()
+
+    rerank_results(
+        query="problema con el motor",
+        results=resultados,
+        model=modelo,
+    )
+
+    assert resultados == copia_original
+    assert all("rerank_score" not in resultado for resultado in resultados)

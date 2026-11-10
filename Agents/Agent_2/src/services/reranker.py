@@ -63,8 +63,11 @@ def sort_by_rerank_score(results):
 
 def rerank_results(query, results, model):
     """
-    Calcula la puntuación del reranker para cada resultado
-    y los ordena de mayor a menor puntuación.
+    Calcula la puntuación del reranker para los candidatos
+    mejor posicionados por RRF y los ordena por relevancia.
+
+    Limita el número de candidatos mediante RERANK_TOP_K
+    y valida las entradas antes de ejecutar la inferencia.
 
     Args:
         query: consulta del usuario.
@@ -76,22 +79,73 @@ def rerank_results(query, results, model):
         ordenada de mayor a menor puntuación.
 
     Raises:
-        ValueError: si el número de scores no coincide con
-                    el número de resultados o si alguna
-                    puntuación no es finita.
+        ValueError: si la consulta, los candidatos,
+                    las puntuaciones RRF o las puntuaciones
+                    del modelo son inválidos.
     """
 
     if not results:
         return []
 
+    # Validar la consulta antes de ejecutar la inferencia.
+    if not isinstance(query, str) or not query.strip():
+        raise ValueError(
+            "La consulta del reranker debe ser un texto no vacío"
+        )
+
+    # Validar todos los candidatos antes de seleccionarlos.
+    for indice, result in enumerate(results):
+        if not isinstance(result, dict):
+            raise ValueError(
+                f"El candidato {indice} del reranker debe ser un diccionario"
+            )
+
+        texto = result.get("texto")
+
+        if not isinstance(texto, str) or not texto.strip():
+            raise ValueError(
+                f"El candidato {indice} del reranker "
+                "no contiene un campo 'texto' válido"
+            )
+
+    # Aplicar el límite únicamente cuando se supera RERANK_TOP_K.
+    # Los resultados de RRF deben incluir rrf_score para poder
+    # seleccionar correctamente los candidatos más relevantes.
+    if len(results) > config.RERANK_TOP_K:
+        for indice, result in enumerate(results):
+            score_rrf = result.get("rrf_score")
+
+            if (
+                isinstance(score_rrf, bool)
+                or not isinstance(score_rrf, (int, float))
+                or not math.isfinite(score_rrf)
+            ):
+                raise ValueError(
+                    f"El candidato {indice} no contiene "
+                    "un 'rrf_score' válido"
+                )
+
+        candidatos = sorted(
+            results,
+            key=lambda result: result["rrf_score"],
+            reverse=True,
+        )[:config.RERANK_TOP_K]
+    else:
+        candidatos = results
+
     pairs = [
         [query, result["texto"]]
-        for result in results
+        for result in candidatos
     ]
 
     scores = model.predict(pairs)
 
-    if len(scores) != len(results):
+    if scores is None:
+        raise ValueError(
+            "El reranker no ha devuelto puntuaciones"
+        )
+
+    if len(scores) != len(candidatos):
         raise ValueError(
             "El número de scores del reranker no coincide "
             "con el número de resultados"
@@ -99,11 +153,14 @@ def rerank_results(query, results, model):
 
     reranked_results = []
 
-    for result, score in zip(results, scores):
-        score = float(score)
+    for result, score in zip(candidatos, scores):
+        try:
+            score = float(score)
+        except (TypeError, ValueError, OverflowError) as error:
+            raise ValueError(
+                "El reranker ha devuelto una puntuación no numérica"
+            ) from error
 
-        # Rechazar NaN e infinito para evitar resultados
-        # incorrectos durante la ordenación y el filtrado.
         if not math.isfinite(score):
             raise ValueError(
                 "El reranker ha devuelto una puntuación no finita"
