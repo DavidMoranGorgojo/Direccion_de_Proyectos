@@ -1,4 +1,17 @@
 
+"""
+Pruebas del cargador reutilizable del reranker del Agente 2.
+
+Incluyen reutilización, configuración, recuperación de errores
+y comportamiento ante llamadas concurrentes.
+"""
+
+import sys
+import threading
+import time
+import types
+from concurrent.futures import ThreadPoolExecutor
+
 import pytest
 
 from Agents.Agent_2.src.clients import reranker_loader
@@ -19,11 +32,15 @@ def limpiar_cache():
     reranker_loader._load_reranker.cache_clear()
 
 
+def instalar_modelo_simulado(monkeypatch, clase_modelo):
+    """Sustituye FlagEmbedding por un módulo simulado."""
+    modulo = types.ModuleType("FlagEmbedding")
+    modulo.FlagReranker = clase_modelo
+    monkeypatch.setitem(sys.modules, "FlagEmbedding", modulo)
+
+
 def test_get_reranker_utiliza_modelo_configurado(monkeypatch):
-    """
-    Comprueba que el cargador utiliza el nombre
-    de modelo definido en config.py.
-    """
+    """Comprueba que se utiliza el modelo configurado."""
     nombres_recibidos = []
 
     def fake_loader(model_name):
@@ -47,13 +64,7 @@ def test_get_reranker_utiliza_modelo_configurado(monkeypatch):
 
 
 def test_load_reranker_reutiliza_instancia(monkeypatch):
-    """
-    Comprueba que el modelo se carga una sola vez
-    y se reutiliza en llamadas posteriores.
-    """
-    import sys
-    import types
-
+    """Dos llamadas sucesivas reutilizan el modelo."""
     cargas = []
 
     class FakeFlagReranker:
@@ -63,14 +74,7 @@ def test_load_reranker_reutiliza_instancia(monkeypatch):
         def compute_score(self, pairs, normalize=False):
             return [0.9] * len(pairs)
 
-    fake_module = types.ModuleType("FlagEmbedding")
-    fake_module.FlagReranker = FakeFlagReranker
-
-    monkeypatch.setitem(
-        sys.modules,
-        "FlagEmbedding",
-        fake_module,
-    )
+    instalar_modelo_simulado(monkeypatch, FakeFlagReranker)
 
     primero = reranker_loader.get_reranker()
     segundo = reranker_loader.get_reranker()
@@ -81,13 +85,7 @@ def test_load_reranker_reutiliza_instancia(monkeypatch):
 
 
 def test_load_reranker_no_carga_hasta_primera_llamada(monkeypatch):
-    """
-    Comprueba que importar el módulo no obliga
-    a inicializar el modelo real.
-    """
-    import sys
-    import types
-
+    """El modelo se inicializa únicamente cuando se solicita."""
     cargas = []
 
     class FakeFlagReranker:
@@ -97,14 +95,7 @@ def test_load_reranker_no_carga_hasta_primera_llamada(monkeypatch):
         def compute_score(self, pairs, normalize=False):
             return [0.9] * len(pairs)
 
-    fake_module = types.ModuleType("FlagEmbedding")
-    fake_module.FlagReranker = FakeFlagReranker
-
-    monkeypatch.setitem(
-        sys.modules,
-        "FlagEmbedding",
-        fake_module,
-    )
+    instalar_modelo_simulado(monkeypatch, FakeFlagReranker)
 
     assert cargas == []
 
@@ -114,38 +105,20 @@ def test_load_reranker_no_carga_hasta_primera_llamada(monkeypatch):
 
 
 def test_load_reranker_propaga_error(monkeypatch):
-    """
-    Un fallo durante la carga del modelo
-    no debe convertirse en un resultado vacío.
-    """
-    import sys
-    import types
+    """Un error de carga se propaga al llamante."""
 
     class FakeFlagReranker:
         def __init__(self, model_name, use_fp16):
             raise RuntimeError("Error simulado de carga")
 
-    fake_module = types.ModuleType("FlagEmbedding")
-    fake_module.FlagReranker = FakeFlagReranker
-
-    monkeypatch.setitem(
-        sys.modules,
-        "FlagEmbedding",
-        fake_module,
-    )
+    instalar_modelo_simulado(monkeypatch, FakeFlagReranker)
 
     with pytest.raises(RuntimeError, match="Error simulado de carga"):
         reranker_loader.get_reranker()
 
 
 def test_load_reranker_permite_reintentar_tras_error(monkeypatch):
-    """
-    Un error de inicialización no debe quedar
-    almacenado en la caché.
-    """
-    import sys
-    import types
-
+    """Un fallo temporal no queda almacenado en caché."""
     intentos = []
 
     class FakeFlagReranker:
@@ -158,14 +131,7 @@ def test_load_reranker_permite_reintentar_tras_error(monkeypatch):
         def compute_score(self, pairs, normalize=False):
             return [0.9] * len(pairs)
 
-    fake_module = types.ModuleType("FlagEmbedding")
-    fake_module.FlagReranker = FakeFlagReranker
-
-    monkeypatch.setitem(
-        sys.modules,
-        "FlagEmbedding",
-        fake_module,
-    )
+    instalar_modelo_simulado(monkeypatch, FakeFlagReranker)
 
     with pytest.raises(RuntimeError, match="Fallo temporal"):
         reranker_loader.get_reranker()
@@ -176,12 +142,8 @@ def test_load_reranker_permite_reintentar_tras_error(monkeypatch):
     assert len(intentos) == 2
 
 
-
 def test_load_reranker_reutiliza_instancia_en_multiples_llamadas(monkeypatch):
-    """Varias consultas reutilizan una única instancia del modelo."""
-    import sys
-    import types
-
+    """Diez llamadas sucesivas reutilizan una única instancia."""
     cargas = []
 
     class FakeFlagReranker:
@@ -191,10 +153,7 @@ def test_load_reranker_reutiliza_instancia_en_multiples_llamadas(monkeypatch):
         def compute_score(self, pairs, normalize=False):
             return [0.9] * len(pairs)
 
-    fake_module = types.ModuleType("FlagEmbedding")
-    fake_module.FlagReranker = FakeFlagReranker
-
-    monkeypatch.setitem(sys.modules, "FlagEmbedding", fake_module)
+    instalar_modelo_simulado(monkeypatch, FakeFlagReranker)
 
     instancias = [
         reranker_loader.get_reranker()
@@ -207,9 +166,6 @@ def test_load_reranker_reutiliza_instancia_en_multiples_llamadas(monkeypatch):
 
 def test_load_reranker_carga_nuevo_modelo_si_cambia_configuracion(monkeypatch):
     """La caché distingue modelos con nombres diferentes."""
-    import sys
-    import types
-
     cargas = []
 
     class FakeFlagReranker:
@@ -219,10 +175,7 @@ def test_load_reranker_carga_nuevo_modelo_si_cambia_configuracion(monkeypatch):
         def compute_score(self, pairs, normalize=False):
             return [0.9] * len(pairs)
 
-    fake_module = types.ModuleType("FlagEmbedding")
-    fake_module.FlagReranker = FakeFlagReranker
-
-    monkeypatch.setitem(sys.modules, "FlagEmbedding", fake_module)
+    instalar_modelo_simulado(monkeypatch, FakeFlagReranker)
 
     monkeypatch.setattr(config, "RERANKER_MODEL", "modelo-A")
     modelo_a = reranker_loader.get_reranker()
@@ -236,9 +189,6 @@ def test_load_reranker_carga_nuevo_modelo_si_cambia_configuracion(monkeypatch):
 
 def test_load_reranker_funciona_despues_de_recuperar_error(monkeypatch):
     """El modelo recuperado permite realizar predicciones."""
-    import sys
-    import types
-
     intentos = []
 
     class FakeFlagReranker:
@@ -251,10 +201,7 @@ def test_load_reranker_funciona_despues_de_recuperar_error(monkeypatch):
         def compute_score(self, pairs, normalize=False):
             return [0.95] * len(pairs)
 
-    fake_module = types.ModuleType("FlagEmbedding")
-    fake_module.FlagReranker = FakeFlagReranker
-
-    monkeypatch.setitem(sys.modules, "FlagEmbedding", fake_module)
+    instalar_modelo_simulado(monkeypatch, FakeFlagReranker)
 
     with pytest.raises(RuntimeError, match="Fallo temporal"):
         reranker_loader.get_reranker()
@@ -267,3 +214,42 @@ def test_load_reranker_funciona_despues_de_recuperar_error(monkeypatch):
 
     assert puntuaciones == [0.95]
     assert len(intentos) == 2
+
+
+def test_load_reranker_una_sola_carga_con_llamadas_concurrentes(monkeypatch):
+    """
+    Varias solicitudes simultáneas deben compartir una única
+    inicialización del modelo.
+    """
+    numero_cargas = 0
+    bloqueo_contador = threading.Lock()
+    barrera_inicio = threading.Barrier(5)
+
+    class FakeFlagReranker:
+        def __init__(self, model_name, use_fp16):
+            nonlocal numero_cargas
+
+            with bloqueo_contador:
+                numero_cargas += 1
+
+            # Simula una carga suficientemente lenta para
+            # que coincidan varias solicitudes.
+            time.sleep(0.15)
+
+        def compute_score(self, pairs, normalize=False):
+            return [0.9] * len(pairs)
+
+    instalar_modelo_simulado(monkeypatch, FakeFlagReranker)
+
+    def obtener_modelo():
+        barrera_inicio.wait(timeout=5)
+        return reranker_loader.get_reranker()
+
+    with ThreadPoolExecutor(max_workers=5) as ejecutor:
+        modelos = list(ejecutor.map(
+            lambda _: obtener_modelo(),
+            range(5),
+        ))
+
+    assert numero_cargas == 1
+    assert all(modelo is modelos[0] for modelo in modelos)
