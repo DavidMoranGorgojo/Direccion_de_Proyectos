@@ -1,3 +1,4 @@
+
 def filter_chunks(chunks, filters=None):
     filters = filters or {}
 
@@ -12,7 +13,19 @@ def filter_chunks(chunks, filters=None):
 
     for chunk in chunks:
         if version not in (None, ""):
-            if version not in chunk.get("vigente_para", []):
+            versiones = chunk.get("versiones", [])
+            vigente_para = chunk.get("vigente_para", [])
+
+            version_aplicable = version in versiones
+
+            # Excepción: documentos sustituidos que siguen
+            # siendo aplicables a versiones anteriores.
+            if chunk.get("sustituido_por") is not None:
+                version_aplicable = (
+                    version_aplicable or version in vigente_para
+                )
+
+            if not version_aplicable:
                 continue
 
         if component not in (None, ""):

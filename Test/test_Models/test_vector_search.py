@@ -1,3 +1,4 @@
+
 import pytest
 from Agents.Agent_2.src.clients.backend import search_vector
 
@@ -8,6 +9,7 @@ def test_vector_search_ranks_by_cosine_and_limits_k():
         {"chunk_id": "medio", "texto": "medio"},
         {"chunk_id": "lejano", "texto": "lejos"},
     ]
+
     vectors = {
         "cercano": [1.0, 0.0],
         "medio": [0.8, 0.6],
@@ -26,24 +28,26 @@ def test_vector_search_ranks_by_cosine_and_limits_k():
     assert results[0]["score"] == pytest.approx(1.0)
     assert results[1]["score"] == pytest.approx(0.8)
 
+
 def test_vector_search_applies_strict_filters_before_top_k():
     chunks = [
         {
             "chunk_id": "otra-version",
-            "vigente_para": ["V2.0"],
+            "versiones": ["V2.0"],
             "componente": "bateria",
         },
         {
             "chunk_id": "correcto",
-            "vigente_para": ["V1.1"],
+            "versiones": ["V1.1"],
             "componente": "bateria",
         },
         {
             "chunk_id": "otro-componente",
-            "vigente_para": ["V1.1"],
+            "versiones": ["V1.1"],
             "componente": "motor",
         },
     ]
+
     vectors = {
         "otra-version": [1.0, 0.0],
         "correcto": [0.8, 0.6],
@@ -65,7 +69,7 @@ def test_missing_chunk_vector_raises_error():
     chunks = [
         {
             "chunk_id": "sin-vector",
-            "vigente_para": ["V1.1"],
+            "versiones": ["V1.1"],
             "componente": "bateria",
         }
     ]
