@@ -1,4 +1,16 @@
 
+"""
+Benchmark de latencia del reranker real del Agente 2.
+
+Mide:
+- Tiempo de carga inicial del modelo.
+- Latencia de reranking con diferentes cantidades de candidatos.
+- Media, mediana, percentil 95 y máximo.
+
+No incluye el resto del pipeline RAG.
+"""
+
+import math
 import os
 import statistics
 import time
@@ -9,24 +21,24 @@ from Agents.Agent_2.src.clients.reranker_model import RerankerModel
 from Agents.Agent_2.src.services.reranker import rerank_results
 
 
-@pytest.mark.skipif(
-    os.getenv("RUN_REAL_RERANKER_TEST") != "1",
-    reason="Benchmark del modelo real desactivado por defecto",
-)
-def test_latency_reranker_real():
+MODELO_RERANKER = "BAAI/bge-reranker-v2-m3"
+CANTIDADES_CANDIDATOS = (1, 5, 10, 20)
+NUM_MEDICIONES = 20
+NUM_CALENTAMIENTOS = 2
+
+
+def calcular_percentil_95(tiempos):
     """
-    Mide el tiempo de carga y la latencia de inferencia
-    del reranker real BAAI/bge-reranker-v2-m3.
-
-    La medición incluye nuestro adaptador y el servicio
-    rerank_results(), pero no el resto del pipeline.
+    Calcula el percentil 95 mediante el método de rango más cercano.
     """
+    tiempos_ordenados = sorted(tiempos)
+    indice = math.ceil(0.95 * len(tiempos_ordenados)) - 1
+    return tiempos_ordenados[indice]
 
-    from FlagEmbedding import FlagReranker
 
-    consulta = "¿Cómo funciona la bomba auxiliar?"
-
-    resultados = [
+def generar_candidatos(cantidad):
+    """Genera candidatos sintéticos para medir la inferencia."""
+    return [
         {
             "chunk_id": f"C{i}",
             "texto": (
@@ -35,14 +47,30 @@ def test_latency_reranker_real():
                 else "El calendario de vacaciones se publica en enero."
             ),
         }
-        for i in range(10)
+        for i in range(cantidad)
     ]
 
-    # Medir la inicialización del modelo.
+
+@pytest.mark.skipif(
+    os.getenv("RUN_REAL_RERANKER_TEST") != "1",
+    reason="Benchmark del modelo real desactivado por defecto",
+)
+def test_latency_reranker_real():
+    """
+    Compara la latencia del reranker real para diferentes
+    cantidades de candidatos.
+
+    El modelo se carga una vez y se reutiliza durante
+    todas las mediciones.
+    """
+    from FlagEmbedding import FlagReranker
+
+    consulta = "¿Cómo funciona la bomba auxiliar?"
+
     inicio_carga = time.perf_counter()
 
     modelo_real = FlagReranker(
-        "BAAI/bge-reranker-v2-m3",
+        MODELO_RERANKER,
         use_fp16=False,
     )
 
@@ -52,47 +80,54 @@ def test_latency_reranker_real():
         time.perf_counter() - inicio_carga
     ) * 1000
 
-    # Calentamiento: no incluir la primera inferencia
-    # en las mediciones.
-    rerank_results(consulta, resultados, modelo)
+    print("\n--- Benchmark reranker real (A2-09) ---")
+    print(f"Modelo: {MODELO_RERANKER}")
+    print(f"Tiempo de carga: {tiempo_carga_ms:.2f} ms")
+    print(f"Mediciones por tamaño: {NUM_MEDICIONES}")
+    print(f"Calentamientos por tamaño: {NUM_CALENTAMIENTOS}")
 
-    tiempos = []
-    resultados_ordenados = None
+    for cantidad in CANTIDADES_CANDIDATOS:
+        resultados = generar_candidatos(cantidad)
 
-    # Pocas iteraciones porque el modelo puede ejecutarse
-    # en CPU y cada inferencia puede ser costosa.
-    for _ in range(10):
-        inicio = time.perf_counter()
+        for _ in range(NUM_CALENTAMIENTOS):
+            rerank_results(
+                consulta,
+                resultados,
+                modelo,
+            )
 
-        resultados_ordenados = rerank_results(
-            consulta,
-            resultados,
-            modelo,
+        tiempos = []
+
+        for _ in range(NUM_MEDICIONES):
+            inicio = time.perf_counter()
+
+            resultados_ordenados = rerank_results(
+                consulta,
+                resultados,
+                modelo,
+            )
+
+            duracion_ms = (
+                time.perf_counter() - inicio
+            ) * 1000
+
+            tiempos.append(duracion_ms)
+
+            assert len(resultados_ordenados) == cantidad
+
+        assert len(tiempos) == NUM_MEDICIONES
+        assert all(
+            math.isfinite(tiempo) and tiempo > 0
+            for tiempo in tiempos
         )
 
-        duracion_ms = (
-            time.perf_counter() - inicio
-        ) * 1000
+        media = statistics.mean(tiempos)
+        mediana = statistics.median(tiempos)
+        p95 = calcular_percentil_95(tiempos)
+        maximo = max(tiempos)
 
-        tiempos.append(duracion_ms)
-
-    assert len(resultados_ordenados) == 10
-    assert len(tiempos) == 10
-    assert all(tiempo > 0 for tiempo in tiempos)
-
-    tiempos_ordenados = sorted(tiempos)
-
-    media = statistics.mean(tiempos)
-    mediana = statistics.median(tiempos)
-    p95 = tiempos_ordenados[9]
-    maximo = max(tiempos)
-
-    print("\n--- Benchmark reranker real (A2-09) ---")
-    print("Modelo: BAAI/bge-reranker-v2-m3")
-    print("Candidatos por consulta: 10")
-    print(f"Tiempo de carga: {tiempo_carga_ms:.2f} ms")
-    print(f"Ejecuciones medidas: {len(tiempos)}")
-    print(f"Media: {media:.2f} ms")
-    print(f"Mediana: {mediana:.2f} ms")
-    print(f"P95: {p95:.2f} ms")
-    print(f"Máximo: {maximo:.2f} ms")
+        print(f"\nCandidatos: {cantidad}")
+        print(f"Media: {media:.2f} ms")
+        print(f"Mediana: {mediana:.2f} ms")
+        print(f"P95: {p95:.2f} ms")
+        print(f"Máximo: {maximo:.2f} ms")
