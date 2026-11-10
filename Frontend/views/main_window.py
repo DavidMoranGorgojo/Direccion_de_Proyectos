@@ -315,22 +315,9 @@ class MainWindow(QMainWindow):
         self._insert_row(self._typing)
         self._set_busy(True)
         self._scroll_bottom()
-<<<<<<< HEAD
-        self._set_busy(True)
-        self._typing = ChatMessage()
-        self._insert_row(self._typing)
-        self._scroll_bottom()
-
-        self._worker = api.ChatWorker(conv.id, text)
-        self._worker.finished_ok.connect(
-            lambda response, conversation=conv:
-                self._on_response(conversation, response)
-        )
-=======
 
         self._worker = api.ChatWorker(conv.id, text)   # sin historial: lo guarda Agentes
         self._worker.finished_ok.connect(lambda r, c=conv: self._on_response(c, r))
->>>>>>> origin/main
         self._worker.start()
 
     def _on_response(self, conv: Conversation, resp: Response) -> None:
