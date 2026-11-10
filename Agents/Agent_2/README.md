@@ -1,3 +1,4 @@
+
 # Agente 2 — Recuperación de evidencias (RAG)
 
 ## 1. Descripción
@@ -17,7 +18,7 @@ El flujo previsto es:
 7. Comprobación de vigencia y recuperación de chunks vecinos.
 8. Generación del JSON de evidencias para el Agente 1.
 
-**Estado:** los componentes RRF, reranker y configuración están implementados y probados. La integración completa del pipeline sigue pendiente.
+**Estado:** los componentes RRF, reranker, configuración, carga reutilizable del modelo y pruebas de resiliencia están implementados y probados. La integración completa del pipeline sigue pendiente.
 
 ## 2. Requisitos
 
@@ -158,13 +159,28 @@ El modelo se ha probado en CPU con `use_fp16=False`.
 
 Los siguientes comandos se ejecutan desde la raíz del repositorio.
 
-### Pruebas unitarias
+### Pruebas unitarias y de resiliencia
 
 ```powershell
-python -m pytest Test/test_Models/test_rrf.py Test/test_Models/test_reranker.py Test/test_Models/test_reranker_model.py Test/test_Models/test_reranker_loader.py Test/test_Models/test_config_agent2.py -v
+python -m pytest Test/test_Models/test_rrf.py Test/test_Models/test_reranker.py Test/test_Models/test_reranker_model.py Test/test_Models/test_reranker_loader.py Test/test_Models/test_config_agent2.py Test/test_Models/test_reranker_resiliencia.py -v
 ```
 
-En la última ejecución conjunta se obtuvieron **65 pruebas superadas**.
+En la última ejecución conjunta se obtuvieron:
+
+- **72 pruebas superadas.**
+- **1 prueba omitida**, correspondiente a la integración opcional con el modelo real.
+- **0 pruebas fallidas.**
+
+Las pruebas de resiliencia comprueban, entre otros casos:
+
+- Candidatos sin texto.
+- Candidatos con tipos incorrectos.
+- Resultados sin puntuación de reranking.
+- Respuestas `None` del modelo.
+- Puntuaciones no numéricas.
+- Errores de carga y recuperación tras fallos del cargador.
+
+Estas pruebas comprueban que los errores no se acepten silenciosamente como resultados válidos.
 
 ### Prueba opcional con el modelo real
 
@@ -190,27 +206,78 @@ $env:RUN_REAL_RERANKER_TEST = "1"
 python -m pytest Test/test_Performance/test_latency_reranker.py -v -s
 ```
 
+El benchmark compara 1, 5, 10 y 20 candidatos, realizando 20 mediciones y 2 calentamientos por tamaño.
+
+El modelo se carga una sola vez y se reutiliza en todas las mediciones.
+
 Los resultados pueden variar según el hardware, la carga del sistema y el número de candidatos.
 
 ## 9. Resultados de rendimiento
 
+### 9.1. Fusión RRF
+
 Mediciones realizadas durante el desarrollo:
 
-| Operación | Resultado |
-|---|---|
-| Fusión RRF — media | 0,1410 ms |
-| Fusión RRF — p95 | 0,2350 ms |
-| Carga inicial del reranker | 13.453,78 ms |
-| Reranking de 10 candidatos — media | 1.374,95 ms |
-| Reranking de 10 candidatos — p95 | 1.445,29 ms |
+| Métrica | Resultado |
+|---|---:|
+| Media | 0,1410 ms |
+| Mediana | 0,1392 ms |
+| P95 | 0,2350 ms |
+| Máximo | 0,8633 ms |
 
 El benchmark RRF utilizó 100 resultados vectoriales y 100 BM25, con 150 candidatos únicos, tras un calentamiento de 100 ejecuciones y 1.000 mediciones.
 
-El benchmark del reranker utilizó 10 candidatos y 10 mediciones con el modelo real en CPU.
+### 9.2. Benchmark comparativo del reranker real
+
+Modelo: `BAAI/bge-reranker-v2-m3`.
+
+Entorno: Python 3.10.11, ejecución en CPU con `use_fp16=False`.
+
+Tiempo de carga inicial: **15.385,86 ms**, aproximadamente **15,39 segundos**.
+
+Se realizaron 20 mediciones por cantidad de candidatos, después de 2 calentamientos.
+
+| Candidatos | Media | Mediana | P95 | Máximo |
+|---|---:|---:|---:|---:|
+| 1 | 1.078,00 ms | 1.091,39 ms | 1.150,23 ms | 1.150,24 ms |
+| 5 | 2.121,85 ms | 2.119,16 ms | 2.290,13 ms | 2.305,17 ms |
+| 10 | 3.104,56 ms | 3.546,17 ms | 3.927,04 ms | 4.119,41 ms |
+| 20 | 3.098,10 ms | 3.111,36 ms | 3.224,40 ms | 3.301,68 ms |
+
+**Resultado de ejecución:** `1 passed in 250.15s`.
+
+La prueba completó 88 inferencias, contando los calentamientos, sin errores.
+
+El percentil 95 se calculó mediante el método de rango más cercano.
+
+### 9.3. Interpretación de resultados
+
+Los resultados muestran que:
+
+- La inicialización del modelo es costosa, por lo que conviene cargarlo una vez y reutilizarlo.
+- La inferencia en CPU tiene un coste significativo.
+- La latencia depende del número de candidatos, aunque no necesariamente de forma lineal.
+- En esta ejecución, 20 candidatos presentaron una media ligeramente inferior a 10 candidatos. Esto puede deberse a variaciones del entorno de ejecución y no permite concluir que 20 candidatos sean siempre más rápidos.
+- Las mediciones no incluyen búsqueda vectorial, BM25, filtros, generación de evidencias ni comunicación con el Agente 1.
 
 **Importante:** estos resultados corresponden a componentes individuales. No representan la latencia extremo a extremo del Agente 2.
 
-El número reducido de muestras del benchmark del reranker limita la precisión estadística del p95.
+El número de mediciones sigue siendo limitado para establecer garantías de rendimiento en producción.
+
+### 9.4. Benchmark anterior del reranker
+
+Antes de ampliar el benchmark se realizó una medición inicial con 10 candidatos y 10 ejecuciones:
+
+| Métrica | Resultado |
+|---|---:|
+| Tiempo de carga | 13.453,78 ms |
+| Media | 1.374,95 ms |
+| Mediana | 1.381,75 ms |
+| P95 | 1.445,29 ms |
+
+Estos resultados se conservan como referencia histórica.
+
+Las diferencias respecto al benchmark comparativo pueden deberse a variaciones del entorno, condiciones de ejecución o características de las mediciones. No deben interpretarse directamente como una regresión confirmada.
 
 ## 10. Resiliencia y consideraciones de despliegue
 
@@ -224,6 +291,8 @@ Para el despliegue se recomienda:
 - Configurar explícitamente los parámetros mediante variables de entorno cuando sea necesario.
 - Registrar y gestionar los errores en la capa de orquestación, sin convertir fallos internos en respuestas vacías aparentemente válidas.
 - Medir la latencia completa una vez integrado el pipeline.
+- Considerar la limitación del número de candidatos enviados al reranker cuando se establezcan los objetivos de latencia.
+- Evaluar el comportamiento bajo concurrencia antes de un despliegue real.
 
 No se ha validado todavía un despliegue de producción ni el comportamiento del pipeline completo ante fallos.
 
@@ -237,5 +306,6 @@ Para completar la integración del Agente 2 quedan pendientes:
 4. Medir la latencia extremo a extremo.
 5. Ejecutar pruebas de resiliencia del flujo integrado.
 6. Validar el JSON de evidencias entregado al Agente 1.
+7. Evaluar el rendimiento y la estabilidad con consultas concurrentes.
 
 Las pruebas de los componentes individuales no sustituyen las pruebas de integración del sistema completo.
