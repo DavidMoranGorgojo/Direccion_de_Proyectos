@@ -1,0 +1,33 @@
+
+Bootstrap: docker
+From: python:3.12-slim
+
+%labels
+    Project ARSOFT
+    Service Ingesta
+
+%files
+    Backend/ingesta /opt/arsoft/ingesta
+    Backend/db/init/01_conocimiento.sql /opt/arsoft/db/init/01_conocimiento.sql
+
+%post
+    python -m pip install --no-cache-dir \
+        --index-url https://download.pytorch.org/whl/cpu \
+        torch
+
+    python -m pip install --no-cache-dir \
+        -r /opt/arsoft/ingesta/requirements.txt
+
+%environment
+    export PYTHONUNBUFFERED=1
+    export PYTHONPATH=/opt/arsoft/ingesta/src
+    export HF_HOME=/cache/huggingface
+    export INGESTA_ENTRADA=/data/manuales
+    export INGESTA_SALIDA=/data/salida
+
+%runscript
+    cd /opt/arsoft/ingesta
+    if [ "$#" -eq 0 ]; then
+        set -- --cargar
+    fi
+    exec python -m ingesta "$@"

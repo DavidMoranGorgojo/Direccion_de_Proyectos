@@ -1,0 +1,37 @@
+Bootstrap: docker
+From: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+
+%labels
+    Project ARSOFT
+    Service Agentes-GPU
+
+%files
+    Agents /opt/arsoft/Agents
+
+%post
+    if [ -f /opt/arsoft/Agents/requirements.txt ]; then
+        python -m pip install --no-cache-dir -r /opt/arsoft/Agents/requirements.txt
+    fi
+
+%environment
+    export PYTHONUNBUFFERED=1
+    export PYTHONPATH=/opt/arsoft
+    export HF_HOME=/models/huggingface
+
+%runscript
+    cd /opt/arsoft
+    if [ -n "${AGENTES_START_CMD:-}" ]; then
+        exec /bin/sh -c "$AGENTES_START_CMD"
+    fi
+    exec python -m Agents.agente1.core "$@"
+
+%startscript
+    cd /opt/arsoft
+    if [ -z "${AGENTES_START_CMD:-}" ]; then
+        echo 'Define AGENTES_START_CMD para iniciar el servidor HTTP de Agentes.' >&2
+        exit 2
+    fi
+    exec /bin/sh -c "$AGENTES_START_CMD"
+
+%test
+    python -c 'import Agents.agente1.core'
