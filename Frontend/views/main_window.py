@@ -316,7 +316,7 @@ class MainWindow(QMainWindow):
         self._set_busy(True)
         self._scroll_bottom()
 
-        self._worker = api.ChatWorker(conv.id, text)   # sin historial: lo guarda Agentes
+        self._worker = api.ChatWorker(conv.server_id, text)   # sin historial: lo guarda Agentes
         self._worker.finished_ok.connect(lambda r, c=conv: self._on_response(c, r))
         self._worker.start()
 
@@ -328,6 +328,8 @@ class MainWindow(QMainWindow):
             self._rows.remove(self._typing)
             self._typing.deleteLater()
             self._typing = None
+        if resp.conversacion_id:
+            conv.server_id = resp.conversacion_id
         msg = Message.from_response(resp)
         conv.messages.append(msg)
         conv.touch()

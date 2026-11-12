@@ -20,6 +20,9 @@ From: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
 
 %runscript
     cd /opt/arsoft
+    if [ "${1:-}" = "--serve" ]; then
+        exec python -m uvicorn Agents.service:app --host 127.0.0.1 --port 8001
+    fi
     if [ -n "${AGENTES_START_CMD:-}" ]; then
         exec /bin/sh -c "$AGENTES_START_CMD"
     fi
@@ -27,11 +30,10 @@ From: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
 
 %startscript
     cd /opt/arsoft
-    if [ -z "${AGENTES_START_CMD:-}" ]; then
-        echo 'Define AGENTES_START_CMD para iniciar el servidor HTTP de Agentes.' >&2
-        exit 2
+    if [ -n "${AGENTES_START_CMD:-}" ]; then
+        exec /bin/sh -c "$AGENTES_START_CMD"
     fi
-    exec /bin/sh -c "$AGENTES_START_CMD"
+    exec python -m uvicorn Agents.service:app --host 127.0.0.1 --port 8001
 
 %test
-    python -c 'import Agents.agente1.core'
+    python -c 'import Agents.service'
