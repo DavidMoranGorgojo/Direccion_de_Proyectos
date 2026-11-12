@@ -8,8 +8,7 @@ Contratos que implementa este módulo:
            Respuesta (siempre los mismos campos; los errores controlados también son HTTP 200):
                {"trace_id", "estado", "texto", "fuentes": [{"chunk_id", "documento", "seccion",
                 "pagina", "versiones", "obsoleto"}], "codigo_error"}
-           La ruta que expone el Backend al Frontend aún no está definida: se usa CONSULTA_PATH
-           (cámbiala solo aquí cuando se acuerde).
+           El Backend expone POST /consulta y devuelve conversacion_id.
   CTR-006  Historial:  GET /chats  ->  {"chats": [...], "total": n}
   CTR-005  Login: ver services/auth.py
 
@@ -26,6 +25,7 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from urllib.parse import urlparse
+from uuid import uuid4
 
 from PySide6.QtCore import QThread, Signal
 
@@ -36,8 +36,8 @@ from models.source import Source
 from services import session
 
 API_URL = os.environ.get("ARSOFT_API_URL", "").rstrip("/")
-TIMEOUT_S = 60
-CONSULTA_PATH = "/agentes/consulta"          # ruta Frontend -> Backend: pendiente de contrato
+TIMEOUT_S = 30
+CONSULTA_PATH = "/consulta"
 HISTORIAL_PATH = "/chats"                    # CTR-006 (ruta propuesta, por confirmar)
 SESSION_EXPIRED = "Tu sesión ha caducado. Cierra sesión y vuelve a entrar."
 
@@ -217,6 +217,7 @@ def _mock_call(method: str, path: str, body: dict | None) -> tuple[int, dict | N
         response = _mock_response(body.get("pregunta", ""))
         return 200, {
             "trace_id": response.trace_id,
+            "conversacion_id": body.get("conversacion_id") or uuid4().hex,
             "estado": response.estado,
             "texto": response.texto,
             "fuentes": [source.to_dict() for source in response.fuentes],

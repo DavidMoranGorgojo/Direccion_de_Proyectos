@@ -18,6 +18,8 @@ class Conversation:
     created_at: str = field(default_factory=lambda: datetime.now().isoformat(timespec="seconds"))
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat(timespec="seconds"))
 
+    server_id: str = ""
+
     def touch(self) -> None:
         self.updated_at = datetime.now().isoformat(timespec="seconds")
 
@@ -30,5 +32,6 @@ class Conversation:
         """Lee un chat de CTR-006 (conversacion_id/titulo/mensajes) o del formato local antiguo."""
         return cls(id=d.get("conversacion_id") or d["id"],
                    title=d.get("titulo") or d.get("title") or DEFAULT_TITLE,
+                   server_id=d.get("conversacion_id", ""),
                    created_at=d.get("created_at", ""), updated_at=d.get("updated_at", ""),
                    messages=[Message.from_dict(m) for m in d.get("mensajes", d.get("messages", []))])
