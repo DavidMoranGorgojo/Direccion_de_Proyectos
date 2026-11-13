@@ -1,25 +1,41 @@
-"""Enlaces HTTP de FastAPI a los componentes existentes de ARSOFT."""
+"""Pasarela HTTP de ARSOFT hacia Agentes y PostgreSQL."""
 
-import asyncio
 import os
+from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 from uuid import uuid4
 
 import httpx
 import psycopg
+from arsoft_http import GENERIC_ERROR, invalid_question
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .conocimiento import router as knowledge
 from .links import connect, service_headers
 
-app = FastAPI(title="ARSOFT Backend API", version="0.2.0")
-app.include_router(knowledge)
+AGENT_TIMEOUT_SECONDS = 25.0
 bearer = HTTPBearer(auto_error=False)
-GENERIC = "El asistente no está disponible, inténtalo de nuevo."
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.agents_client = httpx.AsyncClient(
+        timeout=httpx.Timeout(AGENT_TIMEOUT_SECONDS),
+        trust_env=False,
+    )
+    try:
+        yield
+    finally:
+        await app.state.agents_client.aclose()
+
+
+app = FastAPI(title="ARSOFT Backend API", version="0.2.0", lifespan=lifespan)
+app.include_router(knowledge)
 
 
 class Pregunta(BaseModel):
@@ -29,9 +45,9 @@ class Pregunta(BaseModel):
 
 class Fuente(BaseModel):
     chunk_id: str = Field(min_length=1)
-    documento: str = Field(min_length=1)
-    seccion: str = Field(min_length=1)
-    pagina: int = Field(gt=0, strict=True)
+    documento: str
+    seccion: str
+    pagina: int = Field(ge=0, strict=True)
     versiones: list[str]
     obsoleto: bool
 
@@ -58,9 +74,16 @@ def authorize_consultation(
                                      "mensaje": "La validación de sesión aún no está disponible."})
 
 
-@app.exception_handler(HTTPException)
-async def http_error(request: Request, error: HTTPException):
-    body = error.detail if isinstance(error.detail, dict) else {"mensaje": error.detail}
+@app.exception_handler(StarletteHTTPException)
+async def http_error(request: Request, error: StarletteHTTPException):
+    if isinstance(error.detail, dict):
+        body = error.detail
+    elif error.status_code == 404:
+        body = {"codigo_error": "recurso_no_encontrado", "mensaje": "El recurso solicitado no existe."}
+    elif error.status_code == 405:
+        body = {"codigo_error": "metodo_no_permitido", "mensaje": "El método HTTP no está permitido."}
+    else:
+        body = {"codigo_error": "error_interno", "mensaje": str(error.detail)}
     return JSONResponse(body, status_code=error.status_code, headers=error.headers)
 
 
@@ -82,7 +105,7 @@ def agents_url() -> str:
     return os.getenv("AGENTES_URL", "http://127.0.0.1:8001").rstrip("/")
 
 
-def failed(cid: str, code: str, text: str = GENERIC) -> RespuestaConsulta:
+def failed(cid: str, code: str, text: str = GENERIC_ERROR) -> RespuestaConsulta:
     return RespuestaConsulta(trace_id=uuid4().hex, conversacion_id=cid, estado="error",
                              texto=text, fuentes=[], codigo_error=code)
 
@@ -100,7 +123,8 @@ def ready():
     except psycopg.Error:
         return JSONResponse({"status": "unavailable", "postgres": "unavailable"}, status_code=503)
     try:
-        response = httpx.get(f"{agents_url()}/agentes/salud", headers=service_headers(), timeout=3, trust_env=False)
+        response = httpx.get(f"{agents_url()}/agentes/salud", headers=service_headers(), timeout=3,
+                             trust_env=False)
         response.raise_for_status()
     except httpx.HTTPError:
         return JSONResponse({"status": "unavailable", "postgres": "ok", "agentes": "unavailable"}, status_code=503)
@@ -108,19 +132,25 @@ def ready():
 
 
 @app.post("/consulta", response_model=RespuestaConsulta, dependencies=[Depends(authorize_consultation)])
-async def consulta(data: Pregunta):
-    if not data.pregunta.strip() or len(data.pregunta) > 2000:
-        return failed(data.conversacion_id, "entrada_invalida", "La pregunta debe contener entre 1 y 2000 caracteres.")
+async def consulta(data: Pregunta, request: Request):
     cid = data.conversacion_id or uuid4().hex
+    if invalid_question(data.pregunta):
+        return failed(cid, "entrada_invalida", "La pregunta debe contener entre 1 y 2000 caracteres.")
+    client: httpx.AsyncClient = request.app.state.agents_client
     try:
-        async with asyncio.timeout(25):
-            async with httpx.AsyncClient(timeout=25, trust_env=False) as client:
-                upstream = await client.post(f"{agents_url()}/agentes/consulta", headers=service_headers(),
-                                             json={"conversacion_id": cid, "pregunta": data.pregunta})
-                upstream.raise_for_status()
-                result = RespuestaAgentes.model_validate(upstream.json())
+        upstream = await client.post(f"{agents_url()}/agentes/consulta", headers=service_headers(),
+                                     json={"conversacion_id": cid, "pregunta": data.pregunta})
+        upstream.raise_for_status()
+        result = RespuestaAgentes.model_validate(upstream.json())
         if (result.estado == "respuesta") != bool(result.fuentes):
             raise ValueError("Fuentes incompatibles con el estado")
-    except (httpx.HTTPError, TimeoutError, ValueError):
+    except httpx.TimeoutException:
+        try:
+            await client.delete(f"{agents_url()}/agentes/conversaciones/{cid}",
+                                headers=service_headers(), timeout=3.0)
+        except httpx.HTTPError:
+            pass
+        return failed(cid, "tiempo_agotado")
+    except (httpx.HTTPError, ValueError):
         return failed(cid, "servicio_no_disponible")
     return RespuestaConsulta(**result.model_dump(), conversacion_id=cid)

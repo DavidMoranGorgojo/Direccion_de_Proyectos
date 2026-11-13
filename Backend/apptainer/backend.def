@@ -8,6 +8,7 @@ From: python:3.12-slim
 %files
     Backend/api/requirements.txt /opt/arsoft/requirements.txt
     Backend/api/app /opt/arsoft/app
+    shared/arsoft_http.py /opt/arsoft/arsoft_http.py
 
 %post
     python -m pip install --no-cache-dir -r /opt/arsoft/requirements.txt

@@ -15,7 +15,8 @@ if ! grep -Eq '^ARSOFT_SERVICE_TOKEN=.+$' "$ARSOFT_AGENTS_ENV"; then
   echo 'Define ARSOFT_SERVICE_TOKEN para autenticar las llamadas internas' >&2
   exit 2
 fi
-mkdir -p "$ARSOFT_MODEL_CACHE/huggingface"
+mkdir -p "$ARSOFT_MODEL_CACHE/huggingface" "$ARSOFT_MODEL_CACHE/state"
+chmod 700 "$ARSOFT_MODEL_CACHE/state"
 apptainer run --nv --cleanenv --env-file "$ARSOFT_AGENTS_ENV" \
   --bind "$ARSOFT_MODEL_CACHE:/models" \
   "$ARSOFT_AGENTS_IMAGE" --serve

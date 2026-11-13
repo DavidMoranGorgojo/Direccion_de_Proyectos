@@ -12,6 +12,7 @@ if [[ -z "${POSTGRES_PASSWORD:-}" || "$POSTGRES_PASSWORD" == CAMBIAR_ANTES_DE_US
   echo 'Configura POSTGRES_PASSWORD en el archivo de entorno local' >&2
   exit 2
 fi
+: "${ARSOFT_SERVICE_TOKEN:?Configura ARSOFT_SERVICE_TOKEN en el archivo local de entorno}"
 for name in postgres backend; do
   [[ -f "$IMAGES/$name.sif" ]] || { echo "Falta $IMAGES/$name.sif" >&2; exit 2; }
 done

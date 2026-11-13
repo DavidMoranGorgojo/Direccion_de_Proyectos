@@ -1,19 +1,26 @@
 """Adaptador HTTP del Agente 1 existente y su recuperador simulado."""
 
-import hmac
-import os
+import asyncio
 import time
+from collections import OrderedDict
+from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field
 from threading import Lock
 from typing import Annotated
 from uuid import uuid4
 
 import httpx
+from arsoft_http import (GENERIC_ERROR, invalid_question, service_token_configured,
+                         valid_service_token)
 from fastapi import Depends, FastAPI, Header, HTTPException, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from .agente1.core import Agente1, MODELO_LLM, OLLAMA_URL, consultar_asistente
+
+SESSION_TTL_SECONDS = 1800
+MAX_SESSIONS = 1024
+
 
 @dataclass
 class Session:
@@ -21,22 +28,46 @@ class Session:
     lock: Lock = field(default_factory=Lock)
     touched: float = field(default_factory=time.monotonic)
     requests: int = 0
+    discard_after_request: bool = False
 
 
-sessions: dict[str, Session] = {}
+sessions: OrderedDict[str, Session] = OrderedDict()
 lock = Lock()
-GENERIC = "El asistente no está disponible, inténtalo de nuevo."
 
 
 def service_access(authorization: Annotated[str, Header()] = "") -> None:
-    token = os.getenv("ARSOFT_SERVICE_TOKEN")
-    if not token:
+    if not service_token_configured():
         raise HTTPException(503)
-    if not hmac.compare_digest(authorization.encode(), f"Bearer {token}".encode()):
+    if not valid_service_token(authorization):
         raise HTTPException(401)
 
 
-app = FastAPI(title="ARSOFT Agentes", dependencies=[Depends(service_access)])
+def prune_sessions() -> None:
+    cutoff = time.monotonic() - SESSION_TTL_SECONDS
+    with lock:
+        for cid, session in list(sessions.items()):
+            if session.requests == 0 and session.touched < cutoff:
+                sessions.pop(cid, None)
+
+
+async def cleanup_sessions() -> None:
+    while True:
+        await asyncio.sleep(60)
+        prune_sessions()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    task = asyncio.create_task(cleanup_sessions())
+    try:
+        yield
+    finally:
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
+
+
+app = FastAPI(title="ARSOFT Agentes", dependencies=[Depends(service_access)], lifespan=lifespan)
 
 
 class Query(BaseModel):
@@ -44,32 +75,55 @@ class Query(BaseModel):
     pregunta: str
 
 
+def get_session(cid: str) -> Session:
+    now = time.monotonic()
+    with lock:
+        current = sessions.get(cid)
+        if current is not None and current.requests == 0 and current.touched < now - SESSION_TTL_SECONDS:
+            sessions.pop(cid, None)
+            current = None
+        if current is None:
+            if len(sessions) >= MAX_SESSIONS:
+                available_id = next((old_id for old_id, old_session in sessions.items()
+                                     if old_session.requests == 0), None)
+                if available_id is None:
+                    raise HTTPException(503, "Capacidad de conversaciones ocupada.")
+                sessions.pop(available_id)
+            current = Session(Agente1(conversacion_id=cid))
+            sessions[cid] = current
+        current.requests += 1
+        sessions.move_to_end(cid)
+        return current
+
+
 @app.post("/agentes/consulta")
 def query(data: Query):
-    if not data.pregunta.strip() or len(data.pregunta) > 2000:
+    cid = data.conversacion_id
+    if invalid_question(data.pregunta):
         return {"trace_id": uuid4().hex, "estado": "error", "texto": "La pregunta no es válida.",
                 "fuentes": [], "codigo_error": "entrada_invalida"}
-    with lock:
-        cutoff = time.monotonic() - 1800
-        for cid, session in list(sessions.items()):
-            if not session.requests and session.touched < cutoff:
-                del sessions[cid]
-        current = sessions.get(data.conversacion_id)
-        if current is None:
-            current = Session(Agente1(conversacion_id=data.conversacion_id))
-            sessions[data.conversacion_id] = current
-        current.requests += 1
+
+    current = get_session(cid)
     try:
         with current.lock:
+            with lock:
+                if current.discard_after_request:
+                    current.agent = Agente1(conversacion_id=cid)
+                    current.discard_after_request = False
             result = consultar_asistente(data.pregunta, current.agent)
     finally:
         with lock:
             current.touched = time.monotonic()
             current.requests -= 1
+            if current.discard_after_request and current.requests == 0:
+                sessions.pop(cid, None)
+            elif sessions.get(cid) is current:
+                sessions.move_to_end(cid)
+
     if result["estado"] == "error":
-        result["texto"] = GENERIC
-        if result["codigo_error"] == "error":
-            result["codigo_error"] = "modelo_no_disponible"
+        result["texto"] = GENERIC_ERROR
+        if not result.get("codigo_error"):
+            result["codigo_error"] = "error_verificacion"
     return result
 
 
@@ -78,8 +132,9 @@ def close(conversacion_id: str):
     with lock:
         current = sessions.get(conversacion_id)
         if current and current.requests:
-            raise HTTPException(409, "La conversación tiene un turno en curso.")
-        sessions.pop(conversacion_id, None)
+            current.discard_after_request = True
+        else:
+            sessions.pop(conversacion_id, None)
     return Response(status_code=204)
 
 

@@ -7,6 +7,7 @@ From: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
 
 %files
     Agents /opt/arsoft/Agents
+    shared/arsoft_http.py /opt/arsoft/arsoft_http.py
 
 %post
     if [ -f /opt/arsoft/Agents/requirements.txt ]; then
@@ -17,6 +18,7 @@ From: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
     export PYTHONUNBUFFERED=1
     export PYTHONPATH=/opt/arsoft
     export HF_HOME=/models/huggingface
+    export ARSOFT_AUDIT_PATH=/models/state/agente1_registros.jsonl
 
 %runscript
     cd /opt/arsoft
