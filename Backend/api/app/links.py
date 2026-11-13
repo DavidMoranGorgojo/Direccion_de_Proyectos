@@ -1,10 +1,9 @@
 """Configuración de conexiones internas del Backend."""
 
-import hmac
 import os
-from typing import Annotated
 
 import psycopg
+from arsoft_http import service_headers, service_token_configured, valid_service_token
 from fastapi import Header, HTTPException
 from psycopg.rows import dict_row
 
@@ -16,14 +15,8 @@ def connect():
     return psycopg.connect(dsn, row_factory=dict_row, connect_timeout=3)
 
 
-def service_headers() -> dict[str, str]:
-    token = os.getenv("ARSOFT_SERVICE_TOKEN")
-    return {"Authorization": f"Bearer {token}"} if token else {}
-
-
-def service_access(authorization: Annotated[str, Header()] = "") -> None:
-    expected = service_headers().get("Authorization")
-    if not expected:
+def service_access(authorization: str = Header(default="")) -> None:
+    if not service_token_configured():
         raise HTTPException(503, detail={"codigo": "servicio_no_disponible"})
-    if not hmac.compare_digest(authorization.encode(), expected.encode()):
+    if not valid_service_token(authorization):
         raise HTTPException(401, detail={"codigo": "acceso_denegado"})

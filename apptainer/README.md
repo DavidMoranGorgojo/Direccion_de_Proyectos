@@ -23,7 +23,10 @@ Si `arsoft-api` sigue ejecutando la versión anterior, detenla antes del nuevo a
 En otra terminal, usa el archivo privado de Agentes basado en `.env.agentes.example` y ejecuta la imagen con Ollama disponible y el modelo configurado.
 
 ```bash
+mkdir -p "$HOME/arsoft-state/agents"
+chmod 700 "$HOME/arsoft-state/agents"
 apptainer run --cleanenv --env-file "$HOME/.config/arsoft/agentes.env" \
+  --bind "$HOME/arsoft-state/agents:/models/state" \
   "$HOME/arsoft-images/agentes.sif" --serve
 ```
 
