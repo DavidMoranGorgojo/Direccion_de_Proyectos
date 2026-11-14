@@ -1,0 +1,10 @@
+
+# Modelo de reranking del Agente 2
+FlagEmbedding==1.4.2
+
+# Dependencias de inferencia verificadas con el modelo real
+torch==2.14.1
+transformers==5.20.2
+
+# Ejecución de pruebas
+pytest==9.1.1
