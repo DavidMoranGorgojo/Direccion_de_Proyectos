@@ -3,7 +3,10 @@
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field, field_validator
 
+from .busqueda import K_MAXIMO, K_POR_DEFECTO, Filtros, RespuestaBusqueda, respuesta
+from .busqueda_lexica import TOKENIZADOR, indice_lexico
 from .links import connect, service_access
 
 router = APIRouter(tags=["Conocimiento"], dependencies=[Depends(service_access)])
@@ -25,7 +28,33 @@ def active(conn):
 @router.get("/conocimiento/info")
 def info():
     with connect() as conn:
-        return active(conn)
+        return {**active(conn), "tokenizador_lexico": TOKENIZADOR}
+
+
+class BusquedaLexica(BaseModel):
+    """Petición de búsqueda léxica: texto sin tokenizar, filtros duros y k."""
+
+    texto: str
+    filtros: Filtros | None = None
+    k: int = Field(default=K_POR_DEFECTO, ge=1, le=K_MAXIMO)
+
+    @field_validator("texto")
+    @classmethod
+    def texto_con_contenido(cls, texto: str) -> str:
+        if not texto.strip():
+            raise ValueError("texto vacío")
+        return texto
+
+
+@router.post("/conocimiento/lexica", response_model=RespuestaBusqueda)
+def lexica(peticion: BusquedaLexica):
+    filtros = peticion.filtros.model_dump() if peticion.filtros else {}
+    with connect() as conn:
+        conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        index = active(conn)
+        motor = indice_lexico(conn, index)
+    motor.validar(filtros)
+    return respuesta(index, motor.buscar(peticion.texto, filtros, peticion.k))
 
 
 @router.get("/conocimiento/chunks/{chunk_id}")
