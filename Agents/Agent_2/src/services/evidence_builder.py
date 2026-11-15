@@ -82,9 +82,20 @@ def _build_evidence(candidate: Any, posicion: int) -> Evidence:
 
 def _parse_metadata(candidate: dict, base: str) -> ChunkMetadata:
     return ChunkMetadata(
-        documento=_parse_string(candidate, "documento", f"{base}.documento"),
-        seccion=_parse_string(candidate, "seccion", f"{base}.seccion"),
-        pagina=_parse_int(candidate, "pagina", f"{base}.pagina"),
+        # CTR-004 §5: sin documento, sección y página la evidencia no es válida.
+        documento=_parse_string(
+            candidate,
+            "documento",
+            f"{base}.documento",
+            non_empty=True,
+        ),
+        seccion=_parse_string(
+            candidate,
+            "seccion",
+            f"{base}.seccion",
+            non_empty=True,
+        ),
+        pagina=_parse_positive_int(candidate, "pagina", f"{base}.pagina"),
         versiones=_parse_string_list(
             candidate,
             "versiones",
@@ -105,6 +116,11 @@ def _parse_metadata(candidate: dict, base: str) -> ChunkMetadata:
             candidate,
             "sustituido_por",
             f"{base}.sustituido_por",
+        ),
+        vigente_para=_parse_string_list(
+            candidate,
+            "vigente_para",
+            f"{base}.vigente_para",
         ),
         fecha_revision=_parse_date(
             candidate,
@@ -180,6 +196,17 @@ def _parse_int(data: dict, field: str, path: str) -> int:
 
     if isinstance(value, bool) or not isinstance(value, int):
         raise EvidenceValidationError(f"El campo '{path}' debe ser un entero")
+
+    return value
+
+
+def _parse_positive_int(data: dict, field: str, path: str) -> int:
+    value = _parse_int(data, field, path)
+
+    if value < 1:
+        raise EvidenceValidationError(
+            f"El campo '{path}' debe ser un entero mayor que cero"
+        )
 
     return value
 

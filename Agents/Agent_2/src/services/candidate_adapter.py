@@ -23,6 +23,7 @@ def to_fusion_candidates(candidates: list[VectorCandidate]) -> list[dict]:
                 "tipo_documento": metadatos.tipo_documento,
                 "obsoleto": metadatos.obsoleto,
                 "sustituido_por": metadatos.sustituido_por,
+                "vigente_para": list(metadatos.vigente_para),
                 "fecha_revision": metadatos.fecha_revision,
                 "orden_en_seccion": metadatos.orden_en_seccion,
                 "version_documento": metadatos.version_documento,

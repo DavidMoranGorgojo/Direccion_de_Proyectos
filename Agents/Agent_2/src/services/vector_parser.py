@@ -97,6 +97,11 @@ def _parse_candidate(value: Any, posicion: int) -> VectorCandidate:
             "sustituido_por",
             f"{base}.sustituido_por",
         ),
+        vigente_para=_parse_string_list(
+            value,
+            "vigente_para",
+            f"{base}.vigente_para",
+        ),
         fecha_revision=_parse_date(
             value,
             "fecha_revision",

@@ -200,6 +200,7 @@ class VectorParserTests(unittest.TestCase):
             "tipo_documento",
             "obsoleto",
             "sustituido_por",
+            "vigente_para",
             "fecha_revision",
             "orden_en_seccion",
             "version_documento",
@@ -270,6 +271,9 @@ class VectorParserTests(unittest.TestCase):
             ("afectado_por", [1]),
             ("ids_referenciados", None),
             ("sustituido_por", 3),
+            ("vigente_para", "V1.1"),
+            ("vigente_para", None),
+            ("vigente_para", ["V1.1", 2]),
         ]
 
         for campo, valor in casos:
@@ -299,6 +303,17 @@ class VectorParserTests(unittest.TestCase):
         parsed = parse_vector_response(self._valid_payload())
 
         self.assertIsNone(parsed.resultados[0].metadatos.sustituido_por)
+
+    def test_vigente_para_independiente_de_versiones(self):
+        """CTR-002: vigente_para es un campo propio, no una copia de versiones."""
+        payload = self._valid_payload()
+        payload["resultados"][2]["versiones"] = ["V1.1", "V2.0"]
+        payload["resultados"][2]["vigente_para"] = ["V2.0"]
+
+        metadatos = parse_vector_response(payload).resultados[2].metadatos
+
+        self.assertEqual(metadatos.versiones, ["V1.1", "V2.0"])
+        self.assertEqual(metadatos.vigente_para, ["V2.0"])
 
     def test_listas_vacias_permitidas(self):
         parsed = parse_vector_response(self._valid_payload())
@@ -351,6 +366,7 @@ class VectorParserTests(unittest.TestCase):
         self.assertEqual(metadatos.tipo_documento, esperado["tipo_documento"])
         self.assertEqual(metadatos.obsoleto, esperado["obsoleto"])
         self.assertEqual(metadatos.sustituido_por, esperado["sustituido_por"])
+        self.assertEqual(metadatos.vigente_para, esperado["vigente_para"])
         self.assertEqual(metadatos.fecha_revision, esperado["fecha_revision"])
         self.assertEqual(
             metadatos.orden_en_seccion,

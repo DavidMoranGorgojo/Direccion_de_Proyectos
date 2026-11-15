@@ -235,16 +235,20 @@ def _metrics_for_query(ranking, relevant_ids, threshold):
         1 for relevant_id in relevant_set if relevant_id not in retained_ids
     )
 
-    precision = tp / (tp + fp) if tp + fp > 0 else 0.0
+    # Convención para métricas no definidas (None):
+    # - precision: no definida si no se conserva nada (0/0). Así una
+    #   abstención correcta no penaliza la precisión macro.
+    # - recall y f1: no definidos si la consulta no tiene relevantes.
+    # - f1 = 0 si hay relevantes y no se conserva nada (recall = 0).
+    precision = tp / (tp + fp) if tp + fp > 0 else None
     recall = tp / len(relevant_set) if relevant_set else None
 
-    if relevant_set:
-        if precision + recall > 0:
-            f1 = 2 * precision * recall / (precision + recall)
-        else:
-            f1 = 0.0
-    else:
+    if not relevant_set:
         f1 = None
+    elif precision is None or precision + recall == 0:
+        f1 = 0.0
+    else:
+        f1 = 2 * precision * recall / (precision + recall)
 
     return {
         "tp": tp,
@@ -318,7 +322,12 @@ def evaluate_thresholds(queries, thresholds=None):
             else 0.0
         )
 
-        precision_values = [item["precision"] for item in per_query]
+        # Las métricas macro promedian solo las consultas en que están definidas.
+        precision_values = [
+            item["precision"]
+            for item in per_query
+            if item["precision"] is not None
+        ]
         recall_values = [
             item["recall"] for item in per_query if item["recall"] is not None
         ]

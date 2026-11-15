@@ -114,12 +114,13 @@ def test_cada_evidencia_tiene_exactamente_cuatro_campos():
         assert set(item) == CAMPOS_EVIDENCIA
 
 
-def test_conserva_los_trece_metadatos_ctr_002():
+def test_conserva_los_catorce_metadatos_ctr_002():
     candidates = _candidatos()
 
     response = build_evidence_response(candidates)
 
-    assert len(CAMPOS_METADATOS) == 13
+    assert len(CAMPOS_METADATOS) == 14
+    assert "vigente_para" in CAMPOS_METADATOS
 
     for candidate, item in zip(candidates, response["resultados"]):
         assert set(item["metadatos"]) == CAMPOS_METADATOS
@@ -232,6 +233,8 @@ def test_texto_ausente():
         ("versiones", ["V1.1", 2]),
         ("obsoleto", "false"),
         ("sustituido_por", 1),
+        ("vigente_para", "V1.1"),
+        ("vigente_para", ["V1.1", 2]),
         ("fecha_revision", "2026-13-01"),
         ("orden_en_seccion", True),
         ("afectado_por", ["BOL-003", 1]),
@@ -247,8 +250,42 @@ def test_metadatos_incorrectos(campo, valor):
 
 
 @pytest.mark.parametrize(
+    "campo,valor",
+    [
+        ("documento", ""),
+        ("documento", "   "),
+        ("seccion", ""),
+        ("seccion", "  "),
+        ("pagina", 0),
+        ("pagina", -1),
+    ],
+)
+def test_fuente_no_citable_rechazada(campo, valor):
+    """CTR-004 §5: sin documento, sección y página la evidencia no es válida."""
+    candidate = _candidato()
+    candidate[campo] = valor
+
+    with pytest.raises(EvidenceValidationError):
+        build_evidence_response([candidate])
+
+
+def test_conserva_vigente_para_distinto_de_versiones():
+    """CTR-004 §3: el Agente 2 no descarta metadatos de CTR-002."""
+    candidate = _candidato()
+    candidate["versiones"] = ["V1.1", "V2.0"]
+    candidate["vigente_para"] = ["V2.0"]
+
+    metadatos = build_evidence_response([candidate])["resultados"][0][
+        "metadatos"
+    ]
+
+    assert metadatos["versiones"] == ["V1.1", "V2.0"]
+    assert metadatos["vigente_para"] == ["V2.0"]
+
+
+@pytest.mark.parametrize(
     "campo",
-    ["documento", "seccion", "pagina"],
+    ["documento", "seccion", "pagina", "vigente_para"],
 )
 def test_metadato_ausente(campo):
     candidate = _candidato()

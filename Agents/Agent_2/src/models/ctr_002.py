@@ -24,6 +24,7 @@ class ChunkMetadata:
     tipo_documento: str
     obsoleto: bool
     sustituido_por: Optional[str]
+    vigente_para: list[str]
     fecha_revision: str
     orden_en_seccion: int
     version_documento: str

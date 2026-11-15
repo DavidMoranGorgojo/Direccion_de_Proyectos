@@ -150,6 +150,63 @@ def test_precision_cero_si_no_hay_conservados():
     assert item["f1"] == 0.0
 
 
+def _consulta(query_id, ranking, relevantes):
+    return {
+        "query_id": query_id,
+        "ranking": [
+            {"chunk_id": chunk_id, "rerank_score": score}
+            for chunk_id, score in ranking
+        ],
+        "relevant_chunk_ids": relevantes,
+    }
+
+
+def test_abstencion_correcta_no_penaliza_precision_macro():
+    datos = [
+        _consulta("Q_perfecta", [("a", 0.9)], ["a"]),
+        _consulta("Q_sin_evidencia", [("x", 0.2)], []),
+    ]
+
+    item = evaluate_thresholds(datos, [0.5])["results"][0]
+    abstencion = item["queries"][1]
+
+    assert abstencion["retained_count"] == 0
+    assert abstencion["precision"] is None
+    assert abstencion["recall"] is None
+    assert abstencion["f1"] is None
+    assert item["macro"]["precision"] == pytest.approx(1.0)
+    assert item["macro"]["f1"] == pytest.approx(1.0)
+
+
+def test_falso_positivo_sin_relevantes_si_penaliza_precision_macro():
+    datos = [
+        _consulta("Q_perfecta", [("a", 0.9)], ["a"]),
+        _consulta("Q_sin_evidencia", [("x", 0.9)], []),
+    ]
+
+    item = evaluate_thresholds(datos, [0.5])["results"][0]
+
+    assert item["queries"][1]["precision"] == 0.0
+    assert item["macro"]["precision"] == pytest.approx(0.5)
+
+
+def test_abstencion_con_relevantes_penaliza_recall_y_f1():
+    datos = [
+        _consulta("Q_perfecta", [("a", 0.9)], ["a"]),
+        _consulta("Q_perdida", [("b", 0.2)], ["b"]),
+    ]
+
+    item = evaluate_thresholds(datos, [0.5])["results"][0]
+    perdida = item["queries"][1]
+
+    assert perdida["precision"] is None
+    assert perdida["recall"] == 0.0
+    assert perdida["f1"] == 0.0
+    assert item["macro"]["precision"] == pytest.approx(1.0)
+    assert item["macro"]["recall"] == pytest.approx(0.5)
+    assert item["macro"]["f1"] == pytest.approx(0.5)
+
+
 def test_resultados_en_orden_ascendente():
     result = evaluate_thresholds(_datos_simple(), [0.9, 0.1, 0.5])
 

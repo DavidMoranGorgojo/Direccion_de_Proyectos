@@ -26,6 +26,7 @@ CAMPOS_ESPERADOS = {
     "tipo_documento",
     "obsoleto",
     "sustituido_por",
+    "vigente_para",
     "fecha_revision",
     "orden_en_seccion",
     "version_documento",
@@ -98,6 +99,7 @@ class CandidateAdapterTests(unittest.TestCase):
         self.assertEqual(adaptado["tipo_documento"], metadatos.tipo_documento)
         self.assertEqual(adaptado["obsoleto"], metadatos.obsoleto)
         self.assertEqual(adaptado["sustituido_por"], metadatos.sustituido_por)
+        self.assertEqual(adaptado["vigente_para"], metadatos.vigente_para)
         self.assertEqual(adaptado["fecha_revision"], metadatos.fecha_revision)
         self.assertEqual(
             adaptado["orden_en_seccion"],
@@ -193,6 +195,7 @@ class CandidateAdapterTests(unittest.TestCase):
                 "tipo_documento": metadatos.tipo_documento,
                 "obsoleto": metadatos.obsoleto,
                 "sustituido_por": metadatos.sustituido_por,
+                "vigente_para": metadatos.vigente_para,
                 "fecha_revision": metadatos.fecha_revision,
                 "orden_en_seccion": metadatos.orden_en_seccion,
                 "version_documento": metadatos.version_documento,
