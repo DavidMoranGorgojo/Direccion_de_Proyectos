@@ -111,7 +111,8 @@ class ConsultaOut(BaseModel):
 
 
 # ---------- CTR-001: consulta de Frontend (pasarela hacia Agentes) ----------
-# PROVISIONAL: revisar contra el contrato CTR-001 definitivo.
+# Según el ejemplo orientativo de la Plantilla A: {"pregunta", "version_vehiculo"?, "conversacion_id"}.
+# PROVISIONAL hasta que el contrato esté firmado.
 # Solo se valida lo mínimo; el resto de campos se acepta y se reenvía tal cual a Agentes.
 class ConsultaFrontendIn(BaseModel):
     model_config = ConfigDict(extra="allow", populate_by_name=True, str_strip_whitespace=True)
@@ -119,7 +120,9 @@ class ConsultaFrontendIn(BaseModel):
         min_length=1, max_length=4000,
         validation_alias=AliasChoices("pregunta", "consulta", "mensaje", "texto"),
     )
-    chat_id: int | None = None
+    version_vehiculo: str | None = None   # V1.0 | V1.1 | V2.0, opcional
+    conversacion_id: str | int | None = None
+    chat_id: int | None = None            # chat del historial (CTR-006), si Frontend lo envía
 
 
 class ErrorPasarela(BaseModel):

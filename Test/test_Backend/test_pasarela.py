@@ -27,7 +27,7 @@ def agentes_real(monkeypatch):
         if respuesta["texto"] is not None:
             return httpx.Response(respuesta["status"], text=respuesta["texto"])
         datos = respuesta["json"] or {
-            "estado": "respondida", "respuesta": "Par de apriete: 90 Nm.",
+            "estado": "respuesta", "texto": "Par de apriete: 90 Nm.",
             "fuentes": [{"fragmento_id": "f-1", "documento": "manual.pdf", "pagina": 3},
                         {"fragmento_id": "f-2", "documento": "manual.pdf", "pagina": 4}],
         }
@@ -66,11 +66,11 @@ def test_chat_ajeno_da_404_y_no_se_reenvia(client, h_user1, h_user2, agentes_rea
 
 
 # ------------------------------------------------------------------ modo simulado
-def test_simulado_respondida_y_registrada(client, h_user1, simulado):
+def test_simulado_respuesta_y_registrada(client, h_user1, simulado):
     r = client.post("/consulta", json={"pregunta": "Par de apriete de la culata del Golf V"}, headers=h_user1)
     assert r.status_code == 200
     d = r.json()
-    assert d["estado"] == "respondida" and d["simulada"] is True
+    assert d["estado"] == "respuesta" and d["simulada"] is True and d["texto"]
     assert d["fuentes"] and d["trace_id"] == r.headers["X-Trace-Id"]
     assert r.headers["X-Agentes-Modo"] == "simulado"
 
@@ -82,18 +82,18 @@ def test_simulado_respondida_y_registrada(client, h_user1, simulado):
     assert reg[0]["latencia_ms"] is not None
 
 
-def test_simulado_aclaracion_y_rechazo(client, h_user1, simulado):
+def test_simulado_aclaracion_y_sin_evidencia(client, h_user1, simulado):
     assert client.post("/consulta", json={"pregunta": "culata"}, headers=h_user1).json()["estado"] == "aclaracion"
-    r = client.post("/consulta", json={"pregunta": "dame una receta de paella"}, headers=h_user1)
-    assert r.json()["estado"] == "rechazo"
+    d = client.post("/consulta", json={"pregunta": "dame una receta de paella"}, headers=h_user1).json()
+    assert d["estado"] == "sin_evidencia" and d["fuentes"] == []
 
 
 def test_simulado_fuentes_con_campos_obligatorios(client, h_user1, simulado):
     # ARSOFT-MEM-003 §6: documento, seccion, pagina y estado en cada fuente
     d = client.post("/consulta", json={"pregunta": "¿Cada cuántos km se cambia el refrigerante?"},
                     headers=h_user1).json()
-    assert d["estado"] == "respondida"
-    assert "60.000 km" in d["respuesta"] and "80.000" not in d["respuesta"]  # nunca el valor obsoleto
+    assert d["estado"] == "respuesta"
+    assert "60.000 km" in d["texto"] and "80.000" not in d["texto"]  # nunca el valor obsoleto
     for f in d["fuentes"]:
         assert {"documento", "seccion", "pagina", "estado", "id_fragmento"} <= f.keys()
         assert f["estado"] == "vigente"
@@ -103,14 +103,18 @@ def test_simulado_pide_version_si_la_respuesta_depende_de_ella(client, h_user1, 
     # ARSOFT-MEM-003 §4
     for pregunta in ("¿Qué significa el código HTM-0142?", "¿Qué corriente es normal en la bomba auxiliar?"):
         d = client.post("/consulta", json={"pregunta": pregunta}, headers=h_user1).json()
-        assert d["estado"] == "aclaracion" and "V1.0" in d["respuesta"]
+        assert d["estado"] == "aclaracion" and "V1.0" in d["texto"]
     d = client.post("/consulta", json={"pregunta": "¿Qué significa HTM-0142 en un V2.0?"}, headers=h_user1).json()
-    assert d["estado"] == "respondida" and "CMP-18" in d["respuesta"]
+    assert d["estado"] == "respuesta" and "CMP-18" in d["texto"]
+    # La versión también puede venir en el campo version_vehiculo de la Plantilla A
+    d = client.post("/consulta", json={"pregunta": "¿Qué significa el código HTM-0142?", "version_vehiculo": "V2.0",
+                                       "conversacion_id": "c-0001"}, headers=h_user1).json()
+    assert d["estado"] == "respuesta"
 
 
 def test_acepta_nombres_alternativos_del_campo(client, h_user1, simulado):
     r = client.post("/consulta", json={"consulta": "Par de apriete de la culata"}, headers=h_user1)
-    assert r.status_code == 200 and r.json()["estado"] == "respondida"
+    assert r.status_code == 200 and r.json()["estado"] == "respuesta"
 
 
 def test_estado_de_la_pasarela(client, h_user1, simulado):
@@ -137,7 +141,7 @@ def test_real_reenvia_el_cuerpo_sin_tocarlo(client, h_user1, agentes_real):
 
 def test_real_devuelve_la_respuesta_de_agentes_sin_tocarla(client, h_user1, agentes_real):
     _, respuesta = agentes_real
-    respuesta["json"] = {"estado": "respondida", "respuesta": "ok", "campo_nuevo": {"a": 1},
+    respuesta["json"] = {"estado": "respuesta", "texto": "ok", "campo_nuevo": {"a": 1},
                          "fuentes": [{"id": 7}, {"fragmento_id": "x"}]}
     r = client.post("/consulta", json={"pregunta": "par de apriete culata"}, headers=h_user1)
     assert r.json() == respuesta["json"]

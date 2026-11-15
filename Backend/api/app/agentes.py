@@ -87,9 +87,10 @@ def _reenviar_real(cuerpo: bytes, *, trace_id: str, usuario_id: int) -> dict:
 
 
 # ---------------------------------------------------------------- modo simulado
-# Forma de respuesta PROVISIONAL, a falta del contrato ARSOFT-DIS-002 / Plantilla A:
-#   {"estado": "respondida" | "aclaracion" | "rechazo",
-#    "trace_id": "...", "respuesta": "...", "fuentes": [...], "simulada": true}
+# Forma de respuesta según el ejemplo orientativo de la Plantilla A (contratos de interfaz),
+# a falta del contrato CTR firmado:
+#   {"estado": "respuesta" | "sin_evidencia" | "aclaracion",
+#    "texto": "...", "fuentes": [...], "trace_id": "...", "simulada": true}
 #
 # Fuentes: según ARSOFT-MEM-003 §6, cada fragmento lleva obligatoriamente
 # documento, seccion, pagina y estado; se añaden id_fragmento y version_documento
@@ -151,28 +152,35 @@ def texto_de_consulta(datos: dict) -> str:
     return ""
 
 
+def _version_indicada(datos: dict, texto: str) -> bool:
+    version = datos.get("version_vehiculo")
+    if isinstance(version, str) and version.strip():
+        return True
+    return bool(_VERSION.search(texto))
+
+
 def respuesta_simulada(datos: dict, trace_id: str) -> dict:
     texto = texto_de_consulta(datos)
     minus = texto.lower()
     base = {"trace_id": trace_id, "simulada": True}
 
     if any(p in minus for p in _FUERA_DE_AMBITO):
-        return {**base, "estado": "rechazo", "fuentes": [],
-                "respuesta": "Lo siento, solo puedo resolver dudas técnicas sobre el sistema ThermoDrive HTM-240 "
+        return {**base, "estado": "sin_evidencia", "fuentes": [],
+                "texto": "No he encontrado información sobre esto en la documentación. Solo puedo resolver dudas técnicas sobre el sistema ThermoDrive HTM-240 "
                              "y su documentación."}
 
     if len(re.findall(r"\w+", texto)) < 3:
         return {**base, "estado": "aclaracion", "fuentes": [],
-                "respuesta": "¿Puedes darme más detalles? Por ejemplo, el código de avería o el componente."}
+                "texto": "¿Puedes darme más detalles? Por ejemplo, el código de avería o el componente."}
 
-    if any(p in minus for p in _DEPENDE_DE_VERSION) and not _VERSION.search(texto):
+    if any(p in minus for p in _DEPENDE_DE_VERSION) and not _version_indicada(datos, texto):
         return {**base, "estado": "aclaracion", "fuentes": [],
-                "respuesta": "La respuesta depende de la versión del sistema. ¿Tu vehículo es V1.0, V1.1 o V2.0?"}
+                "texto": "La respuesta depende de la versión del sistema. ¿Tu vehículo es V1.0, V1.1 o V2.0?"}
 
     for claves, respuesta, fuentes in _CASOS:
         if any(c in minus for c in claves):
-            return {**base, "estado": "respondida", "respuesta": respuesta,
+            return {**base, "estado": "respuesta", "texto": respuesta,
                     "fuentes": [dict(f) for f in fuentes]}
 
-    return {**base, "estado": "respondida", "fuentes": [dict(f) for f in _FUENTES_GENERICAS],
-            "respuesta": f"[Respuesta simulada] Esta sería la respuesta de Agentes a: «{texto}»."}
+    return {**base, "estado": "respuesta", "fuentes": [dict(f) for f in _FUENTES_GENERICAS],
+            "texto": f"[Respuesta simulada] Esta sería la respuesta de Agentes a: «{texto}»."}
