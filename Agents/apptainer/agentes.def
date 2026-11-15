@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+From: pytorch/pytorch@sha256:c8268a92a69bd500f8be0e665b2630ee006dadaf7bfbc24249141b15ff622755
 
 %labels
     Project ARSOFT
@@ -22,6 +22,10 @@ From: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
 
 %runscript
     cd /opt/arsoft
+    if [ ! -w /models/state ]; then
+        echo 'Falta un directorio de auditoría escribible en /models/state; monta /models.' >&2
+        exit 2
+    fi
     if [ "${1:-}" = "--serve" ]; then
         exec python -m uvicorn Agents.service:app --host 127.0.0.1 --port 8001
     fi
@@ -32,6 +36,10 @@ From: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
 
 %startscript
     cd /opt/arsoft
+    if [ ! -w /models/state ]; then
+        echo 'Falta un directorio de auditoría escribible en /models/state; monta /models.' >&2
+        exit 2
+    fi
     if [ -n "${AGENTES_START_CMD:-}" ]; then
         exec /bin/sh -c "$AGENTES_START_CMD"
     fi

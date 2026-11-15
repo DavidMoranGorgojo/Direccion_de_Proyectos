@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: pgvector/pgvector:pg16
+From: pgvector/pgvector@sha256:484e838076e04939d27d3e176e91c86eea96236126023be8d3059761122e579f
 
 %labels
     Project ARSOFT

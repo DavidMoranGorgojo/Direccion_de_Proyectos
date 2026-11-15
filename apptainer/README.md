@@ -7,10 +7,10 @@ PostgreSQL y FastAPI se ejecutan como instancias de Apptainer en Ubuntu WSL2. El
 Desde PowerShell, abre Ubuntu en la raíz del repositorio.
 
 ```powershell
-wsl -d Ubuntu --cd /mnt/c/Users/jaime/Proyectos/Direccion_de_Proyectos
+wsl -d Ubuntu --cd /ruta/al/repositorio/Direccion_de_Proyectos
 ```
 
-Usa un archivo privado para `DATABASE_URL`, `AGENTES_URL` y `ARSOFT_SERVICE_TOKEN`, además de las credenciales de PostgreSQL. Usa el mismo token aleatorio en el archivo de entorno de Agentes. Si reutilizas `~/.config/arsoft/local.env`, conserva sus credenciales y añade el token antes de reiniciar el Backend. Puedes generar el token con `openssl rand -hex 32`.
+Usa un archivo privado para `AGENTES_URL`, `ARSOFT_SERVICE_TOKEN` y las credenciales de PostgreSQL. Los scripts construyen `DATABASE_URL` con esas credenciales. Usa el mismo token aleatorio en el archivo de entorno de Agentes. Si reutilizas `~/.config/arsoft/local.env`, conserva sus credenciales y añade el token antes de reiniciar el Backend. Puedes generar el token con `openssl rand -hex 32`.
 
 ```bash
 export ARSOFT_LOCAL_ENV="$HOME/.config/arsoft/local.env"
@@ -23,10 +23,10 @@ Si `arsoft-api` sigue ejecutando la versión anterior, detenla antes del nuevo a
 En otra terminal, usa el archivo privado de Agentes basado en `.env.agentes.example` y ejecuta la imagen con Ollama disponible y el modelo configurado.
 
 ```bash
-mkdir -p "$HOME/arsoft-state/agents"
-chmod 700 "$HOME/arsoft-state/agents"
+mkdir -p "$HOME/arsoft-state/agents/huggingface" "$HOME/arsoft-state/agents/state"
+chmod 700 "$HOME/arsoft-state/agents/state"
 apptainer run --cleanenv --env-file "$HOME/.config/arsoft/agentes.env" \
-  --bind "$HOME/arsoft-state/agents:/models/state" \
+  --bind "$HOME/arsoft-state/agents:/models" \
   "$HOME/arsoft-images/agentes.sif" --serve
 ```
 
