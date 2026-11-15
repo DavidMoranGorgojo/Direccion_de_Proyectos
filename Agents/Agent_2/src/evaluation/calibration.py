@@ -262,6 +262,38 @@ def _metrics_for_query(ranking, relevant_ids, threshold):
     }
 
 
+def _abstention_metrics(per_query):
+    """Mide la abstención: consultas en las que no se conserva ningún resultado.
+
+    - Correcta: la consulta no tiene relevantes y no se conserva nada.
+    - Falsa: la consulta tiene relevantes y no se conserva nada.
+    - Respuesta sin evidencia: la consulta no tiene relevantes y se
+      conserva algún resultado.
+
+    Las tasas son ``None`` si no hay consultas del tipo correspondiente.
+    """
+
+    sin_relevantes = [q for q in per_query if q["relevant_count"] == 0]
+    con_relevantes = [q for q in per_query if q["relevant_count"] > 0]
+
+    correctas = sum(1 for q in sin_relevantes if q["retained_count"] == 0)
+    falsas = sum(1 for q in con_relevantes if q["retained_count"] == 0)
+
+    return {
+        "consultas_sin_relevantes": len(sin_relevantes),
+        "consultas_con_relevantes": len(con_relevantes),
+        "abstenciones_correctas": correctas,
+        "abstenciones_falsas": falsas,
+        "respuestas_sin_evidencia": len(sin_relevantes) - correctas,
+        "tasa_abstencion_correcta": (
+            correctas / len(sin_relevantes) if sin_relevantes else None
+        ),
+        "tasa_abstencion_falsa": (
+            falsas / len(con_relevantes) if con_relevantes else None
+        ),
+    }
+
+
 def evaluate_threshold(queries, threshold):
     normalized = normalize_calibration_data(queries)
     thresholds = normalize_thresholds([threshold])
@@ -363,6 +395,7 @@ def evaluate_thresholds(queries, thresholds=None):
             "recall": recall_macro,
             "f1": f1_macro,
         }
+        abstencion = _abstention_metrics(per_query)
 
         item = {
             "threshold": threshold,
@@ -381,6 +414,7 @@ def evaluate_thresholds(queries, thresholds=None):
             "precision_macro": precision_macro,
             "recall_macro": recall_macro,
             "f1_macro": f1_macro,
+            "abstencion": abstencion,
             "retained_count": retained_total,
             "retained_results": retained_total,
             "average_retained_per_query": average_retained,
@@ -423,11 +457,15 @@ def dump_calibration_result(result, path):
 
 def format_calibration_table(result):
     lines = []
-    header = "umbral  precision  recall     f1         media  TP  FP  FN"
+    header = (
+        "umbral  precision  recall     f1         media  TP  FP  FN"
+        "  abst_ok  abst_mal"
+    )
     lines.append(header)
     lines.append("-" * len(header))
 
     for item in result["results"]:
+        abstencion = item["abstencion"]
         lines.append(
             f"{item['threshold']:.2f}    "
             f"{item['precision']:.4f}   "
@@ -436,7 +474,11 @@ def format_calibration_table(result):
             f"{item['average_retained_per_query']:.4f}  "
             f"{item['tp']:>2}  "
             f"{item['fp']:>2}  "
-            f"{item['fn']:>2}"
+            f"{item['fn']:>2}  "
+            f"{abstencion['abstenciones_correctas']:>2}/"
+            f"{abstencion['consultas_sin_relevantes']:<4}  "
+            f"{abstencion['abstenciones_falsas']:>2}/"
+            f"{abstencion['consultas_con_relevantes']:<4}"
         )
 
     return "\n".join(lines)

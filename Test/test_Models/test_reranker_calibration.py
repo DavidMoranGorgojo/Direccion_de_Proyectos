@@ -207,6 +207,58 @@ def test_abstencion_con_relevantes_penaliza_recall_y_f1():
     assert item["macro"]["f1"] == pytest.approx(0.5)
 
 
+def test_metricas_de_abstencion():
+    datos = [
+        _consulta("Q_perfecta", [("a", 0.9)], ["a"]),
+        _consulta("Q_perdida", [("b", 0.2)], ["b"]),
+        _consulta("Q_abst_ok", [("x", 0.2)], []),
+        _consulta("Q_sin_evidencia", [("y", 0.9)], []),
+        _consulta("Q_abst_ok_vacia", [], []),
+    ]
+
+    abstencion = evaluate_thresholds(datos, [0.5])["results"][0]["abstencion"]
+
+    assert abstencion == {
+        "consultas_sin_relevantes": 3,
+        "consultas_con_relevantes": 2,
+        "abstenciones_correctas": 2,
+        "abstenciones_falsas": 1,
+        "respuestas_sin_evidencia": 1,
+        "tasa_abstencion_correcta": pytest.approx(2 / 3),
+        "tasa_abstencion_falsa": pytest.approx(0.5),
+    }
+
+
+def test_abstencion_depende_del_umbral():
+    datos = [
+        _consulta("Q_rel", [("a", 0.6)], ["a"]),
+        _consulta("Q_sin_rel", [("x", 0.4)], []),
+    ]
+
+    resultados = evaluate_thresholds(datos, [0.3, 0.5, 0.7])["results"]
+    abst = [item["abstencion"] for item in resultados]
+
+    assert [a["abstenciones_correctas"] for a in abst] == [0, 1, 1]
+    assert [a["abstenciones_falsas"] for a in abst] == [0, 0, 1]
+
+
+def test_tasas_de_abstencion_no_definidas_sin_consultas_del_tipo():
+    solo_con_relevantes = evaluate_thresholds(_datos_simple(), [0.5])
+    abstencion = solo_con_relevantes["results"][0]["abstencion"]
+
+    assert abstencion["consultas_sin_relevantes"] == 0
+    assert abstencion["tasa_abstencion_correcta"] is None
+    assert abstencion["tasa_abstencion_falsa"] == 0.0
+
+    solo_sin_relevantes = evaluate_thresholds(
+        [_consulta("Q", [("x", 0.9)], [])], [0.5]
+    )
+    abstencion = solo_sin_relevantes["results"][0]["abstencion"]
+
+    assert abstencion["tasa_abstencion_falsa"] is None
+    assert abstencion["tasa_abstencion_correcta"] == 0.0
+
+
 def test_resultados_en_orden_ascendente():
     result = evaluate_thresholds(_datos_simple(), [0.9, 0.1, 0.5])
 
@@ -345,6 +397,8 @@ def test_format_calibration_table():
 
     assert "umbral" in tabla
     assert "0.50" in tabla
+    assert "abst_ok" in tabla
+    assert "abst_mal" in tabla
 
 
 def test_dump_calibration_result(tmp_path):
