@@ -5,7 +5,7 @@ Revisar contra los contratos CTR-003, CTR-005 y CTR-006 definitivos.
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 
 # ---------- CTR-005: login ----------
@@ -85,7 +85,8 @@ class ChatDetalle(ChatResumen):
 # ---------- CTR-003: registro de consultas ----------
 class ConsultaIn(BaseModel):
     consulta: str = Field(min_length=1)
-    tipo_busqueda: Literal["vectorial", "bm25", "otro"]
+    # "agentes": consulta que pasa por la pasarela hacia Agentes (POST /consulta)
+    tipo_busqueda: Literal["vectorial", "bm25", "agentes", "otro"]
     chat_id: int | None = None
     num_resultados: int = 0
     resultados: list | None = None
@@ -107,3 +108,22 @@ class ConsultaOut(BaseModel):
     estado: str
     error: str | None
     creado_en: datetime
+
+
+# ---------- CTR-001: consulta de Frontend (pasarela hacia Agentes) ----------
+# PROVISIONAL: revisar contra el contrato CTR-001 definitivo.
+# Solo se valida lo mínimo; el resto de campos se acepta y se reenvía tal cual a Agentes.
+class ConsultaFrontendIn(BaseModel):
+    model_config = ConfigDict(extra="allow", populate_by_name=True, str_strip_whitespace=True)
+    pregunta: str = Field(
+        min_length=1, max_length=4000,
+        validation_alias=AliasChoices("pregunta", "consulta", "mensaje", "texto"),
+    )
+    chat_id: int | None = None
+
+
+class ErrorPasarela(BaseModel):
+    estado: Literal["error"] = "error"
+    mensaje: str
+    codigo_error: str
+    trace_id: str | None = None

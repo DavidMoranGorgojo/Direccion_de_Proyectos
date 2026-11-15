@@ -67,7 +67,7 @@ class RegistroConsulta(Base):
     usuario_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id", ondelete="SET NULL"), index=True, nullable=True)
     chat_id: Mapped[int | None] = mapped_column(ForeignKey("chats.id", ondelete="SET NULL"), nullable=True)
     consulta: Mapped[str] = mapped_column(Text)
-    tipo_busqueda: Mapped[str] = mapped_column(String(16))  # vectorial | bm25 | otro
+    tipo_busqueda: Mapped[str] = mapped_column(String(16))  # vectorial | bm25 | agentes | otro
     num_resultados: Mapped[int] = mapped_column(Integer, default=0)
     resultados: Mapped[list | None] = mapped_column(JSON, nullable=True)  # ids de fragmentos devueltos
     latencia_ms: Mapped[float | None] = mapped_column(Float, nullable=True)

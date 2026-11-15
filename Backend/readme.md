@@ -1,5 +1,38 @@
 # Backend · API (FastAPI)
 
+## Pasarela hacia Agentes (Álvaro)
+
+La consulta de Frontend (**CTR-001**) llega a Backend, se reenvía a Agentes **sin tocarla** y queda registrada con el registro de consultas (**CTR-003**).
+
+**`POST /consulta`** (requiere `Authorization: Bearer <token>`)
+- Cuerpo (provisional, a falta del CTR-001 definitivo): `{"pregunta": "...", "chat_id"?: 12, ...}`. También se acepta `consulta`, `mensaje` o `texto` en lugar de `pregunta`. El resto de campos se acepta y se reenvía.
+- Backend solo comprueba que haya pregunta y que el `chat_id`, si viene, sea del usuario (si no, 404 y no se reenvía).
+- A Agentes le llegan **los mismos bytes** que mandó Frontend, en `POST {AGENTES_URL}{AGENTES_RUTA}`, con las cabeceras `X-Trace-Id` y `X-Usuario-Id`. El token del usuario no se reenvía.
+- A Frontend le llega la respuesta de Agentes **tal cual**, con las cabeceras `X-Trace-Id` y `X-Agentes-Modo` (`real` | `simulado`).
+- Cada consulta se registra con `tipo_busqueda: "agentes"`: latencia, nº de fuentes, ids de los fragmentos citados, y `estado: error` con el motivo y el trace_id si falla.
+- Errores: `{"estado": "error", "mensaje", "codigo_error", "trace_id"}`
+  - 422 `datos_incompletos` · 404 `chat_no_encontrado` · 502 `agentes_no_disponible` · 502 `agentes_respuesta_invalida` · 504 `agentes_tiempo_agotado`
+
+**`GET /consulta/estado`** → `{"modo": "real" | "simulado"}`
+
+**Configuración**
+
+| Variable | Por defecto | |
+|---|---|---|
+| `AGENTES_URL` | (vacía) | URL base de Agentes, p. ej. `http://localhost:8100` |
+| `AGENTES_RUTA` | `/consulta` | ruta del endpoint de Agentes |
+| `AGENTES_MODO` | `real` si hay `AGENTES_URL`, si no `simulado` | |
+| `AGENTES_TIMEOUT_S` | `60` | |
+
+**Modo simulado** (mientras Agentes no esté listo). Devuelve respuestas con esta forma, que también es provisional:
+```json
+{"estado": "respondida", "trace_id": "t-…", "respuesta": "…", "simulada": true,
+ "fuentes": [{"fragmento_id": "sim-0001", "documento": "…", "pagina": 42, "componente": "motor", "extracto": "…"}]}
+```
+- Menos de 3 palabras → `estado: "aclaracion"`; temas fuera de ámbito (receta, fútbol…) → `estado: "rechazo"`; lo demás → `"respondida"`. Los estados `aclaracion` y `rechazo` son los del Agente 1.
+
+Código: `api/app/agentes.py` (cliente y respuestas simuladas) y `api/app/routers/pasarela.py`. Tests: `Test/test_Backend/test_pasarela.py`.
+
 ## Login, historial de chats y registro de consultas (Álvaro)
 
 **CTR-005** (login), **CTR-006** (historial de chats) y **CTR-003** (registro de consultas), con usuarios de prueba y tests.
@@ -58,3 +91,6 @@ El contrato aún no define el mecanismo de sesión; se devuelve `token` (JWT), q
 - **Esquema:** `db/schema_usuarios.sql` es la propuesta de tablas para el esquema unificado (Roberto y Daniel). Al cerrarlo, alinear `api/app/models.py`.
 - **Búsqueda (Jaime):** llamar a `registrar_consulta` desde los endpoints vectorial y BM25.
 - **Contratos CTR-003 y CTR-006:** los campos son una propuesta; revisar contra los definitivos.
+- **Pasarela:** revisar los campos de `ConsultaFrontendIn` (`schemas.py`) y la respuesta simulada (`agentes.py`) contra CTR-001 y el contrato de respuesta de Agentes. Confirmar con Agentes la ruta (`AGENTES_RUTA`) y si quieren el `X-Trace-Id`.
+- **Esquema:** se añade `agentes` a los valores de `tipo_busqueda` (también en el CHECK de `db/schema_usuarios.sql`). Tenerlo en cuenta al unificar el esquema.
+- **Semana que viene:** paso a Agentes reales (`AGENTES_MODO=real`) y conexión con Frontend.

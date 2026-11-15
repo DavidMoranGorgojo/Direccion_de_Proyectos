@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS registro_consultas (
     usuario_id      INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
     chat_id         INTEGER REFERENCES chats(id)    ON DELETE SET NULL,
     consulta        TEXT        NOT NULL,
-    tipo_busqueda   VARCHAR(16) NOT NULL CHECK (tipo_busqueda IN ('vectorial', 'bm25', 'otro')),
+    tipo_busqueda   VARCHAR(16) NOT NULL CHECK (tipo_busqueda IN ('vectorial', 'bm25', 'agentes', 'otro')),
     num_resultados  INTEGER     NOT NULL DEFAULT 0,
     resultados      JSONB,                  -- ids de fragmentos devueltos
     latencia_ms     DOUBLE PRECISION,
