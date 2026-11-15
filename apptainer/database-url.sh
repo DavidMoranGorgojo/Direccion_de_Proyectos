@@ -7,6 +7,8 @@ if [[ -z "${POSTGRES_PASSWORD:-}" || "$POSTGRES_PASSWORD" == CAMBIAR_ANTES_DE_US
   return 2
 fi
 export POSTGRES_USER POSTGRES_DB POSTGRES_PASSWORD
-DATABASE_URL="$(python3 -c 'import os, urllib.parse as u; q=lambda name: u.quote(os.environ[name], safe=""); print("postgresql://%s:%s@127.0.0.1:5432/%s" % (q("POSTGRES_USER"), q("POSTGRES_PASSWORD"), q("POSTGRES_DB")))')"
-[[ -n "$DATABASE_URL" ]] || { echo 'No se pudo construir DATABASE_URL' >&2; return 2; }
+if ! DATABASE_URL="$("${ARSOFT_PYTHON_BIN:-python3}" -c 'import os, urllib.parse as u; q=lambda name: u.quote(os.environ[name], safe=""); print("postgresql://%s:%s@127.0.0.1:5432/%s" % (q("POSTGRES_USER"), q("POSTGRES_PASSWORD"), q("POSTGRES_DB")))')"; then
+  echo 'No se pudo construir DATABASE_URL; se necesita Python 3 en el host.' >&2
+  return 2
+fi
 export DATABASE_URL

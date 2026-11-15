@@ -6,7 +6,11 @@ From: pytorch/pytorch@sha256:c8268a92a69bd500f8be0e665b2630ee006dadaf7bfbc242491
     Service Agentes-GPU
 
 %files
-    Agents /opt/arsoft/Agents
+    Agents/__init__.py /opt/arsoft/Agents/__init__.py
+    Agents/requirements.txt /opt/arsoft/Agents/requirements.txt
+    Agents/service.py /opt/arsoft/Agents/service.py
+    Agents/agente1/__init__.py /opt/arsoft/Agents/agente1/__init__.py
+    Agents/agente1/core.py /opt/arsoft/Agents/agente1/core.py
     shared/arsoft_http.py /opt/arsoft/arsoft_http.py
 
 %post
