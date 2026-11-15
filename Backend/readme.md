@@ -24,12 +24,17 @@ La consulta de Frontend (**CTR-001**) llega a Backend, se reenvía a Agentes **s
 | `AGENTES_MODO` | `real` si hay `AGENTES_URL`, si no `simulado` | |
 | `AGENTES_TIMEOUT_S` | `60` | |
 
-**Modo simulado** (mientras Agentes no esté listo). Devuelve respuestas con esta forma, que también es provisional:
+**Modo simulado** (mientras Agentes no esté listo). Forma provisional a falta del contrato **ARSOFT-DIS-002 / Plantilla A (Contratos de Interfaz)**; las fuentes siguen **ARSOFT-MEM-003 §6** (`documento`, `seccion`, `pagina` y `estado` obligatorios):
 ```json
-{"estado": "respondida", "trace_id": "t-…", "respuesta": "…", "simulada": true,
- "fuentes": [{"fragmento_id": "sim-0001", "documento": "…", "pagina": 42, "componente": "motor", "extracto": "…"}]}
+{"estado": "respondida", "trace_id": "t-…", "simulada": true,
+ "respuesta": "El refrigerante se sustituye cada 60.000 km o 48 meses…",
+ "fuentes": [{"id_fragmento": "HTM240-MNT-001_p2_refrigerante", "documento": "HTM240-MNT-001",
+              "version_documento": "1.1", "seccion": "Plan de mantenimiento", "pagina": 2,
+              "estado": "vigente", "extracto": "…"}]}
 ```
-- Menos de 3 palabras → `estado: "aclaracion"`; temas fuera de ámbito (receta, fútbol…) → `estado: "rechazo"`; lo demás → `"respondida"`. Los estados `aclaracion` y `rechazo` son los del Agente 1.
+- Fuera de ámbito (receta, fútbol…) → `rechazo`. Menos de 3 palabras → `aclaracion`.
+- Pregunta que depende de la versión del vehículo (HTM-0142, bomba auxiliar CMP-02, PTC, sensores…) sin indicar V1.0/V1.1/V2.0 → `aclaracion` pidiendo la versión (ARSOFT-MEM-003 §4).
+- Respuestas de ejemplo con datos reales del corpus: refrigerante (60.000 km, nunca el valor obsoleto), HTM-0142 y corriente de CMP-02. El resto → respuesta genérica.
 
 Código: `api/app/agentes.py` (cliente y respuestas simuladas) y `api/app/routers/pasarela.py`. Tests: `Test/test_Backend/test_pasarela.py`.
 
@@ -91,6 +96,6 @@ El contrato aún no define el mecanismo de sesión; se devuelve `token` (JWT), q
 - **Esquema:** `db/schema_usuarios.sql` es la propuesta de tablas para el esquema unificado (Roberto y Daniel). Al cerrarlo, alinear `api/app/models.py`.
 - **Búsqueda (Jaime):** llamar a `registrar_consulta` desde los endpoints vectorial y BM25.
 - **Contratos CTR-003 y CTR-006:** los campos son una propuesta; revisar contra los definitivos.
-- **Pasarela:** revisar los campos de `ConsultaFrontendIn` (`schemas.py`) y la respuesta simulada (`agentes.py`) contra CTR-001 y el contrato de respuesta de Agentes. Confirmar con Agentes la ruta (`AGENTES_RUTA`) y si quieren el `X-Trace-Id`.
+- **Pasarela:** revisar los campos de `ConsultaFrontendIn` (`schemas.py`) y la respuesta simulada (`agentes.py`) contra CTR-001 en ARSOFT-DIS-002 / Plantilla A. Confirmar con Agentes la ruta (`AGENTES_RUTA`) y si quieren el `X-Trace-Id`.
 - **Esquema:** se añade `agentes` a los valores de `tipo_busqueda` (también en el CHECK de `db/schema_usuarios.sql`). Tenerlo en cuenta al unificar el esquema.
 - **Semana que viene:** paso a Agentes reales (`AGENTES_MODO=real`) y conexión con Frontend.

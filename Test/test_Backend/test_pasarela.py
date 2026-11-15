@@ -78,7 +78,7 @@ def test_simulado_respondida_y_registrada(client, h_user1, simulado):
     assert len(reg) == 1
     assert reg[0]["tipo_busqueda"] == "agentes" and reg[0]["estado"] == "ok"
     assert reg[0]["num_resultados"] == len(d["fuentes"])
-    assert reg[0]["resultados"] == [f["fragmento_id"] for f in d["fuentes"]]
+    assert reg[0]["resultados"] == [f["id_fragmento"] for f in d["fuentes"]]
     assert reg[0]["latencia_ms"] is not None
 
 
@@ -86,6 +86,26 @@ def test_simulado_aclaracion_y_rechazo(client, h_user1, simulado):
     assert client.post("/consulta", json={"pregunta": "culata"}, headers=h_user1).json()["estado"] == "aclaracion"
     r = client.post("/consulta", json={"pregunta": "dame una receta de paella"}, headers=h_user1)
     assert r.json()["estado"] == "rechazo"
+
+
+def test_simulado_fuentes_con_campos_obligatorios(client, h_user1, simulado):
+    # ARSOFT-MEM-003 §6: documento, seccion, pagina y estado en cada fuente
+    d = client.post("/consulta", json={"pregunta": "¿Cada cuántos km se cambia el refrigerante?"},
+                    headers=h_user1).json()
+    assert d["estado"] == "respondida"
+    assert "60.000 km" in d["respuesta"] and "80.000" not in d["respuesta"]  # nunca el valor obsoleto
+    for f in d["fuentes"]:
+        assert {"documento", "seccion", "pagina", "estado", "id_fragmento"} <= f.keys()
+        assert f["estado"] == "vigente"
+
+
+def test_simulado_pide_version_si_la_respuesta_depende_de_ella(client, h_user1, simulado):
+    # ARSOFT-MEM-003 §4
+    for pregunta in ("¿Qué significa el código HTM-0142?", "¿Qué corriente es normal en la bomba auxiliar?"):
+        d = client.post("/consulta", json={"pregunta": pregunta}, headers=h_user1).json()
+        assert d["estado"] == "aclaracion" and "V1.0" in d["respuesta"]
+    d = client.post("/consulta", json={"pregunta": "¿Qué significa HTM-0142 en un V2.0?"}, headers=h_user1).json()
+    assert d["estado"] == "respondida" and "CMP-18" in d["respuesta"]
 
 
 def test_acepta_nombres_alternativos_del_campo(client, h_user1, simulado):

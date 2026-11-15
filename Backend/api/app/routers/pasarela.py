@@ -35,7 +35,7 @@ def _ids_fuentes(datos: dict) -> list:
     ids = []
     for f in fuentes:
         if isinstance(f, dict):
-            ident = f.get("fragmento_id") or f.get("id") or f.get("chunk_id") or f.get("documento")
+            ident = f.get("id_fragmento") or f.get("fragmento_id") or f.get("id") or f.get("chunk_id") or f.get("documento")
             if ident is not None:
                 ids.append(ident)
         elif isinstance(f, (str, int)):

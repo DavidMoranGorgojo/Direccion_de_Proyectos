@@ -87,30 +87,58 @@ def _reenviar_real(cuerpo: bytes, *, trace_id: str, usuario_id: int) -> dict:
 
 
 # ---------------------------------------------------------------- modo simulado
-# Forma de respuesta PROVISIONAL (revisar con el contrato definitivo de Agentes):
+# Forma de respuesta PROVISIONAL, a falta del contrato ARSOFT-DIS-002 / Plantilla A:
 #   {"estado": "respondida" | "aclaracion" | "rechazo",
-#    "trace_id": "...", "respuesta": "...",
-#    "fuentes": [{"fragmento_id", "documento", "pagina", "componente", "extracto"}],
-#    "simulada": true}
-# "aclaracion" y "rechazo" corresponden a los estados del Agente 1 (agente1_core.py).
+#    "trace_id": "...", "respuesta": "...", "fuentes": [...], "simulada": true}
+#
+# Fuentes: según ARSOFT-MEM-003 §6, cada fragmento lleva obligatoriamente
+# documento, seccion, pagina y estado; se añaden id_fragmento y version_documento
+# de la estructura de metadatos de pgvector.
+# Aclaración: según ARSOFT-MEM-003 §4, si la respuesta depende de la versión del
+# vehículo (V1.0, V1.1, V2.0) y el usuario no la indica, el estado es "aclaracion".
 
 _FUERA_DE_AMBITO = ("receta", "futbol", "fútbol", "chiste", "política", "politica", "horóscopo", "horoscopo")
 
-_FUENTES_EJEMPLO = [
-    {
-        "fragmento_id": "sim-0001",
-        "documento": "Manual de taller (simulado)",
-        "pagina": 42,
-        "componente": "motor",
-        "extracto": "Fragmento de ejemplo devuelto por la pasarela en modo simulado.",
-    },
-    {
-        "fragmento_id": "sim-0002",
-        "documento": "Ficha técnica (simulada)",
-        "pagina": 7,
-        "componente": "motor",
-        "extracto": "Segundo fragmento de ejemplo para probar la lista de fuentes.",
-    },
+# Temas cuya respuesta cambia según la versión (ARSOFT-MEM-003 §4)
+_DEPENDE_DE_VERSION = ("htm-0142", "bomba auxiliar", "cmp-02", "corriente", "ptc", "calentador",
+                       "cmp-15", "sensor de temperatura de batería", "sensor de temperatura de bateria",
+                       "sensor de presión", "sensor de presion")
+_VERSION = re.compile(r"\bv\s?(1\.0|1\.1|2\.0)\b|\bversi[oó]n\s+(1\.0|1\.1|2\.0)\b", re.IGNORECASE)
+
+
+def _fuente(id_fragmento, documento, version, seccion, pagina, extracto):
+    return {"id_fragmento": id_fragmento, "documento": documento, "version_documento": version,
+            "seccion": seccion, "pagina": pagina, "estado": "vigente", "extracto": extracto}
+
+
+# Respuestas de ejemplo con datos reales del corpus ThermoDrive HTM-240
+_CASOS = [
+    (("refrigerante",),
+     "El refrigerante se sustituye cada 60.000 km o 48 meses, lo que antes ocurra (MNT-001 v1.1, "
+     "corregido por el boletín BOL-006).",
+     [_fuente("HTM240-MNT-001_p2_refrigerante", "HTM240-MNT-001", "1.1", "Plan de mantenimiento", 2,
+              "Sustitución de refrigerante: 60.000 km o 48 meses."),
+      _fuente("HTM240-BOL-006_p1_correccion", "HTM240-BOL-006", "1.0", "Corrección", 1,
+              "Corrige la errata del intervalo de refrigerante a 60.000 km o 48 meses.")]),
+    (("htm-0142",),
+     "En V2.0, el código HTM-0142 indica un fallo del sensor combinado CMP-18 (BOL-003). "
+     "En V1.0 y V1.1 significa que el precalentamiento de batería no completó su objetivo.",
+     [_fuente("HTM240-DTC-001_p3_htm0142", "HTM240-DTC-001", "1.0", "Códigos TCU", 3,
+              "HTM-0142: precalentamiento de batería no completado."),
+      _fuente("HTM240-BOL-003_p1_cambio", "HTM240-BOL-003", "1.0", "Cambio de significado", 1,
+              "En V2.0, HTM-0142 pasa a indicar fallo del sensor combinado CMP-18.")]),
+    (("bomba auxiliar", "cmp-02", "corriente"),
+     "La corriente nominal de la bomba auxiliar CMP-02 es de 3-6 A a 12 V en V1.1 y V2.0 (BOL-002). "
+     "En V1.0 sin actualizar se mantiene en 3-5 A.",
+     [_fuente("HTM240-PRC-003_p1_pasos", "HTM240-PRC-003", "2.0", "Pasos de verificación", 1,
+              "Corriente nominal CMP-02: 3-6 A a 12 V."),
+      _fuente("HTM240-BOL-002_p1_corriente", "HTM240-BOL-002", "1.0", "Modificación", 1,
+              "Actualiza la corriente nominal de la bomba CMP-02 a 3-6 A a 12 V.")]),
+]
+
+_FUENTES_GENERICAS = [
+    _fuente("HTM240-SIM-001_p1", "HTM240-SIM-001", "1.0", "Fragmento simulado", 1,
+            "Fragmento de ejemplo devuelto por la pasarela en modo simulado."),
 ]
 
 
@@ -130,11 +158,21 @@ def respuesta_simulada(datos: dict, trace_id: str) -> dict:
 
     if any(p in minus for p in _FUERA_DE_AMBITO):
         return {**base, "estado": "rechazo", "fuentes": [],
-                "respuesta": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales."}
+                "respuesta": "Lo siento, solo puedo resolver dudas técnicas sobre el sistema ThermoDrive HTM-240 "
+                             "y su documentación."}
 
     if len(re.findall(r"\w+", texto)) < 3:
         return {**base, "estado": "aclaracion", "fuentes": [],
-                "respuesta": "¿Puedes darme más detalles? Por ejemplo, el modelo del vehículo y el componente."}
+                "respuesta": "¿Puedes darme más detalles? Por ejemplo, el código de avería o el componente."}
 
-    return {**base, "estado": "respondida", "fuentes": [dict(f) for f in _FUENTES_EJEMPLO],
+    if any(p in minus for p in _DEPENDE_DE_VERSION) and not _VERSION.search(texto):
+        return {**base, "estado": "aclaracion", "fuentes": [],
+                "respuesta": "La respuesta depende de la versión del sistema. ¿Tu vehículo es V1.0, V1.1 o V2.0?"}
+
+    for claves, respuesta, fuentes in _CASOS:
+        if any(c in minus for c in claves):
+            return {**base, "estado": "respondida", "respuesta": respuesta,
+                    "fuentes": [dict(f) for f in fuentes]}
+
+    return {**base, "estado": "respondida", "fuentes": [dict(f) for f in _FUENTES_GENERICAS],
             "respuesta": f"[Respuesta simulada] Esta sería la respuesta de Agentes a: «{texto}»."}
