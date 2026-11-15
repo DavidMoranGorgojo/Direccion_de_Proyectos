@@ -2,8 +2,9 @@
 
 Las de validación no necesitan base de datos. Las demás requieren un PostgreSQL con pgvector:
 
+    pip install fastapi httpx "psycopg[binary]" pytest
     export DATABASE_URL=postgresql://postgres:postgres@localhost:5433/thermodrive_test
-    python -m pytest
+    cd Backend/api && python -m pytest
 
 Crean el esquema `conocimiento` si no existe y cargan una versión de índice propia («test-api»),
 que borran al terminar. No tocan otras versiones.
@@ -16,11 +17,11 @@ from pathlib import Path
 
 import psycopg
 import pytest
+from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
+from psycopg.rows import dict_row
 
-from app import busqueda
-from app.db import get_conn
-from app.main import app
+from app.vectorial import busqueda, crear_router
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 ESQUEMA = Path(__file__).resolve().parents[2] / "db" / "init" / "01_conocimiento.sql"
@@ -82,17 +83,21 @@ def bd():
         conn.execute("DELETE FROM conocimiento.indice_version WHERE version = %s", (VERSION,))
 
 
+def conectar():
+    """Igual que links.connect de integracion-api: filas como diccionario y sin autocommit."""
+    return psycopg.connect(DATABASE_URL, row_factory=dict_row)
+
+
+def montar(abrir_conexion, acceso=None) -> TestClient:
+    app = FastAPI()
+    app.include_router(crear_router(abrir_conexion, acceso))
+    return TestClient(app)
+
+
 @pytest.fixture()
 def cliente(bd):
     busqueda.limpiar_cache()
-
-    def conexion():
-        with psycopg.connect(DATABASE_URL, autocommit=True) as conn:
-            yield conn
-
-    app.dependency_overrides[get_conn] = conexion
-    yield TestClient(app)
-    app.dependency_overrides.clear()
+    return montar(conectar)
 
 
 def pedir(cliente, sem=1, filtros=None, k=30, **extra):
@@ -203,13 +208,32 @@ def test_indice_nuevo_en_carga_no_afecta_a_la_activa(cliente):
             conn.execute("DELETE FROM conocimiento.indice_version WHERE version = 'test-api-nueva'")
 
 
-# --- Validación de la petición (no necesita base de datos) ---
+# --- Validación de la petición, acceso y caída de la base de datos (sin base de datos) ---
+
+def sin_bd():
+    raise AssertionError("no debería abrirse la conexión")
+
 
 @pytest.fixture()
 def cliente_sin_bd():
-    app.dependency_overrides[get_conn] = lambda: iter([None])
-    yield TestClient(app)
-    app.dependency_overrides.clear()
+    return montar(sin_bd)
+
+
+def test_acceso_protege_la_ruta():
+    def denegar():
+        raise HTTPException(401, detail={"codigo": "acceso_denegado"})
+
+    protegido = montar(sin_bd, acceso=denegar)
+    r = protegido.post("/conocimiento/vectorial", json={"vector": [0.1] * 1024, "k": 1})
+    assert r.status_code == 401 and r.json()["detail"]["codigo"] == "acceso_denegado"
+
+
+def test_base_de_datos_caida_es_503_indice_no_disponible():
+    def caida():
+        raise psycopg.OperationalError("sin conexión")
+
+    r = montar(caida).post("/conocimiento/vectorial", json={"vector": [0.1] * 1024, "k": 1})
+    assert r.status_code == 503 and r.json()["codigo"] == "indice_no_disponible"
 
 
 @pytest.mark.parametrize("cuerpo", [

@@ -45,31 +45,34 @@ class Indice:
     dimensiones: int
 
 
+def _filas(conn: psycopg.Connection, sql: str, parametros=None) -> List[dict]:
+    """Filas como diccionarios, sea cual sea el row_factory de la conexión que nos pasen."""
+    with conn.cursor(row_factory=dict_row) as cur:
+        return cur.execute(sql, parametros).fetchall()
+
+
 def indice_activo(conn: psycopg.Connection) -> Optional[Indice]:
-    fila = conn.execute(
-        "SELECT version, modelo_embeddings, dimensiones FROM conocimiento.indice_version WHERE activo"
-    ).fetchone()
-    return Indice(*fila) if fila else None
+    filas = _filas(conn, "SELECT version, modelo_embeddings, dimensiones FROM conocimiento.indice_version WHERE activo")
+    return Indice(**filas[0]) if filas else None
 
 
 def valores_validos(conn: psycopg.Connection, indice: Indice) -> Dict[str, List[str]]:
     if indice.version in _VALIDOS:
         return _VALIDOS[indice.version]
-    fila = conn.execute(
-        "SELECT contenido FROM conocimiento.catalogo WHERE nombre = 'vehiculos' AND version = %s", (indice.version,)
-    ).fetchone()
-    if fila:
-        versiones = sorted(v["version"] for v in fila[0])
+    catalogo = _filas(conn, "SELECT contenido FROM conocimiento.catalogo WHERE nombre = 'vehiculos' AND version = %s",
+                      (indice.version,))
+    if catalogo:
+        versiones = sorted(v["version"] for v in catalogo[0]["contenido"])
     else:
-        versiones = [r[0] for r in conn.execute(
-            "SELECT DISTINCT unnest(versiones) AS v FROM conocimiento.chunk WHERE indice_version = %s ORDER BY 1",
-            (indice.version,)).fetchall()]
+        versiones = [r["valor"] for r in _filas(
+            conn, "SELECT DISTINCT unnest(versiones) AS valor FROM conocimiento.chunk WHERE indice_version = %s ORDER BY 1",
+            (indice.version,))]
     # Componente y tipo de documento: la lista cerrada que usa el índice cargado
     valores = {"version": versiones}
     for campo in ("componente", "tipo_documento"):
-        valores[campo] = [r[0] for r in conn.execute(
-            f"SELECT DISTINCT {campo} FROM conocimiento.chunk WHERE indice_version = %s ORDER BY 1",
-            (indice.version,)).fetchall()]
+        valores[campo] = [r["valor"] for r in _filas(
+            conn, f"SELECT DISTINCT {campo} AS valor FROM conocimiento.chunk WHERE indice_version = %s ORDER BY 1",
+            (indice.version,))]
     _VALIDOS[indice.version] = valores
     return valores
 
@@ -127,8 +130,7 @@ def buscar_vectorial(conn: psycopg.Connection, peticion: PeticionVectorial) -> d
 
     parametros = {**{k: v for k, v in filtros.items() if v}, "indice": indice.version,
                   "vector": vector_literal(peticion.vector), "k": peticion.k}
-    with conn.cursor(row_factory=dict_row) as cur:
-        filas = cur.execute(construir_consulta(filtros), parametros).fetchall()
+    filas = _filas(conn, construir_consulta(filtros), parametros)
 
     return {
         "indice": {"version": indice.version, "modelo_embeddings": indice.modelo_embeddings},
