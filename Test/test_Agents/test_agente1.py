@@ -13,6 +13,7 @@ from Agents.agente1.core import (
     simulador_agente_2,
     validar_esquema_query_json,
     verificar_citas,
+    normalizar_respuesta_agente2,
 )
 
 
@@ -250,6 +251,129 @@ class TestVerificadorCitas(unittest.TestCase):
         self.assertFalse(res["valido"])
         self.assertEqual(res["citas_detectadas"], [])
         self.assertEqual(res["citas_validas"], [])
+
+
+class TestAdaptadorUniversalCTR004(unittest.TestCase):
+    """
+    Validación de robustez del adaptador universal CTR-004 para Agente 2.
+    Cubre las correcciones de la revisión de código:
+      1. Formato real de Agente 2 de Víctor (PR #18: rerank_score y rrf_score).
+      2. Protección de valores saneados por defecto frente a sobreescritura de meta_dict.
+      3. Protección contra TypeError cuando los campos de puntuación son None.
+      4. Variante de OpenCode (resultados, metadatos, score_final, sin estado).
+    """
+
+    def test_formato_victor_pr18_rerank_y_rrf_score(self):
+        """La PR #18 de Víctor devuelve rerank_score y rrf_score; deben mapearse correctamente sin quedar a 0.0."""
+        datos_victor = {
+            "estado": "suficiente",
+            "evidencias": [
+                {
+                    "chunk_id": "HTM240-MAN-001@1.1_p14_1",
+                    "texto": "Apriete de culata en 3 fases: 40 Nm, 90 grados y 90 grados.",
+                    "rerank_score": 0.895,
+                    "rrf_score": 0.0312,
+                    "metadata": {
+                        "documento": "HTM240-MAN-001",
+                        "seccion": "Culata",
+                        "pagina": 14,
+                        "versiones": ["V1.1"]
+                    }
+                }
+            ]
+        }
+
+        norm = normalizar_respuesta_agente2(datos_victor)
+        self.assertEqual(norm["estado"], "suficiente")
+        self.assertEqual(len(norm["evidencias"]), 1)
+        ev = norm["evidencias"][0]
+        self.assertAlmostEqual(ev["score"], 0.895, places=3)
+        self.assertAlmostEqual(ev["score_final"], 0.895, places=3)
+        self.assertAlmostEqual(ev["rerank_score"], 0.895, places=3)
+        self.assertAlmostEqual(ev["rrf_score"], 0.0312, places=4)
+        self.assertAlmostEqual(ev["scores"]["rerank"], 0.895, places=3)
+        self.assertAlmostEqual(ev["scores"]["rrf"], 0.0312, places=4)
+
+    def test_proteccion_contra_none_en_scores(self):
+        """Si un campo de score viene como None, _safe_float no debe lanzar TypeError."""
+        datos_con_none = {
+            "estado": "suficiente",
+            "evidencias": [
+                {
+                    "chunk_id": "c_none_01",
+                    "texto": "Texto técnico sobre refrigeración del motor.",
+                    "score_final": None,
+                    "rerank_score": None,
+                    "score": None,
+                    "metadata": {
+                        "documento": "HTM240-DTC-001",
+                        "seccion": "Refrigeracion",
+                        "pagina": 5,
+                        "versiones": ["V1.0"]
+                    }
+                }
+            ]
+        }
+
+        norm = normalizar_respuesta_agente2(datos_con_none)
+        self.assertEqual(norm["estado"], "suficiente")
+        ev = norm["evidencias"][0]
+        self.assertEqual(ev["score"], 0.0)
+        self.assertEqual(ev["score_final"], 0.0)
+        self.assertEqual(ev["rerank_score"], 0.0)
+
+    def test_meta_dict_no_machaca_valores_saneados(self):
+        """Un documento vacío "" en meta_dict no debe sustituir al saneado DOC_DESCONOCIDO."""
+        datos_doc_vacio = {
+            "estado": "suficiente",
+            "evidencias": [
+                {
+                    "chunk_id": "c_vacio_01",
+                    "texto": "Instrucciones de mantenimiento general del alternador.",
+                    "metadata": {
+                        "documento": "",  # Vacío a propósito
+                        "seccion": "Electrico",
+                        "pagina": 12,
+                        "versiones": ["V2.0"]
+                    }
+                }
+            ]
+        }
+
+        norm = normalizar_respuesta_agente2(datos_doc_vacio)
+        self.assertEqual(norm["estado"], "suficiente")
+        ev = norm["evidencias"][0]
+        self.assertEqual(ev["metadata"]["documento"], "DOC_DESCONOCIDO")
+
+    def test_variante_opencode_y_deduccion_estado(self):
+        """Variante OpenCode: claves 'resultados', 'metadatos', 'score_final', sin 'estado' explícito."""
+        datos_opencode = {
+            "resultados": [
+                {
+                    "chunk_id": "c45",
+                    "score_final": 0.895,
+                    "texto": "Texto del fragmento sobre refrigeracion...",
+                    "metadatos": {
+                        "documento": "HTM240-DTC-001",
+                        "seccion": "2.1",
+                        "pagina": 3,
+                        "versiones": ["V1.1", "V2.0"],
+                        "componente": "refrigeracion",
+                        "obsoleto": False
+                    }
+                }
+            ]
+        }
+
+        norm = normalizar_respuesta_agente2(datos_opencode)
+        self.assertEqual(norm["estado"], "suficiente")
+        self.assertEqual(len(norm["evidencias"]), 1)
+        ev = norm["evidencias"][0]
+        self.assertEqual(ev["chunk_id"], "c45")
+        self.assertAlmostEqual(ev["score"], 0.895, places=3)
+        self.assertEqual(ev["metadata"]["documento"], "HTM240-DTC-001")
+        self.assertEqual(ev["metadatos"]["documento"], "HTM240-DTC-001")
+        self.assertEqual(ev["metadata"]["pagina"], 3)
 
 
 if __name__ == "__main__":
