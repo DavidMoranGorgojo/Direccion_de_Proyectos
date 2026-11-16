@@ -14,6 +14,7 @@ from pathlib import Path
 
 AGENT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DATASET_PATH = AGENT_ROOT / "data" / "bbdd_sintetica_chunks.json"
+CATALOG_DIR = AGENT_ROOT / "data" / "catalogos"
 
 DEFAULT_BACKEND_BASE_URL = "http://localhost:8000"
 DEFAULT_EMBEDDINGS_MODEL = "BAAI/bge-m3"
