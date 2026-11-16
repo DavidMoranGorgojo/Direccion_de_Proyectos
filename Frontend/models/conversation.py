@@ -18,6 +18,8 @@ class Conversation:
     created_at: str = field(default_factory=lambda: datetime.now().isoformat(timespec="seconds"))
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat(timespec="seconds"))
 
+    server_id: str = ""
+
     def touch(self) -> None:
         self.updated_at = datetime.now().isoformat(timespec="seconds")
 

@@ -22,6 +22,7 @@ class Response:
     fuentes: list[Source] = field(default_factory=list)
     trace_id: str = ""
     codigo_error: str = ""
+    conversacion_id: str = ""
 
     @classmethod
     def error(cls, texto: str = GENERIC_ERROR, codigo: str = "") -> "Response":
@@ -34,4 +35,5 @@ class Response:
             return cls.error(d.get("texto") or GENERIC_ERROR, "estado_desconocido")
         return cls(texto=d.get("texto", ""), estado=estado,
                    fuentes=[Source.from_dict(s) for s in d.get("fuentes") or []],
-                   trace_id=d.get("trace_id", ""), codigo_error=d.get("codigo_error", ""))
+                   trace_id=d.get("trace_id", ""), codigo_error=d.get("codigo_error", ""),
+                   conversacion_id=d.get("conversacion_id", ""))
