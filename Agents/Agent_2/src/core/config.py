@@ -1,9 +1,11 @@
 """Configuración del Agente 2 (recuperación).
 
-Centraliza los parámetros de la parte de recuperación de Alba:
-cliente HTTP del Backend, vectorización local con BGE-M3 y filtros duros.
+Centraliza los parámetros de la recuperación híbrida: cliente HTTP del Backend,
+vectorización local con BGE-M3, filtros duros, fusión RRF y reranker.
 
-Los valores pueden sobrescribirse mediante variables de entorno.
+Los valores pueden sobrescribirse mediante variables de entorno durante el
+despliegue; las pruebas pueden construir :class:`Agent2Settings` con un
+diccionario propio mediante ``from_env(env=...)``.
 """
 
 import math
@@ -22,6 +24,10 @@ DEFAULT_EMBEDDING_DIMENSION = 1024
 DEFAULT_SEARCH_TOP_K = 30
 DEFAULT_REQUEST_TIMEOUT = 5.0
 DEFAULT_USE_QUERY_PREFIX = True
+DEFAULT_RRF_K = 60
+DEFAULT_RERANKER_MODEL = "BAAI/bge-reranker-v2-m3"
+DEFAULT_RERANK_THRESHOLD = 0.45
+DEFAULT_RERANK_TOP_K = 20
 
 _TRUE_VALUES = {"1", "true", "yes", "on"}
 _FALSE_VALUES = {"0", "false", "no", "off"}
@@ -61,6 +67,28 @@ def _positive_float(env, name, default):
     if not math.isfinite(value) or value <= 0:
         raise ValueError(
             f"{name} debe ser un número finito mayor que cero; "
+            f"valor recibido: {raw_value!r}"
+        )
+
+    return value
+
+
+def _threshold(env, name, default):
+    """Umbral numérico finito entre 0 y 1, ambos incluidos."""
+
+    raw_value = env.get(name, str(default))
+
+    try:
+        value = float(raw_value)
+    except (TypeError, ValueError, OverflowError) as error:
+        raise ValueError(
+            f"{name} debe ser un número finito entre 0 y 1; "
+            f"valor recibido: {raw_value!r}"
+        ) from error
+
+    if not math.isfinite(value) or not 0 <= value <= 1:
+        raise ValueError(
+            f"{name} debe ser un número finito entre 0 y 1; "
             f"valor recibido: {raw_value!r}"
         )
 
@@ -108,6 +136,10 @@ class Agent2Settings:
     request_timeout: float = DEFAULT_REQUEST_TIMEOUT
     use_query_prefix: bool = DEFAULT_USE_QUERY_PREFIX
     dataset_path: Path = DEFAULT_DATASET_PATH
+    rrf_k: int = DEFAULT_RRF_K
+    reranker_model: str = DEFAULT_RERANKER_MODEL
+    rerank_threshold: float = DEFAULT_RERANK_THRESHOLD
+    rerank_top_k: int = DEFAULT_RERANK_TOP_K
 
     @classmethod
     def from_env(cls, env=None):
@@ -149,6 +181,22 @@ class Agent2Settings:
                 DEFAULT_USE_QUERY_PREFIX,
             ),
             dataset_path=DEFAULT_DATASET_PATH,
+            rrf_k=_positive_int(env, "AGENT2_RRF_K", DEFAULT_RRF_K),
+            reranker_model=_non_empty_string(
+                env,
+                "AGENT2_RERANKER_MODEL",
+                DEFAULT_RERANKER_MODEL,
+            ),
+            rerank_threshold=_threshold(
+                env,
+                "AGENT2_RERANK_THRESHOLD",
+                DEFAULT_RERANK_THRESHOLD,
+            ),
+            rerank_top_k=_positive_int(
+                env,
+                "AGENT2_RERANK_TOP_K",
+                DEFAULT_RERANK_TOP_K,
+            ),
         )
 
 
@@ -161,3 +209,11 @@ SEARCH_TOP_K = SETTINGS.search_top_k
 REQUEST_TIMEOUT = SETTINGS.request_timeout
 USE_QUERY_PREFIX = SETTINGS.use_query_prefix
 DATASET_PATH = SETTINGS.dataset_path
+
+RRF_K = SETTINGS.rrf_k
+RERANKER_MODEL = SETTINGS.reranker_model
+RERANK_THRESHOLD = SETTINGS.rerank_threshold
+
+# Máximo de candidatos que se envían al reranker después de ordenar los
+# resultados mediante RRF.
+RERANK_TOP_K = SETTINGS.rerank_top_k
