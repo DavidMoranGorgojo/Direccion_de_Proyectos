@@ -1,4 +1,4 @@
-from Agents.Agent_2.src.clients.backend import BackendAPIClient
+from Agents.Agent_2.src.clients.backend import BackendAPIClient, ctr002_filters
 from Agents.Agent_2.src.core.errors import BackendRequestError
 from Agents.Agent_2.src.services.lexical_parser import LexicalContractError
 import pytest
@@ -447,6 +447,8 @@ def test_get_chunk_accepts_a_null_revision_date():
         (422, {"detail": {"codigo": "entrada_invalida"}}, "entrada_invalida"),
         (500, {"codigo_error": "modelo_no_disponible"}, "modelo_no_disponible"),
         (504, {}, "tiempo_agotado"),
+        (400, {"codigo": "peticion_invalida"}, "entrada_invalida"),
+        (400, {"codigo": "filtro_invalido"}, "entrada_invalida"),
         (503, {"detail": {"codigo": "codigo_raro"}}, "servicio_no_disponible"),
     ],
 )
@@ -535,3 +537,92 @@ def test_get_chunk_rejects_invalid_arguments():
     for vecinos in (2, -1, True, "1", 1.0):
         with pytest.raises(ValueError):
             client.get_chunk("HTM240-PRC-003@1.0_p1_centro", vecinos=vecinos)
+
+
+def test_ctr002_filters_keep_only_the_contract_fields():
+    assert ctr002_filters(None) == {}
+    assert ctr002_filters({}) == {}
+    assert ctr002_filters(
+        {"version": "V1.1", "componente": "bateria"}
+    ) == {"version": "V1.1", "componente": "bateria"}
+
+    # Los filtros locales del Agente 2 no viajan al Backend (§5.1).
+    assert ctr002_filters(
+        {
+            "version": "V1.1",
+            "codigos": ["HTM-0142"],
+            "incluir_obsoletos": False,
+        }
+    ) == {"version": "V1.1"}
+
+    # Un valor vacío equivale a no restringir.
+    assert ctr002_filters(
+        {"version": "   ", "componente": "", "tipo_documento": ""}
+    ) == {}
+
+
+def test_ctr002_filters_admit_a_single_document_type():
+    assert ctr002_filters({"tipo_documento": "manual"}) == {
+        "tipo_documento": "manual"
+    }
+    assert ctr002_filters({"tipo_documento": ["manual"]}) == {
+        "tipo_documento": "manual"
+    }
+    assert ctr002_filters({"tipo_documento": ["", "manual", "manual"]}) == {
+        "tipo_documento": "manual"
+    }
+
+    # CTR-002 solo admite un tipo por petición: no se elige uno al azar.
+    with pytest.raises(ValueError):
+        ctr002_filters({"tipo_documento": ["manual", "boletin"]})
+
+
+def test_ctr002_filters_reject_invalid_values():
+    with pytest.raises(TypeError):
+        ctr002_filters("filtros")
+    with pytest.raises(TypeError):
+        ctr002_filters({"version": 1.1})
+    with pytest.raises(TypeError):
+        ctr002_filters({"componente": 3})
+    with pytest.raises(TypeError):
+        ctr002_filters({"tipo_documento": 5})
+    with pytest.raises(TypeError):
+        ctr002_filters({"tipo_documento": [5]})
+
+
+def test_searches_send_the_filters_normalised_to_ctr002():
+    session = FakeSession(FakeResponse({"indice": {}, "resultados": []}))
+    client = make_backend_client(session)
+
+    client.search_lexical(
+        text="batería",
+        filtros={
+            "version": "V1.1",
+            "componente": "bateria",
+            "tipo_documento": ["manual"],
+            "codigos": ["HTM-0142"],
+        },
+    )
+
+    assert session.calls[0]["json"]["filtros"] == {
+        "version": "V1.1",
+        "componente": "bateria",
+        "tipo_documento": "manual",
+    }
+
+    client.search_vector(vector=[0.0] * 1024, filtros={"incluir_obsoletos": False})
+
+    assert session.calls[1]["json"]["filtros"] == {}
+
+
+def test_searches_refuse_to_relax_several_document_types():
+    session = FakeSession(FakeResponse({"indice": {}, "resultados": []}))
+    client = make_backend_client(session)
+
+    with pytest.raises(ValueError):
+        client.search_lexical(
+            text="batería",
+            filtros={"tipo_documento": ["manual", "boletin"]},
+        )
+
+    assert session.calls == []

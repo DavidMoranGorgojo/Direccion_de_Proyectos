@@ -19,6 +19,76 @@ from ..core.errors import (
 from ..services.filters import filter_chunks
 from ..services.lexical_parser import parse_lexical_response
 
+CTR002_FILTER_FIELDS = ("version", "componente")
+
+
+def ctr002_filters(filtros):
+    """Reduce los filtros internos a la forma que admite CTR-002 §3.
+
+    El Backend solo acepta ``version``, ``componente`` y ``tipo_documento``, con
+    un único valor por campo y sin campos extra (§5.1 prohíbe enviar códigos de
+    avería como filtro). ``codigos`` e ``incluir_obsoletos`` son filtros locales
+    del Agente 2 y no viajan al Backend.
+
+    ``tipo_documento`` con varios valores se rechaza: CTR-002 solo admite uno
+    por petición, así que hay que lanzar una petición por tipo. Rechazarlo evita
+    relajar un filtro duro en silencio.
+    """
+
+    if filtros is None:
+        return {}
+
+    if not isinstance(filtros, dict):
+        raise TypeError("filtros debe ser un diccionario o None.")
+
+    limpios = {}
+
+    for campo in CTR002_FILTER_FIELDS:
+        valor = filtros.get(campo)
+
+        if valor is None:
+            continue
+
+        if not isinstance(valor, str):
+            raise TypeError(f"filtros.{campo} debe ser texto o None.")
+
+        if valor.strip():
+            limpios[campo] = valor
+
+    tipos = filtros.get("tipo_documento")
+
+    if isinstance(tipos, str):
+        tipos = [tipos]
+
+    if tipos:
+        if not isinstance(tipos, (list, tuple)):
+            raise TypeError(
+                "filtros.tipo_documento debe ser texto o una lista de texto."
+            )
+
+        unicos = []
+
+        for tipo in tipos:
+            if not isinstance(tipo, str):
+                raise TypeError(
+                    "filtros.tipo_documento debe contener solo texto."
+                )
+
+            if tipo.strip() and tipo not in unicos:
+                unicos.append(tipo)
+
+        if len(unicos) > 1:
+            raise ValueError(
+                "CTR-002 solo admite un tipo_documento por petición; "
+                f"se recibieron {unicos}."
+            )
+
+        if unicos:
+            limpios["tipo_documento"] = unicos[0]
+
+    return limpios
+
+
 REQUIRED_CHUNK_FIELDS = {
     "chunk_id",
     "texto",
@@ -71,7 +141,7 @@ class BackendAPIClient:
         payload = {
             "vector": list(vector),
             "modelo_embeddings": self.model_embeddings,
-            "filtros": filtros or {},
+            "filtros": ctr002_filters(filtros),
             "k": k,
         }
 
@@ -89,7 +159,7 @@ class BackendAPIClient:
 
         payload = {
             "texto": text,
-            "filtros": filtros or {},
+            "filtros": ctr002_filters(filtros),
             "k": k,
         }
 
@@ -246,6 +316,11 @@ def _backend_error_code(response):
 
     if codigo in CODIGOS_ERROR:
         return codigo
+
+    # CTR-002 §4 usa nombres propios para la petición mal formada; el Agente 1
+    # solo conoce el código estándar equivalente.
+    if codigo in {"peticion_invalida", "filtro_invalido"}:
+        return "entrada_invalida"
 
     status = getattr(response, "status_code", None)
 
