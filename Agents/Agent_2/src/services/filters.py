@@ -221,6 +221,22 @@ def code_key(value):
     return re.sub(r"[\s\-_]+", "", value.casefold())
 
 
+def version_applies(chunk, version):
+    """Indica si un chunk es aplicable a una versión ya normalizada.
+
+    Un documento sustituido sigue siendo aplicable a las versiones que figuran
+    en ``vigente_para``.
+    """
+
+    if version in (chunk.get("versiones") or []):
+        return True
+
+    return (
+        chunk.get("sustituido_por") is not None
+        and version in (chunk.get("vigente_para") or [])
+    )
+
+
 def extract_code_tokens(text):
     """Extrae códigos exactos del texto, sin normalizar su contenido."""
 
@@ -278,21 +294,8 @@ def filter_chunks(chunks, filters=None):
     filtered_chunks = []
 
     for chunk in chunks:
-        if version is not None:
-            versiones = chunk.get("versiones") or []
-            vigente_para = chunk.get("vigente_para") or []
-
-            version_aplicable = version in versiones
-
-            # Excepción: documentos sustituidos que siguen
-            # siendo aplicables a versiones anteriores.
-            if chunk.get("sustituido_por") is not None:
-                version_aplicable = (
-                    version_aplicable or version in vigente_para
-                )
-
-            if not version_aplicable:
-                continue
+        if version is not None and not version_applies(chunk, version):
+            continue
 
         if component is not None:
             if chunk.get("componente") != component:

@@ -1,4 +1,5 @@
 from Agents.Agent_2.src.clients.backend import BackendAPIClient
+from Agents.Agent_2.src.core.errors import BackendRequestError
 from Agents.Agent_2.src.services.lexical_parser import LexicalContractError
 import pytest
 import requests
@@ -304,3 +305,233 @@ def test_search_lexical_candidates_propagates_parse_errors():
 
     with pytest.raises(LexicalContractError):
         client.search_lexical_candidates(text="HTM-0142")
+
+
+class FakeGetSession:
+    def __init__(self, response=None, error=None):
+        self.response = response
+        self.error = error
+        self.calls = []
+
+    def get(self, url, *, params, timeout):
+        self.calls.append({
+            "url": url,
+            "params": params,
+            "timeout": timeout,
+        })
+
+        if self.error is not None:
+            raise self.error
+
+        return self.response
+
+
+def make_backend_chunk(chunk_id, **overrides):
+    chunk = {
+        "chunk_id": chunk_id,
+        "texto": f"Texto de {chunk_id}",
+        "documento": "HTM240-PRC-003",
+        "seccion": "Corriente",
+        "pagina": 1,
+        "versiones": ["V1.0", "V1.1"],
+        "componente": "refrigeracion",
+        "tipo_documento": "procedimiento",
+        "obsoleto": False,
+        "sustituido_por": None,
+        "vigente_para": [],
+        "fecha_revision": "2025-09-18",
+        "orden_en_seccion": 1,
+        "version_documento": "1.0",
+        "afectado_por": [],
+        "ids_referenciados": [],
+    }
+    chunk.update(overrides)
+    return chunk
+
+
+def make_chunk_payload(chunk_id, vecinos=None):
+    return {
+        "indice": {"version": "v1.0-bd"},
+        "chunk": make_backend_chunk(chunk_id, orden_en_seccion=2),
+        "vecinos": [] if vecinos is None else vecinos,
+    }
+
+
+def make_backend_client(session):
+    return BackendAPIClient(
+        base_url="http://backend.test",
+        model_embeddings="BAAI/bge-m3",
+        session=session,
+        timeout=2,
+    )
+
+
+def test_get_chunk_requests_neighbors_and_validates_response():
+    chunk_id = "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A"
+    neighbor = make_backend_chunk(
+        "HTM240-PRC-003@1.0_p1_vecino",
+        orden_en_seccion=1,
+    )
+    session = FakeGetSession(
+        FakeResponse(make_chunk_payload(chunk_id, [neighbor]))
+    )
+
+    result = make_backend_client(session).get_chunk(chunk_id, vecinos=1)
+
+    assert session.calls == [{
+        "url": (
+            "http://backend.test/conocimiento/chunks/"
+            "HTM240-PRC-003%401.0_p1_sustituido_corriente_bomba_3_5A"
+        ),
+        "params": {"vecinos": 1},
+        "timeout": 2,
+    }]
+    assert result["indice"] == {"version": "v1.0-bd"}
+    assert result["chunk"]["chunk_id"] == chunk_id
+    assert result["vecinos"] == [neighbor]
+
+
+def test_get_neighbors_returns_only_the_neighbors():
+    chunk_id = "HTM240-PRC-003@1.0_p1_centro"
+    neighbor = make_backend_chunk(
+        "HTM240-PRC-003@1.0_p1_vecino",
+        orden_en_seccion=1,
+    )
+    session = FakeGetSession(
+        FakeResponse(make_chunk_payload(chunk_id, [neighbor]))
+    )
+
+    assert make_backend_client(session).get_neighbors(chunk_id) == [neighbor]
+
+
+def test_get_chunk_can_request_zero_neighbors():
+    chunk_id = "HTM240-PRC-003@1.0_p1_centro"
+    session = FakeGetSession(FakeResponse(make_chunk_payload(chunk_id)))
+
+    result = make_backend_client(session).get_chunk(chunk_id, vecinos=0)
+
+    assert session.calls[0]["params"] == {"vecinos": 0}
+    assert result["vecinos"] == []
+
+
+def test_get_chunk_accepts_a_null_revision_date():
+    chunk_id = "HTM240-PRC-003@1.0_p1_centro"
+    center = make_backend_chunk(chunk_id, fecha_revision=None)
+    neighbor = make_backend_chunk(
+        "HTM240-PRC-003@1.0_p1_vecino",
+        fecha_revision=None,
+        orden_en_seccion=1,
+    )
+    payload = {
+        "indice": {"version": "v1.0-bd"},
+        "chunk": center,
+        "vecinos": [neighbor],
+    }
+    session = FakeGetSession(FakeResponse(payload))
+
+    result = make_backend_client(session).get_chunk(chunk_id)
+
+    assert result["chunk"]["fecha_revision"] is None
+    assert result["vecinos"][0]["fecha_revision"] is None
+
+
+@pytest.mark.parametrize(
+    ("status_code", "payload", "expected_code"),
+    [
+        (
+            503,
+            {"detail": {"codigo": "indice_no_disponible"}},
+            "indice_no_disponible",
+        ),
+        (404, {"detail": {"codigo": "recurso_no_encontrado"}}, "indice_no_disponible"),
+        (422, {"detail": {"codigo": "entrada_invalida"}}, "entrada_invalida"),
+        (500, {"codigo_error": "modelo_no_disponible"}, "modelo_no_disponible"),
+        (504, {}, "tiempo_agotado"),
+        (503, {"detail": {"codigo": "codigo_raro"}}, "servicio_no_disponible"),
+    ],
+)
+def test_get_chunk_maps_http_errors_to_standard_codes(
+    status_code,
+    payload,
+    expected_code,
+):
+    session = FakeGetSession(FakeResponse(payload, status_code=status_code))
+
+    with pytest.raises(BackendRequestError) as error:
+        make_backend_client(session).get_chunk(
+            "HTM240-PRC-003@1.0_p1_centro"
+        )
+
+    assert error.value.codigo_error == expected_code
+
+
+def test_get_chunk_maps_timeouts():
+    session = FakeGetSession(error=requests.Timeout())
+
+    with pytest.raises(BackendRequestError) as error:
+        make_backend_client(session).get_chunk(
+            "HTM240-PRC-003@1.0_p1_centro"
+        )
+
+    assert error.value.codigo_error == "tiempo_agotado"
+
+
+def test_get_chunk_maps_connection_errors():
+    session = FakeGetSession(error=requests.ConnectionError())
+
+    with pytest.raises(BackendRequestError) as error:
+        make_backend_client(session).get_chunk(
+            "HTM240-PRC-003@1.0_p1_centro"
+        )
+
+    assert error.value.codigo_error == "servicio_no_disponible"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        "no es un objeto",
+        {"chunk": make_backend_chunk("x"), "vecinos": []},
+        {"indice": {"version": ""}, "chunk": make_backend_chunk("x"), "vecinos": []},
+        {"indice": {"version": "v1"}, "chunk": None, "vecinos": []},
+        {"indice": {"version": "v1"}, "chunk": make_backend_chunk("x"), "vecinos": None},
+        {"indice": {"version": "v1"}, "chunk": make_backend_chunk("otro"), "vecinos": []},
+        {
+            "indice": {"version": "v1"},
+            "chunk": make_backend_chunk("x"),
+            "vecinos": [make_backend_chunk("y", pagina=0)],
+        },
+        {
+            "indice": {"version": "v1"},
+            "chunk": make_backend_chunk("x"),
+            "vecinos": [make_backend_chunk("y", seccion="Otra")],
+        },
+        {
+            "indice": {"version": "v1"},
+            "chunk": make_backend_chunk("x"),
+            "vecinos": [
+                make_backend_chunk("y"),
+                make_backend_chunk("y", orden_en_seccion=2),
+            ],
+        },
+    ],
+)
+def test_get_chunk_rejects_invalid_payloads(payload):
+    session = FakeGetSession(FakeResponse(payload))
+
+    with pytest.raises(BackendRequestError) as error:
+        make_backend_client(session).get_chunk("x")
+
+    assert error.value.codigo_error == "servicio_no_disponible"
+
+
+def test_get_chunk_rejects_invalid_arguments():
+    client = make_backend_client(FakeGetSession(FakeResponse({})))
+
+    for chunk_id in ("", "   ", None, 7):
+        with pytest.raises(ValueError):
+            client.get_chunk(chunk_id)
+
+    for vecinos in (2, -1, True, "1", 1.0):
+        with pytest.raises(ValueError):
+            client.get_chunk("HTM240-PRC-003@1.0_p1_centro", vecinos=vecinos)

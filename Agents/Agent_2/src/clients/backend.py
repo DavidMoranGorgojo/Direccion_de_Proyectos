@@ -6,9 +6,16 @@ from collections import Counter
 import math
 import re
 import unicodedata
+from urllib.parse import quote
+
 import requests
 
 from ..core.config import EMBEDDING_DIMENSION, SEARCH_TOP_K
+from ..core.errors import (
+    CODIGO_ERROR_POR_DEFECTO,
+    CODIGOS_ERROR,
+    BackendRequestError,
+)
 from ..services.filters import filter_chunks
 from ..services.lexical_parser import parse_lexical_response
 
@@ -102,8 +109,65 @@ class BackendAPIClient:
 
         payload = self.search_lexical(text=text, filtros=filtros, k=k)
         return parse_lexical_response(payload)
-    
-def _invalid_chunk_fields(chunk):
+
+    def get_chunk(self, chunk_id, vecinos=1):
+        """Recupera un fragmento y, opcionalmente, sus vecinos de sección.
+
+        ``vecinos=1`` devuelve los chunks contiguos (±1) de la misma sección y
+        documento. Un fallo del Backend se traduce a ``BackendRequestError``
+        con un código estándar.
+        """
+
+        if not isinstance(chunk_id, str) or not chunk_id.strip():
+            raise ValueError("chunk_id debe ser texto no vacío.")
+
+        if type(vecinos) is not int or vecinos not in (0, 1):
+            raise ValueError("vecinos debe ser 0 o 1.")
+
+        url = (
+            f"{self.base_url}/conocimiento/chunks/"
+            f"{quote(chunk_id, safe='')}"
+        )
+
+        try:
+            response = self.session.get(
+                url,
+                params={"vecinos": vecinos},
+                timeout=self.timeout,
+            )
+        except requests.Timeout as error:
+            raise BackendRequestError(
+                "tiempo_agotado",
+                f"Tiempo agotado al recuperar el fragmento {chunk_id}.",
+            ) from error
+        except requests.RequestException as error:
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                f"No se pudo contactar con el Backend al recuperar el "
+                f"fragmento {chunk_id}.",
+            ) from error
+
+        if response.status_code >= 400:
+            raise _chunk_request_error(response, chunk_id)
+
+        try:
+            payload = response.json()
+        except (TypeError, ValueError) as error:
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                f"El Backend devolvió una respuesta no JSON para el "
+                f"fragmento {chunk_id}.",
+            ) from error
+
+        return _parse_chunk_response(payload, chunk_id)
+
+    def get_neighbors(self, chunk_id, vecinos=1):
+        """Devuelve solo los fragmentos vecinos de la misma sección."""
+
+        return self.get_chunk(chunk_id, vecinos=vecinos)["vecinos"]
+
+
+def _invalid_chunk_fields(chunk, require_fecha_revision=True):
     problems = []
 
     text_fields = (
@@ -152,14 +216,150 @@ def _invalid_chunk_fields(chunk):
         problems.append("sustituido_por debe ser texto o null")
 
     fecha_revision = chunk.get("fecha_revision")
-    try:
-        if not isinstance(fecha_revision, str):
-            raise TypeError
-        date.fromisoformat(fecha_revision)
-    except (TypeError, ValueError):
-        problems.append("fecha_revision debe tener formato YYYY-MM-DD")
+    if fecha_revision is None and not require_fecha_revision:
+        pass
+    else:
+        try:
+            if not isinstance(fecha_revision, str):
+                raise TypeError
+            date.fromisoformat(fecha_revision)
+        except (TypeError, ValueError):
+            problems.append("fecha_revision debe tener formato YYYY-MM-DD")
 
     return problems
+
+
+def _backend_error_code(response):
+    codigo = None
+
+    try:
+        payload = response.json()
+    except (TypeError, ValueError):
+        payload = None
+
+    if isinstance(payload, dict):
+        detalle = payload.get("detail")
+        if isinstance(detalle, dict):
+            codigo = detalle.get("codigo")
+        if codigo is None:
+            codigo = payload.get("codigo_error") or payload.get("codigo")
+
+    if codigo in CODIGOS_ERROR:
+        return codigo
+
+    status = getattr(response, "status_code", None)
+
+    if status == 404:
+        # El índice activo no contiene un fragmento que se acaba de recuperar.
+        return "indice_no_disponible"
+    if status in (408, 504):
+        return "tiempo_agotado"
+    if status == 422:
+        return "entrada_invalida"
+
+    return CODIGO_ERROR_POR_DEFECTO
+
+
+def _chunk_request_error(response, chunk_id):
+    return BackendRequestError(
+        _backend_error_code(response),
+        f"El Backend devolvió HTTP {response.status_code} al recuperar el "
+        f"fragmento {chunk_id}.",
+    )
+
+
+def _parse_chunk_response(payload, chunk_id):
+    if not isinstance(payload, dict):
+        raise BackendRequestError(
+            "servicio_no_disponible",
+            "La respuesta del fragmento debe ser un objeto.",
+        )
+
+    indice = payload.get("indice")
+    version = indice.get("version") if isinstance(indice, dict) else None
+
+    if not isinstance(version, str) or not version.strip():
+        raise BackendRequestError(
+            "servicio_no_disponible",
+            "La respuesta del fragmento no incluye 'indice.version'.",
+        )
+
+    chunk = payload.get("chunk")
+    vecinos = payload.get("vecinos")
+
+    if not isinstance(chunk, dict):
+        raise BackendRequestError(
+            "servicio_no_disponible",
+            "La respuesta no incluye el objeto 'chunk'.",
+        )
+
+    if not isinstance(vecinos, list):
+        raise BackendRequestError(
+            "servicio_no_disponible",
+            "La respuesta no incluye la lista 'vecinos'.",
+        )
+
+    problems = _invalid_chunk_fields(chunk, require_fecha_revision=False)
+    if problems:
+        raise BackendRequestError(
+            "servicio_no_disponible",
+            f"El fragmento {chunk_id} no cumple CTR-002: "
+            f"{'; '.join(problems)}.",
+        )
+
+    if chunk.get("chunk_id") != chunk_id:
+        raise BackendRequestError(
+            "servicio_no_disponible",
+            f"El Backend devolvió el fragmento "
+            f"{chunk.get('chunk_id')!r} en lugar de {chunk_id!r}.",
+        )
+
+    valid_neighbors = []
+    seen = {chunk_id}
+
+    for position, neighbor in enumerate(vecinos):
+        if not isinstance(neighbor, dict):
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                f"El vecino en la posición {position} no es un objeto.",
+            )
+
+        problems = _invalid_chunk_fields(
+            neighbor,
+            require_fecha_revision=False,
+        )
+        if problems:
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                f"El vecino en la posición {position} no cumple CTR-002: "
+                f"{'; '.join(problems)}.",
+            )
+
+        neighbor_id = neighbor["chunk_id"]
+        if neighbor_id in seen:
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                f"Vecino duplicado o igual al fragmento: {neighbor_id}.",
+            )
+
+        if (
+            neighbor.get("documento") != chunk.get("documento")
+            or neighbor.get("seccion") != chunk.get("seccion")
+        ):
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                f"El vecino {neighbor_id} no pertenece a la misma sección "
+                f"que {chunk_id}.",
+            )
+
+        seen.add(neighbor_id)
+        valid_neighbors.append(neighbor)
+
+    return {
+        "indice": {"version": version},
+        "chunk": chunk,
+        "vecinos": valid_neighbors,
+    }
 
 
 def load_chunks(path):
