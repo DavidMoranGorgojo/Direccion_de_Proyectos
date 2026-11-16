@@ -24,7 +24,7 @@ Interfaz gráfica de escritorio para el asistente conversacional técnico sobre 
 Cuando la variable de entorno `ARSOFT_API_URL` **no está definida**, el cliente `services/api.py` activa automáticamente el **modo simulado**:
 - Permite desarrollar, probar e interactuar con la interfaz de forma completamente autónoma, sin necesidad de que el Backend o los modelos de IA estén ejecutándose.
 - Simula las respuestas técnicas bajo los contratos del proyecto:
-  - **CTR-001**: Respuestas estructuradas con texto, estado (`respuesta`, `aclaracion`, `fuera_de_ambito`, `sin_evidencia`), `trace_id` y fuentes documentales (`Source`).
+  - **CTR-001**: Respuestas estructuradas con texto, estado (`respuesta`, `aclaracion`, `fuera_de_ambito`, `sin_evidencia`, `error`), `trace_id`, `codigo_error` y fuentes documentales (`Source`). Las consultas que contienen `simular_error`, `error_simulado` o `timeout` reproducen un error 503 del motor de búsqueda.
   - **CTR-006**: Historial precargado de conversaciones (`GET /chats`), con soporte para simular historial vacío mediante `ARSOFT_MOCK_EMPTY_HISTORY=1`.
   - **CTR-005**: Inicio de sesión simulado (`usuario: demo`, `contraseña: demo1234`), además de simulación de errores 401 y 429 (`usuario: rate_limit`).
 
@@ -46,6 +46,7 @@ Las pruebas unitarias y de integración del Frontend se ubican en `Test/test_Fro
   - Gestión de códigos de error HTTP: 401 (no autenticado / sesión caducada), 403 (prohibido), 429 (rate limit) y 500 (error interno del servidor).
   - Resiliencia ante JSON no válido, respuestas malformadas y estados desconocidos.
   - Envío de consultas y preservación de la pregunta exacta según CTR-001.
+  - Bloqueo del envío durante la respuesta y representación de errores del simulador como mensajes del asistente.
 
 Ejecución de las pruebas:
 ```bash
@@ -63,14 +64,20 @@ python -m unittest discover -s Test/test_Frontend -p "test_*.py"
 Lista de aspectos pendientes a confirmar con las **personas 1 (Agentes)** y **2 (Backend)** para la integración final:
 
 1. **Rutas (Endpoints HTTP)**:
-   - **CTR-001 (Consulta)**: Confirmar la ruta final expuesta por el Backend (actualmente `CONSULTA_PATH = "/agentes/consulta"`).
+   - **CTR-001 (Consulta)**: El cliente usa provisionalmente `POST /agentes/consulta` (`CONSULTA_PATH`). El módulo HTTP del Backend todavía no implementa esta ruta, por lo que queda pendiente de confirmación con Backend.
    - **CTR-006 (Historial)**: Confirmar la ruta de recuperación del historial (actualmente `HISTORIAL_PATH = "/chats"`) y soporte para operaciones de borrado.
    - **CTR-005 (Login)**: Confirmar la ruta final de autenticación (`/auth/login`) y endpoints complementarios (logout, validación de sesión).
 
 2. **Identificador de la conversación (`conversacion_id`)**:
-   - **Generación**: Confirmar si el Frontend genera el UUID inicial o si el Backend/Agentes devuelve el `conversacion_id` asignado tras el primer turno.
-   - **Persistencia**: Confirmar la persistencia de turnos y memoria conversacional entre Backend y Agente 1.
+   - **Formato actual**: El Frontend genera un UUID opaco para un chat nuevo y lo envía en cada consulta como `conversacion_id`.
+   - **Agentes**: `Agente1` conserva ese identificador y su memoria para los turnos sucesivos; la función CTR-001 devuelve `trace_id`, `estado`, `texto`, `fuentes` y `codigo_error`.
+   - **Pendiente con Backend**: Confirmar si Backend acepta el UUID generado por Frontend o lo sustituye por uno propio, y cómo persiste la conversación.
 
 3. **Mecanismo de sesión**:
    - **Tipo de token**: Confirmar el uso de Bearer token (`Authorization: Bearer <token>`) o cookie de sesión.
    - **Caducidad**: Formato de error y flujo de renovación ante expiración (HTTP 401 / 403).
+
+   **Estado comprobado en el Frontend:** el `token` devuelto por login se conserva en memoria y,
+   si existe, se envía en la cabecera `Authorization`. El esquema definitivo del token o cookie,
+   su caducidad y la renovación siguen pendientes de confirmación con Backend; ante 401/403 se
+   cierra la sesión.
