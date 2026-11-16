@@ -561,6 +561,7 @@ class Agente1:
         if not isinstance(salida_llm, str) or not salida_llm.strip():
             return {
                 "estado": "error",
+                "codigo_error": "modelo_no_disponible",
                 "mensaje": "No se pudo conectar con Ollama. Verifica que 'ollama serve' esté activo."
             }
 
@@ -667,12 +668,14 @@ class RespuestaSimuladorAgente2(dict):
     Hereda de dict para soportar res["estado"], res["evidencias"], res["mensaje_error"],
     y mantiene compatibilidad con listas: for ev in res, len(res), res[0].
     """
-    def __init__(self, estado: str, evidencias: list, campo_ambiguo: Optional[str] = None, mensaje_error: Optional[str] = None):
+    def __init__(self, estado: str, evidencias: list, campo_ambiguo: Optional[str] = None,
+                 mensaje_error: Optional[str] = None, codigo_error: Optional[str] = None):
         super().__init__(
             estado=estado,
             evidencias=evidencias,
             campo_ambiguo=campo_ambiguo,
-            mensaje_error=mensaje_error
+            mensaje_error=mensaje_error,
+            codigo_error=codigo_error or ""
         )
 
     def __iter__(self):
@@ -1122,7 +1125,11 @@ def registrar_turno_auditoria(datos: Dict[str, Any]):
     A1-08: Guarda auditoría por turno en archivo JSONL. Tolerante a fallos.
     """
     try:
-        with open("agente1_registros.jsonl", "a", encoding="utf-8") as f:
+        ruta = os.getenv("ARSOFT_AUDIT_PATH", "agente1_registros.jsonl")
+        directorio = os.path.dirname(ruta)
+        if directorio:
+            os.makedirs(directorio, mode=0o700, exist_ok=True)
+        with open(ruta, "a", encoding="utf-8") as f:
             f.write(json.dumps(datos, ensure_ascii=False) + "\n")
     except Exception as e:
         logger.warning(f"No se pudo escribir registro de auditoría JSONL: {e}")
@@ -1178,12 +1185,14 @@ def normalizar_respuesta_agente2(respuesta: Any) -> RespuestaSimuladorAgente2:
       2. Prioridad de valores saneados: un documento "" no sobreescribe "DOC_DESCONOCIDO".
       3. Extracción segura con _safe_float: ningún valor None lanza TypeError.
       4. Rechazo estricto de tipos no serializables o metadatos inválidos según evidencia_valida.
+      5. Preservación de códigos de error según PR #23 (Apptainer).
     """
     error = RespuestaSimuladorAgente2(
         estado="error",
         evidencias=[],
         campo_ambiguo=None,
-        mensaje_error="Contrato de Agente 2 inválido."
+        mensaje_error="Contrato de Agente 2 inválido.",
+        codigo_error="error_verificacion"
     )
 
     if not isinstance(respuesta, dict):
@@ -1328,11 +1337,20 @@ def normalizar_respuesta_agente2(respuesta: Any) -> RespuestaSimuladorAgente2:
     if any(not evidencia_valida(e) for e in chunks_normalizados):
         return error
 
+    codigo_error = respuesta.get("codigo_error", "")
+    if codigo_error not in {"entrada_invalida", "modelo_no_disponible", "modelo_incompatible",
+                            "indice_no_disponible", "tiempo_agotado", "error_verificacion",
+                            "servicio_no_disponible"}:
+        codigo_error = ""
+    if estado == "error" and not codigo_error:
+        codigo_error = "error_verificacion"
+
     return RespuestaSimuladorAgente2(
         estado=estado,
         evidencias=chunks_normalizados,
         campo_ambiguo=campo,
-        mensaje_error=mensaje
+        mensaje_error=mensaje,
+        codigo_error=codigo_error
     )
 
 
@@ -1343,7 +1361,9 @@ def resolver_evidencias(pregunta: str, respuesta_a2: dict, agente: Agente1, *, v
     evidencias = respuesta_a2["evidencias"]
     if estado == "error":
         mensaje = respuesta_a2.get("mensaje_error")
-        return {"estado": "error", "texto": mensaje if isinstance(mensaje, str) and mensaje else "Error de recuperación.", "fuentes": []}
+        codigo = respuesta_a2.get("codigo_error") or "indice_no_disponible"
+        return {"estado": "error", "texto": mensaje if isinstance(mensaje, str) and mensaje else "Error de recuperación.",
+                "fuentes": [], "codigo_error": codigo}
     if estado == "ambiguo":
         campo = respuesta_a2.get("campo_ambiguo") or "version"
         versiones = sorted({e.get("metadata", {}).get("version") for e in evidencias
@@ -1392,7 +1412,9 @@ def _ejecutar_turno(pregunta: str, agente: Agente1, agente2, nueva_consulta: boo
                     respuesta_a2 = agente2(query)
                 except Exception as exc:
                     logger.error("Fallo en la llamada local a Agente 2 (%s).", type(exc).__name__)
-                    respuesta_a2 = {"estado": "error", "evidencias": [], "mensaje_error": "Error de comunicación con Agente 2."}
+                    respuesta_a2 = {"estado": "error", "evidencias": [],
+                                    "mensaje_error": "Error de comunicación con Agente 2.",
+                                    "codigo_error": "servicio_no_disponible"}
                 respuesta_a2 = normalizar_respuesta_agente2(respuesta_a2)
                 evidencias = respuesta_a2["evidencias"]
                 final = resolver_evidencias(pregunta, respuesta_a2, agente, version=query["filtros"]["version"])
@@ -1406,7 +1428,12 @@ def _ejecutar_turno(pregunta: str, agente: Agente1, agente2, nueva_consulta: boo
     estado = final["estado"]
     codigo = ""
     if estado in {"error", "error_verificacion"}:
-        codigo, estado = estado, "error"
+        codigo = final.get("codigo_error") or resultado.get("codigo_error")
+        if not codigo and respuesta_a2 is not None and respuesta_a2.get("estado") == "error":
+            codigo = respuesta_a2.get("codigo_error") or "indice_no_disponible"
+        if not codigo:
+            codigo = "error_verificacion"
+        estado = "error"
     if estado != "aclaracion":
         agente.finalizar_consulta()
     fuentes = []
