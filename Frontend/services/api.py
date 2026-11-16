@@ -30,15 +30,16 @@ from uuid import uuid4
 from PySide6.QtCore import QThread, Signal
 
 from models.conversation import Conversation
-from models.response import (GENERIC_ERROR, Response, STATUS_CLARIFY, STATUS_NO_EVIDENCE,
-                             STATUS_OK, STATUS_OUT_OF_SCOPE)
+from models.response import (Response, STATUS_CLARIFY, STATUS_NO_EVIDENCE, STATUS_OK,
+                             STATUS_OUT_OF_SCOPE)
 from models.source import Source
 from services import session
 
 API_URL = os.environ.get("ARSOFT_API_URL", "").rstrip("/")
-TIMEOUT_S = 30
-CONSULTA_PATH = "/consulta"
-HISTORIAL_PATH = "/chats"                    # CTR-006 (ruta propuesta, por confirmar)
+TIMEOUT_S = 60
+CONSULTA_PATH = "/agentes/consulta"          # ruta Frontend -> Backend: pendiente de contrato
+LOGIN_PATH = "/auth/login"                   # CTR-005
+HISTORIAL_PATH = "/chats"                    # CTR-006
 SESSION_EXPIRED = "Tu sesión ha caducado. Cierra sesión y vuelve a entrar."
 
 
@@ -62,10 +63,8 @@ def _insecure() -> bool:
 
 
 def auth_headers() -> dict:
-    if session.token:
-        return {"Authorization": "Bearer " + session.token}
-    """Identificación del usuario. El mecanismo de sesión no está definido en CTR-005:
-    si el Backend devuelve un token se envía; si no, no se envía nada."""
+    """Identificación del usuario. Si el Backend devolvió un token en el login se envía;
+    si no, no se envía nada."""
     return {"Authorization": f"Bearer {session.token}"} if session.token else {}
 
 
@@ -195,7 +194,7 @@ _MOCK_CHATS = [
 
 def _mock_call(method: str, path: str, body: dict | None) -> tuple[int, dict | None]:
     """Simula el servidor conservando los mismos cuerpos que el modo real."""
-    if method == "POST" and path == "/auth/login":
+    if method == "POST" and path == LOGIN_PATH:
         if body and body.get("usuario") == "rate_limit":
             return 429, {"estado": "error", "mensaje": "Demasiados intentos."}
         if body and body.get("usuario") == "demo" and body.get("contrasena") == "demo1234":
@@ -229,6 +228,11 @@ def _mock_call(method: str, path: str, body: dict | None) -> tuple[int, dict | N
 def _mock_response(pregunta: str) -> Response:
     time.sleep(1.2)
     text = pregunta.lower()
+    if any(marker in text for marker in ("error_simulado", "simular_error", "timeout")):
+        return Response.error(
+            "Error 503: Motor de búsqueda vectorial BGE-M3 no disponible (timeout > 5s).",
+            "error",
+        )
     if len(text.split()) <= 2:
         return Response("¿Qué testigo o código aparece exactamente y en qué versión del vehículo?",
                         STATUS_CLARIFY, trace_id="t-demo")

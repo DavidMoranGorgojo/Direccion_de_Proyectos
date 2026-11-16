@@ -34,7 +34,7 @@ BAD_CREDENTIALS = "Usuario o contraseña incorrectos"
 
 def _remote_login(username: str, password: str) -> AuthResult:
     try:
-        status, d = api.call("POST", "/auth/login", {"usuario": username, "contrasena": password})
+        status, d = api.call("POST", api.LOGIN_PATH, {"usuario": username, "contrasena": password})
     except api.ConnectionFailed as e:
         msg = str(e) if "HTTPS" in str(e) else "No se pudo conectar con el servidor."
         return AuthResult(False, error=msg)            # sin respuesta: nunca se concede acceso
