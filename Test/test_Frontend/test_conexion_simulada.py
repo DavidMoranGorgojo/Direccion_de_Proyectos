@@ -118,6 +118,7 @@ class TestCTR001LecturaRespuestas(BaseFrontendTestCase):
         self.assertIsInstance(res, Response)
         self.assertEqual(res.estado, STATUS_OK)
         self.assertEqual(res.trace_id, "t-demo")
+
         self.assertEqual(res.codigo_error, "")
         self.assertIn("refrigerante", res.texto.lower())
 
@@ -131,6 +132,14 @@ class TestCTR001LecturaRespuestas(BaseFrontendTestCase):
         self.assertIn("V1.1", fuente.versiones)
         self.assertFalse(fuente.obsoleto)
         self.assertEqual(fuente.chunk_id, "c45")
+
+    def test_ctr001_error_tecnico_en_simulador(self):
+        """El simulador conserva la respuesta de error técnico del Agente 2."""
+        res = api.send_message("conv-error", "Consulta con simular_error en el motor de búsqueda")
+
+        self.assertEqual(res.estado, STATUS_ERROR)
+        self.assertEqual(res.codigo_error, "error")
+        self.assertIn("503", res.texto)
 
     def test_ctr001_aclaracion_por_pregunta_demasiado_corta(self):
         """Preguntas de dos o menos palabras provocan repregunta (estado aclaracion)."""

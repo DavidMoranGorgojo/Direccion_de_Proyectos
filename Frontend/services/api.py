@@ -227,6 +227,11 @@ def _mock_call(method: str, path: str, body: dict | None) -> tuple[int, dict | N
 def _mock_response(pregunta: str) -> Response:
     time.sleep(1.2)
     text = pregunta.lower()
+    if any(marker in text for marker in ("error_simulado", "simular_error", "timeout")):
+        return Response.error(
+            "Error 503: Motor de búsqueda vectorial BGE-M3 no disponible (timeout > 5s).",
+            "error",
+        )
     if len(text.split()) <= 2:
         return Response("¿Qué testigo o código aparece exactamente y en qué versión del vehículo?",
                         STATUS_CLARIFY, trace_id="t-demo")
