@@ -7,6 +7,7 @@ from Agents.Agent_2.src.core import config
 
 
 VARIABLES_CONFIG = (
+    "ARSOFT_SERVICE_TOKEN",
     "AGENT2_RRF_K",
     "AGENT2_RERANKER_MODEL",
     "AGENT2_RERANK_THRESHOLD",
@@ -57,6 +58,7 @@ def test_config_valores_por_defecto(monkeypatch):
     assert config.RERANK_THRESHOLD == 0.45
     assert config.SEARCH_TOP_K == 30
     assert config.RERANK_TOP_K == 20
+    assert config.SERVICE_TOKEN == ""
 
 
 def test_config_variables_entorno(monkeypatch):
@@ -70,6 +72,7 @@ def test_config_variables_entorno(monkeypatch):
     monkeypatch.setenv("AGENT2_RERANK_THRESHOLD", "0.60")
     monkeypatch.setenv("AGENT2_SEARCH_TOP_K", "25")
     monkeypatch.setenv("AGENT2_RERANK_TOP_K", "12")
+    monkeypatch.setenv("ARSOFT_SERVICE_TOKEN", "token-de-servicio")
 
     importlib.reload(config)
 
@@ -78,6 +81,7 @@ def test_config_variables_entorno(monkeypatch):
     assert config.RERANK_THRESHOLD == 0.60
     assert config.SEARCH_TOP_K == 25
     assert config.RERANK_TOP_K == 12
+    assert config.SERVICE_TOKEN == "token-de-servicio"
 
 
 @pytest.mark.parametrize(

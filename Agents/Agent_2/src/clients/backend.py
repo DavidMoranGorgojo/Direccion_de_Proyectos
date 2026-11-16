@@ -10,7 +10,7 @@ from urllib.parse import quote
 
 import requests
 
-from ..core.config import EMBEDDING_DIMENSION, SEARCH_TOP_K
+from ..core.config import EMBEDDING_DIMENSION, SEARCH_TOP_K, SERVICE_TOKEN
 from ..core.errors import (
     CODIGO_ERROR_POR_DEFECTO,
     CODIGOS_ERROR,
@@ -115,15 +115,29 @@ class BackendAPIClient:
         model_embeddings,
         session=None,
         timeout=5,
+        token=None,
     ):
         self.base_url = base_url.rstrip("/")
         self.model_embeddings = model_embeddings
         self.timeout = timeout
+        # Bearer de servicio interno (CTR-002). Sin token, las rutas de
+        # /conocimiento responden 401 o 503 según la configuración del Backend.
+        self.token = (
+            SERVICE_TOKEN if token is None else str(token)
+        ).strip()
 
         if session is None:
             session = requests.Session()
 
         self.session = session
+
+    def _auth_kwargs(self):
+        """Cabecera de servicio solo cuando hay token configurado."""
+
+        if not self.token:
+            return {}
+
+        return {"headers": {"Authorization": f"Bearer {self.token}"}}
 
     def search_vector(self, vector, filtros=None, k=30):
         if hasattr(vector, "tolist"):
@@ -149,6 +163,7 @@ class BackendAPIClient:
             f"{self.base_url}/conocimiento/vectorial",
             json=payload,
             timeout=self.timeout,
+            **self._auth_kwargs(),
         )
         response.raise_for_status()
         return response.json()
@@ -167,6 +182,7 @@ class BackendAPIClient:
             f"{self.base_url}/conocimiento/lexica",
             json=payload,
             timeout=self.timeout,
+            **self._auth_kwargs(),
         )
         response.raise_for_status()
         return response.json()
@@ -204,6 +220,7 @@ class BackendAPIClient:
                 url,
                 params={"vecinos": vecinos},
                 timeout=self.timeout,
+                **self._auth_kwargs(),
             )
         except requests.Timeout as error:
             raise BackendRequestError(

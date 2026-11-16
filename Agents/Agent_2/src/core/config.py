@@ -19,6 +19,7 @@ DEFAULT_DATASET_PATH = AGENT_ROOT / "data" / "bbdd_sintetica_chunks.json"
 CATALOG_DIR = AGENT_ROOT / "data" / "catalogos"
 
 DEFAULT_BACKEND_BASE_URL = "http://localhost:8000"
+DEFAULT_SERVICE_TOKEN = ""
 DEFAULT_EMBEDDINGS_MODEL = "BAAI/bge-m3"
 DEFAULT_EMBEDDING_DIMENSION = 1024
 DEFAULT_SEARCH_TOP_K = 30
@@ -106,6 +107,22 @@ def _non_empty_string(env, name, default):
     return value.strip()
 
 
+def _optional_string(env, name, default=""):
+    """Cadena opcional; los espacios sobrantes se descartan."""
+
+    value = env.get(name, default)
+
+    if value is None:
+        return ""
+
+    if not isinstance(value, str):
+        raise ValueError(
+            f"{name} debe ser una cadena de texto"
+        )
+
+    return value.strip()
+
+
 def _boolean(env, name, default):
     raw_value = env.get(name)
 
@@ -130,6 +147,7 @@ class Agent2Settings:
     """Parámetros de configuración de la recuperación del Agente 2."""
 
     backend_base_url: str = DEFAULT_BACKEND_BASE_URL
+    service_token: str = DEFAULT_SERVICE_TOKEN
     embeddings_model: str = DEFAULT_EMBEDDINGS_MODEL
     embedding_dimension: int = DEFAULT_EMBEDDING_DIMENSION
     search_top_k: int = DEFAULT_SEARCH_TOP_K
@@ -155,6 +173,11 @@ class Agent2Settings:
 
         return cls(
             backend_base_url=base_url,
+            service_token=_optional_string(
+                env,
+                "ARSOFT_SERVICE_TOKEN",
+                DEFAULT_SERVICE_TOKEN,
+            ),
             embeddings_model=_non_empty_string(
                 env,
                 "AGENT2_EMBEDDINGS_MODEL",
@@ -203,6 +226,7 @@ class Agent2Settings:
 SETTINGS = Agent2Settings.from_env()
 
 BACKEND_BASE_URL = SETTINGS.backend_base_url
+SERVICE_TOKEN = SETTINGS.service_token
 EMBEDDINGS_MODEL = SETTINGS.embeddings_model
 EMBEDDING_DIMENSION = SETTINGS.embedding_dimension
 SEARCH_TOP_K = SETTINGS.search_top_k

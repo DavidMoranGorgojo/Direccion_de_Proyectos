@@ -77,6 +77,8 @@ Los parámetros pueden modificarse mediante variables de entorno.
 
 | Variable | Valor predeterminado | Descripción |
 |---|---|---|
+| `AGENT2_BACKEND_BASE_URL` | `http://localhost:8000` | URL del Backend para CTR-002 |
+| `ARSOFT_SERVICE_TOKEN` | vacío | Bearer de servicio interno que exige el Backend en `/conocimiento/*` |
 | `AGENT2_RRF_K` | `60` | Constante utilizada en la fusión RRF |
 | `AGENT2_RERANKER_MODEL` | `BAAI/bge-reranker-v2-m3` | Identificador del modelo de reranking |
 | `AGENT2_RERANK_THRESHOLD` | `0.45` | Umbral mínimo de relevancia |
@@ -89,11 +91,15 @@ Las variables `AGENT2_RRF_K`, `AGENT2_SEARCH_TOP_K` y `AGENT2_RERANK_TOP_K` debe
 
 `AGENT2_RERANKER_MODEL` debe contener un identificador no vacío. Los espacios iniciales y finales se eliminan.
 
+`ARSOFT_SERVICE_TOKEN` es opcional en la configuración, pero el Backend real protege `/conocimiento/*` con un Bearer de servicio: sin el mismo token que usa el Backend, las búsquedas responden `401` (o `503` si el Backend no lo tiene configurado). Debe coincidir con el valor desplegado en el entorno del Backend.
+
 Los valores no válidos producen errores explícitos que identifican la variable de configuración correspondiente.
 
 ### Ejemplo de configuración en PowerShell
 
 ```powershell
+$env:AGENT2_BACKEND_BASE_URL = "http://localhost:8000"
+$env:ARSOFT_SERVICE_TOKEN = "token-de-servicio"
 $env:AGENT2_RRF_K = "60"
 $env:AGENT2_RERANK_THRESHOLD = "0.45"
 $env:AGENT2_RERANKER_MODEL = "BAAI/bge-reranker-v2-m3"

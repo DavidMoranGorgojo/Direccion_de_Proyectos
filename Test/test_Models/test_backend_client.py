@@ -22,12 +22,15 @@ class FakeSession:
         self.response = response
         self.calls = []
 
-    def post(self, url, *, json, timeout):
-        self.calls.append({
+    def post(self, url, *, json, timeout, headers=None):
+        call = {
             "url": url,
             "json": json,
             "timeout": timeout,
-        })
+        }
+        if headers is not None:
+            call["headers"] = headers
+        self.calls.append(call)
         return self.response
 
 
@@ -313,12 +316,15 @@ class FakeGetSession:
         self.error = error
         self.calls = []
 
-    def get(self, url, *, params, timeout):
-        self.calls.append({
+    def get(self, url, *, params, timeout, headers=None):
+        call = {
             "url": url,
             "params": params,
             "timeout": timeout,
-        })
+        }
+        if headers is not None:
+            call["headers"] = headers
+        self.calls.append(call)
 
         if self.error is not None:
             raise self.error
@@ -626,3 +632,57 @@ def test_searches_refuse_to_relax_several_document_types():
         )
 
     assert session.calls == []
+
+
+def test_searches_send_the_service_bearer_when_a_token_is_configured():
+    session = FakeSession(FakeResponse({"indice": {}, "resultados": []}))
+    client = BackendAPIClient(
+        base_url="http://backend.test",
+        model_embeddings="BAAI/bge-m3",
+        session=session,
+        timeout=2,
+        token="token-de-servicio",
+    )
+
+    client.search_lexical(text="batería")
+    client.search_vector(vector=[0.0] * 1024)
+
+    assert session.calls[0]["headers"] == {
+        "Authorization": "Bearer token-de-servicio"
+    }
+    assert session.calls[1]["headers"] == {
+        "Authorization": "Bearer token-de-servicio"
+    }
+
+
+def test_searches_omit_the_header_when_there_is_no_token():
+    session = FakeSession(FakeResponse({"indice": {}, "resultados": []}))
+    client = BackendAPIClient(
+        base_url="http://backend.test",
+        model_embeddings="BAAI/bge-m3",
+        session=session,
+        timeout=2,
+        token="",
+    )
+
+    client.search_lexical(text="batería")
+
+    assert "headers" not in session.calls[0]
+
+
+def test_get_chunk_sends_the_service_bearer_when_a_token_is_configured():
+    chunk_id = "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A"
+    session = FakeGetSession(FakeResponse(make_chunk_payload(chunk_id)))
+    client = BackendAPIClient(
+        base_url="http://backend.test",
+        model_embeddings="BAAI/bge-m3",
+        session=session,
+        timeout=2,
+        token="token-de-servicio",
+    )
+
+    client.get_chunk(chunk_id)
+
+    assert session.calls[0]["headers"] == {
+        "Authorization": "Bearer token-de-servicio"
+    }
