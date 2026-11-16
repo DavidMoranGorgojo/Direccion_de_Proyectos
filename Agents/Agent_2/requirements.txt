@@ -1,0 +1,10 @@
+# Cliente HTTP del Backend (CTR-002)
+requests>=2.31
+
+# Vectorización local BGE-M3 (A2-01)
+FlagEmbedding>=1.2.10
+torch>=2.0
+numpy>=1.24
+
+# Ejecución de pruebas
+pytest>=8.0

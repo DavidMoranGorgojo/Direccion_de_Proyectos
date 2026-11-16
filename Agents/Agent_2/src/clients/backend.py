@@ -8,6 +8,7 @@ import re
 import unicodedata
 import requests
 
+from ..core.config import EMBEDDING_DIMENSION
 from ..services.filters import filter_chunks
 
 REQUIRED_CHUNK_FIELDS = {
@@ -50,8 +51,14 @@ class BackendAPIClient:
         if hasattr(vector, "tolist"):
             vector = vector.tolist()
 
-        if not isinstance(vector, (list, tuple)) or len(vector) != 1024:
-            raise ValueError("El vector debe contener exactamente 1024 valores.")
+        if (
+            not isinstance(vector, (list, tuple))
+            or len(vector) != EMBEDDING_DIMENSION
+        ):
+            raise ValueError(
+                "El vector debe contener exactamente "
+                f"{EMBEDDING_DIMENSION} valores."
+            )
 
         payload = {
             "vector": list(vector),
