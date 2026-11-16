@@ -1,4 +1,5 @@
 from Agents.Agent_2.src.clients.backend import BackendAPIClient
+from Agents.Agent_2.src.services.lexical_parser import LexicalContractError
 import pytest
 import requests
 
@@ -228,3 +229,78 @@ def test_lexical_search_propagates_backend_http_errors():
 
     with pytest.raises(requests.HTTPError):
         client.search_lexical(text="HTM-0142")
+
+
+def test_search_lexical_candidates_requests_and_parses():
+    response_body = {
+        "indice": {
+            "version": "v1.0-bd",
+            "modelo_embeddings": "BAAI/bge-m3",
+        },
+        "resultados": [
+            {
+                "chunk_id": "HTM240-DTC-001@1.0_p1_htm0142",
+                "score": 4.25,
+                "texto": "HTM-0142: revisar CMP-17-B.",
+                "documento": "HTM240-DTC-001",
+                "seccion": "HTM-0142",
+                "pagina": 1,
+                "versiones": ["V1.0", "V1.1"],
+                "componente": "bateria",
+                "tipo_documento": "codigo_averia",
+                "obsoleto": False,
+                "sustituido_por": None,
+                "vigente_para": [],
+                "fecha_revision": "2025-09-18",
+                "orden_en_seccion": 1,
+                "version_documento": "1.0",
+                "afectado_por": ["BOL-003"],
+                "ids_referenciados": ["CMP-17", "HTM-0142"],
+            }
+        ],
+    }
+    session = FakeSession(FakeResponse(response_body))
+    client = BackendAPIClient(
+        base_url="http://backend.test",
+        model_embeddings="BAAI/bge-m3",
+        session=session,
+        timeout=2,
+    )
+
+    parsed = client.search_lexical_candidates(
+        text="HTM-0142",
+        filtros={"version": "V1.1"},
+    )
+
+    assert session.calls[0]["url"] == (
+        "http://backend.test/conocimiento/lexica"
+    )
+    assert session.calls[0]["json"]["texto"] == "HTM-0142"
+    assert session.calls[0]["json"]["k"] == 30
+    assert parsed.resultados[0].chunk_id == (
+        "HTM240-DTC-001@1.0_p1_htm0142"
+    )
+    assert parsed.resultados[0].metadatos.ids_referenciados == [
+        "CMP-17",
+        "HTM-0142",
+    ]
+
+
+def test_search_lexical_candidates_propagates_parse_errors():
+    response_body = {
+        "indice": {
+            "version": "v1.0-bd",
+            "modelo_embeddings": "BAAI/bge-m3",
+        },
+        "resultados": [{}],
+    }
+    session = FakeSession(FakeResponse(response_body))
+    client = BackendAPIClient(
+        base_url="http://backend.test",
+        model_embeddings="BAAI/bge-m3",
+        session=session,
+        timeout=2,
+    )
+
+    with pytest.raises(LexicalContractError):
+        client.search_lexical_candidates(text="HTM-0142")

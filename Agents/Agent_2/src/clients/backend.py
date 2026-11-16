@@ -8,8 +8,9 @@ import re
 import unicodedata
 import requests
 
-from ..core.config import EMBEDDING_DIMENSION
+from ..core.config import EMBEDDING_DIMENSION, SEARCH_TOP_K
 from ..services.filters import filter_chunks
+from ..services.lexical_parser import parse_lexical_response
 
 REQUIRED_CHUNK_FIELDS = {
     "chunk_id",
@@ -92,6 +93,15 @@ class BackendAPIClient:
         )
         response.raise_for_status()
         return response.json()
+
+    def search_lexical_candidates(self, text, filtros=None, k=None):
+        """Solicita la búsqueda léxica y valida la respuesta de CTR-002."""
+
+        if k is None:
+            k = SEARCH_TOP_K
+
+        payload = self.search_lexical(text=text, filtros=filtros, k=k)
+        return parse_lexical_response(payload)
     
 def _invalid_chunk_fields(chunk):
     problems = []
