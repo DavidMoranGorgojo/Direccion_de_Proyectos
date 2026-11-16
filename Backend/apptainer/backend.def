@@ -1,0 +1,29 @@
+Bootstrap: docker
+From: python@sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e669c
+
+%labels
+    Project ARSOFT
+    Service Backend-FastAPI
+
+%files
+    Backend/api/requirements.txt /opt/arsoft/requirements.txt
+    Backend/api/app /opt/arsoft/app
+    shared/arsoft_http.py /opt/arsoft/arsoft_http.py
+
+%post
+    python -m pip install --no-cache-dir -r /opt/arsoft/requirements.txt
+
+%environment
+    export PYTHONUNBUFFERED=1
+    export PYTHONPATH=/opt/arsoft
+
+%runscript
+    cd /opt/arsoft
+    exec python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+
+%startscript
+    cd /opt/arsoft
+    exec python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+
+%test
+    python -c 'import fastapi, uvicorn'

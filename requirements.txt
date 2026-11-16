@@ -1,0 +1,3 @@
+# Agente 1 y benchmark: Python >=3.10, biblioteca estándar.
+# SDK y validación Pydantic opcionales: requirements-agente1-optional.txt
+# Dependencias de interfaz: Frontend/requirements.txt
