@@ -7,6 +7,7 @@ From: pgvector/pgvector@sha256:484e838076e04939d27d3e176e91c86eea96236126023be8d
 
 %files
     Backend/db/init/01_conocimiento.sql /docker-entrypoint-initdb.d/01_conocimiento.sql
+    Backend/db/init/02_usuarios.sql /docker-entrypoint-initdb.d/02_usuarios.sql
 
 %environment
     export PGDATA=/var/lib/postgresql/data/pgdata
