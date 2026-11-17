@@ -1,10 +1,13 @@
+# Cliente HTTP del Backend (CTR-002)
+requests>=2.31
 
-# Modelo de reranking del Agente 2
+# Vectorización local BGE-M3 (A2-01) y reranking (A2-05)
 FlagEmbedding==1.4.2
 
 # Dependencias de inferencia verificadas con el modelo real
 torch==2.14.1
 transformers==5.20.2
+numpy>=1.24
 
 # Ejecución de pruebas
 pytest==9.1.1
