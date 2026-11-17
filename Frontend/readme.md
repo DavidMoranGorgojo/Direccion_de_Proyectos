@@ -116,6 +116,7 @@ Las pruebas unitarias y de integración del Frontend se ubican en `Test/test_Fro
 - **`Test/test_Frontend/test_conexion_simulada.py`**:
   - Lectura y validación de respuestas CTR-001 (estados `respuesta`, `aclaracion`, `fuera_de_ambito`, `sin_evidencia` y fuentes).
   - Lectura del historial CTR-006 y soporte de historial vacío.
+  - Lectura tolerante de chats (`Conversation.from_dict`): mensajes sin `message_id`, `fuentes` ausentes o nulas y fechas con sufijo `Z` (formato que emite el Backend).
   - Gestión de códigos de error HTTP: 401 (no autenticado / sesión caducada), 403 (prohibido), 429 (rate limit) y 500 (error interno del servidor).
   - Resiliencia ante JSON no válido, respuestas malformadas y estados desconocidos.
   - Envío de consultas y preservación de la pregunta exacta según CTR-001.
@@ -129,6 +130,13 @@ Ejecución de las pruebas (desde la raíz del repositorio):
 ```bash
 pytest Test/test_Frontend/
 ```
+> **Nota sobre `PYTHONPATH=shared`:** el Frontend no importa nada de `shared/`, así que sus
+> pruebas no lo necesitan. Sí lo necesitan las de Agentes y Backend (`arsoft_http`). Para no
+> tener que exportarlo a mano, el `pytest.ini` de la raíz ya añade `shared` a la ruta de
+> importación (`pythonpath = shared`); basta con lanzar `pytest` desde la raíz. Si se ejecutan
+> con otro ejecutor (p. ej. `unittest`) desde otra carpeta, hay que definirlo manualmente:
+> `PYTHONPATH=shared` (Linux/macOS) o `$env:PYTHONPATH="shared"` (PowerShell).
+
 o bien con el ejecutor estándar de Python:
 ```bash
 python -m unittest discover -s Test/test_Frontend -p "test_*.py"

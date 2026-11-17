@@ -20,6 +20,7 @@ import os
 import sys
 import types
 import unittest
+from datetime import timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -64,6 +65,7 @@ if "PySide6.QtCore" not in sys.modules:
     sys.modules["PySide6.QtCore"] = qtcore_mock
 
 from models.conversation import Conversation, DEFAULT_TITLE
+from models.dates import parse as parse_date
 from models.message import Message, ROLE_USER, ROLE_BOT
 from models.response import (
     Response,
@@ -300,6 +302,64 @@ class TestCTR006LecturaHistorial(BaseFrontendTestCase):
 
         self.assertEqual(conv.title, DEFAULT_TITLE)
         self.assertEqual(conv.messages, [])
+
+    def test_ctr006_message_from_dict_sin_message_id(self):
+        """Un mensaje sin `message_id` se lee igualmente, con identificador vacío."""
+        conv = Conversation.from_dict({
+            "conversacion_id": "conv-sin-mid",
+            "mensajes": [
+                {"role": ROLE_USER, "contenido": "¿Presión de aceite?"},
+                {"role": ROLE_BOT, "contenido": "Entre 2 y 4 bar.", "estado": "respuesta"},
+            ],
+        })
+
+        self.assertEqual(len(conv.messages), 2)
+        self.assertTrue(all(m.message_id == "" for m in conv.messages))
+        self.assertEqual(conv.messages[0].text, "¿Presión de aceite?")
+        self.assertEqual(conv.messages[1].text, "Entre 2 y 4 bar.")
+
+    def test_ctr006_message_from_dict_fuentes_ausentes(self):
+        """`fuentes` ausente, nulo o vacío produce una lista de fuentes vacía."""
+        base = {"role": ROLE_BOT, "contenido": "Respuesta", "estado": "respuesta"}
+        casos = {
+            "clave ausente": dict(base),
+            "valor null": {**base, "fuentes": None},
+            "lista vacía": {**base, "fuentes": []},
+        }
+        for nombre, raw in casos.items():
+            with self.subTest(nombre):
+                self.assertEqual(Message.from_dict(raw).sources, [])
+
+        # Un chat completo con mensajes sin fuentes tampoco debe fallar.
+        conv = Conversation.from_dict({"conversacion_id": "c", "mensajes": [dict(base)]})
+        self.assertEqual(conv.messages[0].sources, [])
+
+    def test_ctr006_fechas_con_sufijo_z(self):
+        """Las fechas con sufijo Z (formato que emite el Backend) se conservan y se interpretan."""
+        conv = Conversation.from_dict({
+            "conversacion_id": "conv-z",
+            "created_at": "2026-01-15T10:00:00Z",
+            "updated_at": "2026-01-15T10:03:00Z",
+            "mensajes": [{"role": ROLE_USER, "contenido": "Hola",
+                          "timestamp": "2026-01-15T10:00:00Z"}],
+        })
+
+        # El modelo guarda el texto tal cual lo emite el Backend...
+        self.assertEqual(conv.created_at, "2026-01-15T10:00:00Z")
+        self.assertEqual(conv.updated_at, "2026-01-15T10:03:00Z")
+        self.assertEqual(conv.messages[0].timestamp, "2026-01-15T10:00:00Z")
+
+        # ...y `dates.parse` lo convierte a hora local sin zona, respetando el orden.
+        creada, actualizada = parse_date(conv.created_at), parse_date(conv.updated_at)
+        self.assertIsNotNone(creada)
+        self.assertIsNone(creada.tzinfo)
+        self.assertEqual(actualizada - creada, timedelta(minutes=3))
+        self.assertEqual(parse_date("2026-01-15T10:00:00Z"), parse_date("2026-01-15T10:00:00+00:00"))
+
+    def test_fechas_vacias_o_invalidas_no_rompen(self):
+        """Una fecha vacía o ilegible devuelve None en lugar de lanzar excepción."""
+        self.assertIsNone(parse_date(""))
+        self.assertIsNone(parse_date("no-es-una-fecha"))
 
 
 # ==============================================================================
