@@ -1,0 +1,48 @@
+{
+  "consultas": [
+    {
+      "query_id": "Q001",
+      "ranking": [
+        { "chunk_id": "c_alta_rel", "rerank_score": 0.92 },
+        { "chunk_id": "c_alta_no_rel", "rerank_score": 0.81 },
+        { "chunk_id": "c_baja_rel", "rerank_score": 0.35 },
+        { "chunk_id": "c_baja_no_rel", "rerank_score": 0.10 }
+      ],
+      "relevant_chunk_ids": [
+        "c_alta_rel",
+        "c_baja_rel",
+        "c_ausente"
+      ]
+    },
+    {
+      "query_id": "Q002",
+      "ranking": [
+        { "chunk_id": "c_rel_1", "rerank_score": 0.75 },
+        { "chunk_id": "c_no_rel", "rerank_score": 0.65 },
+        { "chunk_id": "c_rel_2", "rerank_score": 0.55 }
+      ],
+      "relevant_chunk_ids": [
+        "c_rel_1",
+        "c_rel_2"
+      ]
+    },
+    {
+      "query_id": "Q003",
+      "ranking": [
+        { "chunk_id": "c_sin_rel_1", "rerank_score": 0.60 },
+        { "chunk_id": "c_sin_rel_2", "rerank_score": 0.20 }
+      ],
+      "relevant_chunk_ids": []
+    },
+    {
+      "query_id": "Q004",
+      "ranking": [
+        { "chunk_id": "c_umbral", "rerank_score": 0.45 },
+        { "chunk_id": "c_debajo", "rerank_score": 0.40 }
+      ],
+      "relevant_chunk_ids": [
+        "c_umbral"
+      ]
+    }
+  ]
+}
