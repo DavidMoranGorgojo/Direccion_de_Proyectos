@@ -13,29 +13,19 @@ from Agents.Agent_2.src.services.filter_inference import (
     load_catalogs,
     merge_filters,
 )
-from Agents.Agent_2.src.services.filters import filter_chunks
+from Agents.Agent_2.src.services.filters import filter_chunks, version_applies
 
 DATA_FILE = (
     Path(__file__).resolve().parents[2]
     / "Agents"
     / "Agent_2"
-    / "data"
+    / "fixtures"
     / "bbdd_sintetica_chunks.json"
 )
 
 
 def read_dataset():
     return json.loads(DATA_FILE.read_text(encoding="utf-8-sig"))["chunks"]
-
-
-def version_applies(chunk, version):
-    if version in (chunk.get("versiones") or []):
-        return True
-
-    return (
-        chunk.get("sustituido_por") is not None
-        and version in (chunk.get("vigente_para") or [])
-    )
 
 
 def test_infer_version_requires_a_single_explicit_version():
@@ -57,8 +47,8 @@ def test_infer_version_requires_a_single_explicit_version():
 def test_infer_component_uses_only_closed_categories():
     assert infer_component("la batería") == "bateria"
     assert infer_component("Baterías de alta tensión") == "bateria"
-    assert infer_component("el motor") == "motor"
-    assert infer_component("los motores") == "motor"
+    assert infer_component("el motor") is None  # Alias genérico sin especificidad
+    assert infer_component("los motores") is None
     assert infer_component("pierde refrigerante") == "refrigeracion"
     assert infer_component("calefacción") == "calefaccion"
     assert infer_component("la TCU") == "control_tcu"
@@ -102,7 +92,7 @@ def test_infer_document_types_returns_every_mentioned_type():
     assert infer_document_types("códigos de avería") == ["codigo_averia"]
     assert infer_document_types("el DTC") == ["codigo_averia"]
     assert infer_document_types("casos de servicio") == ["casos_servicio"]
-    assert infer_document_types("diagnósticos") == ["diagnostico"]
+    assert infer_document_types("diagnósticos") is None  # Término genérico: no imponer documento
 
     assert infer_document_types("ficha técnica") is None
     assert infer_document_types("no sé qué documento") is None

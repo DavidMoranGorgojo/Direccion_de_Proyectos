@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from ..core.errors import CODIGO_ERROR_POR_DEFECTO, BackendRequestError
 from ..models.retrieval import ESTADOS, RetrievalDecision, RetrievalResult
-from .filters import normalize_component, normalize_version, version_applies
+from .filters import filter_chunks, normalize_component, normalize_version, version_applies
 from .neighbors import expand_with_neighbors
 
 DOCUMENT_STATES = ("vigente", "obsoleto", "sustituido")
@@ -141,6 +141,10 @@ def resolve_retrieval(candidates, filters=None, fetch_neighbors=None):
     ``codigo_error`` estándar; nunca una lista vacía.
     """
     filters = filters or {}
+    # Filtro defensivo: nunca usar candidatos incompatibles de Backend para
+    # decidir un estado, aunque el proveedor haya relajado sus WHERE.
+    hard_filters = {k: filters[k] for k in ("version", "componente", "incluir_obsoletos") if k in filters}
+    candidates = filter_chunks(_require_candidates(candidates), hard_filters)
     decision = classify_state(candidates, filters)
 
     if decision.estado == "insuficiente":
@@ -150,6 +154,9 @@ def resolve_retrieval(candidates, filters=None, fetch_neighbors=None):
 
     try:
         expanded = expand_with_neighbors(candidates, fetch_neighbors)
+        # Los vecinos pueden compartir documento/sección y pertenecer a otra
+        # versión/componente: deben someterse a los mismos filtros duros.
+        expanded = filter_chunks(expanded, hard_filters)
     except BackendRequestError as error:
         return RetrievalResult(
             estado="error",

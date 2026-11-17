@@ -333,16 +333,12 @@ class VectorParserTests(unittest.TestCase):
                 ):
                     parse_vector_response(payload)
 
-    def test_fecha_null_rechazada(self):
-        """CTR-002 exige fecha_revision; la ingesta admite null, discrepancia pendiente."""
+    def test_fecha_null_se_conserva_como_dato_ausente(self):
+        """La API acepta fecha_revision nullable sin inventar una fecha."""
         payload = self._valid_payload()
         payload["resultados"][0]["fecha_revision"] = None
-
-        with self.assertRaisesRegex(
-            VectorValidationError,
-            r"resultados\[0\]\.fecha_revision",
-        ):
-            parse_vector_response(payload)
+        parsed = parse_vector_response(payload)
+        self.assertIsNone(parsed.resultados[0].metadatos.fecha_revision)
 
     def test_no_muta_el_payload_de_entrada(self):
         payload = self._valid_payload()

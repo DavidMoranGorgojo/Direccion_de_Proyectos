@@ -233,8 +233,12 @@ def _parse_score(data: dict, field: str, path: str) -> float:
     return float(value)
 
 
-def _parse_date(data: dict, field: str, path: str) -> str:
-    value = _parse_string(data, field, path, non_empty=True)
+def _parse_date(data: dict, field: str, path: str) -> str | None:
+    value = _required(data, field, path)
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value.strip():
+        raise VectorValidationError(f"El campo '{path}' debe ser una fecha o null")
 
     if not _DATE_RE.fullmatch(value):
         raise VectorValidationError(

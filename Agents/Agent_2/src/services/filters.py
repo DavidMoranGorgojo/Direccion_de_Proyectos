@@ -222,16 +222,20 @@ def code_key(value):
 def version_applies(chunk, version):
     """Indica si un chunk es aplicable a una versión ya normalizada.
 
-    Un documento sustituido sigue siendo aplicable a las versiones que figuran
-    en ``vigente_para``.
+    Un documento sustituido solo es aplicable a las versiones que figuran
+    en ``vigente_para``. Los no sustituidos del corpus sintético pueden tener
+    esa lista vacía y usar ``versiones`` como alternativa.
     """
-    if version in (chunk.get("versiones") or []):
-        return True
-
-    return (
-        chunk.get("sustituido_por") is not None
-        and version in (chunk.get("vigente_para") or [])
-    )
+    # CTR-002: vigente_para prevalece cuando se ha informado aplicabilidad.
+    # En el corpus sintético los documentos no sustituidos pueden tener esa
+    # lista vacía y siguen usando versiones; nunca se aplica este fallback a
+    # documentos sustituidos/obsoletos (caso PRC-003).
+    applicable = chunk.get("vigente_para") or []
+    if applicable:
+        return version in applicable
+    if chunk.get("obsoleto") or chunk.get("sustituido_por"):
+        return False
+    return version in (chunk.get("versiones") or [])
 
 
 def extract_code_tokens(text):

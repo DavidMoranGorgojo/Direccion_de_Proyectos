@@ -238,7 +238,11 @@ def _parse_string_list(data: dict, field: str, path: str) -> list[str]:
 
 
 def _parse_rerank_score(data: dict, path: str) -> float:
-    value = _required(data, "rerank_score", path)
+    value = data.get("rerank_score")
+    if value is None:
+        value = data.get("score_final")
+    if value is None:
+        value = _required(data, "rerank_score", path)
 
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise EvidenceValidationError(
@@ -258,8 +262,14 @@ def _parse_rerank_score(data: dict, path: str) -> float:
     return float(value)
 
 
-def _parse_date(data: dict, field: str, path: str) -> str:
-    value = _parse_string(data, field, path, non_empty=True)
+def _parse_date(data: dict, field: str, path: str) -> str | None:
+    value = _required(data, field, path)
+
+    if value is None:
+        return None
+
+    if not isinstance(value, str) or not value.strip():
+        raise EvidenceValidationError(f"El campo '{path}' debe ser un string no vacío o null")
 
     if not _DATE_RE.fullmatch(value):
         raise EvidenceValidationError(

@@ -167,15 +167,41 @@ class BackendAPIClient:
         return {"headers": {"Authorization": f"Bearer {self.token}"}}
 
     def _post_conocimiento(self, ruta, payload):
-        """Helper privado con mapeo exhaustivo de errores según CTR-002 (ALB-7)."""
-        response = self.session.post(
-            f"{self.base_url}{ruta}",
-            json=payload,
-            timeout=self.timeout,
-            **self._auth_kwargs(),
-        )
+        """Helper privado con mapeo exhaustivo de errores según CTR-002 (ALB-7).
 
-        response.raise_for_status()
+        No utiliza raise_for_status() directamente para poder inspeccionar el
+        código HTTP y el cuerpo de la respuesta antes de decidir el código de
+        error contractual (entrada_invalida, modelo_incompatible, etc.).
+        """
+        try:
+            response = self.session.post(
+                f"{self.base_url}{ruta}",
+                json=payload,
+                timeout=self.timeout,
+                **self._auth_kwargs(),
+            )
+        except requests.Timeout as error:
+            raise BackendRequestError(
+                "tiempo_agotado",
+                f"Tiempo agotado al contactar con el Backend en {ruta}.",
+            ) from error
+        except requests.ConnectionError as error:
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                f"No se pudo conectar con el Backend en {ruta}.",
+            ) from error
+        except requests.RequestException as error:
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                f"Error de red al contactar con el Backend en {ruta}: {error}",
+            ) from error
+
+        if response.status_code >= 400:
+            codigo = _backend_error_code(response)
+            raise BackendRequestError(
+                codigo,
+                f"El Backend devolvió error HTTP {response.status_code} en {ruta}.",
+            )
 
         try:
             return response.json()
@@ -294,6 +320,78 @@ class BackendAPIClient:
         """Recupera solo los vecinos de sección de un fragmento dado."""
         result = self.get_chunk(chunk_id, vecinos=1)
         return result["vecinos"]
+
+    def get_catalogo(self, nombre):
+        """Descarga un catálogo versionado desde el Backend (CTR-002 §2).
+
+        Args:
+            nombre: Uno de 'codigos', 'terminos', 'vehiculos', 'componentes'.
+
+        Returns:
+            dict con {'nombre': ..., 'version': ..., 'contenido': ...}
+
+        Raises:
+            ValueError: Si el nombre del catálogo no es válido.
+            BackendRequestError: Si el catálogo no existe (indice_no_disponible) o hay error HTTP/red.
+        """
+        validos = {"codigos", "terminos", "vehiculos", "componentes"}
+        if not isinstance(nombre, str) or nombre not in validos:
+            raise ValueError(
+                f"Nombre de catálogo inválido: {nombre!r}. Debe ser uno de {sorted(validos)}."
+            )
+
+        url = f"{self.base_url}/catalogos/{quote(nombre, safe='')}"
+        try:
+            response = self.session.get(
+                url,
+                timeout=self.timeout,
+                **self._auth_kwargs(),
+            )
+        except requests.Timeout as error:
+            raise BackendRequestError(
+                "tiempo_agotado",
+                f"Tiempo agotado al recuperar el catálogo {nombre}.",
+            ) from error
+        except requests.RequestException as error:
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                f"No se pudo contactar con el Backend al recuperar el catálogo {nombre}: {error}",
+            ) from error
+
+        if response.status_code == 404:
+            raise BackendRequestError(
+                "indice_no_disponible",
+                f"El catálogo {nombre!r} no existe en el Backend o el índice no está disponible.",
+            )
+
+        if response.status_code >= 400:
+            codigo = _backend_error_code(response)
+            raise BackendRequestError(
+                codigo,
+                f"El Backend devolvió error HTTP {response.status_code} al recuperar el catálogo {nombre}.",
+            )
+
+        try:
+            payload = response.json()
+        except (TypeError, ValueError) as error:
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                f"El Backend devolvió una respuesta no JSON para el catálogo {nombre}.",
+            ) from error
+
+        if not isinstance(payload, dict):
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                f"Respuesta inválida para el catálogo {nombre}: se esperaba un objeto JSON.",
+            )
+
+        if "contenido" not in payload:
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                f"Respuesta incompleta para el catálogo {nombre}: falta el campo 'contenido'.",
+            )
+
+        return payload
 
 
 def _invalid_chunk_fields(chunk, require_fecha_revision=True):

@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "descripcion": "Catálogo sintético de prueba para componentes",
+  "componentes": [
+    {
+      "id": "CMP-01",
+      "nombre": "Bomba mecánica de agua",
+      "circuito": "CIR-01",
+      "categoria": "motor"
+    },
+    {
+      "id": "CMP-02",
+      "nombre": "Bomba eléctrica auxiliar A",
+      "circuito": "CIR-02",
+      "categoria": "bateria"
+    },
+    {
+      "id": "CMP-17",
+      "nombre": "Bomba refrigerante secundaria",
+      "circuito": "CIR-01",
+      "categoria": "refrigeracion"
+    },
+    {
+      "id": "CMP-18",
+      "nombre": "Sensor térmico culata",
+      "circuito": "CIR-01",
+      "categoria": "refrigeracion"
+    }
+  ]
+}

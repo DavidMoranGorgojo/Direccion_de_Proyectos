@@ -7,11 +7,16 @@ de modo que las pruebas y el resto del servicio funcionan sin el modelo.
 
 from __future__ import annotations
 
+import threading
+from functools import lru_cache
+
 from ..core.config import EMBEDDINGS_MODEL
 
 
 QUERY_PREFIX = "query: "
 PASSAGE_PREFIX = "passage: "
+
+_bloqueo_carga = threading.Lock()
 
 
 def _with_prefix(text, prefix):
@@ -27,35 +32,18 @@ class BgeM3Client:
         self.use_prefix = use_prefix
 
     def encode_query(self, text):
-        """Antepone 'query: ' si use_prefix está activo (ALB-7)."""
+        """Antepone 'query: ' obligatoriamente según CTR-002 (sin duplicar)."""
         if not isinstance(text, str):
             raise TypeError("text debe ser texto.")
 
-        if self.use_prefix:
-            query = _with_prefix(text, QUERY_PREFIX)
-        else:
-            query = text
+        query = _with_prefix(text, QUERY_PREFIX)
         return self._encode([query])[0]
 
     def encode(self, text, use_prefix=None):
         """Método unificado de codificación para compatibilidad directa."""
         if isinstance(text, str):
-            if use_prefix is not None:
-                old = self.use_prefix
-                self.use_prefix = use_prefix
-                try:
-                    return self.encode_query(text)
-                finally:
-                    self.use_prefix = old
             return self.encode_query(text)
         elif isinstance(text, (list, tuple)):
-            if use_prefix is not None:
-                old = self.use_prefix
-                self.use_prefix = use_prefix
-                try:
-                    return self.encode_passages(text)
-                finally:
-                    self.use_prefix = old
             return self.encode_passages(text)
         raise TypeError("text debe ser texto o una secuencia de textos.")
 
@@ -131,4 +119,24 @@ def load_bge_m3_client(
     return BgeM3Client(encoder, use_prefix=use_prefix if use_prefix is not None else True)
 
 
-__all__ = ["BgeM3Client", "load_bge_m3_client", "QUERY_PREFIX", "PASSAGE_PREFIX"]
+@lru_cache(maxsize=1)
+def _load_bge_m3_cached(model_name, device, use_fp16):
+    return load_bge_m3_client(model_name=model_name, device=device, use_fp16=use_fp16)
+
+
+def get_bge_m3_client(model_name=None, *, device=None, use_fp16=True):
+    """Obtiene el cliente reutilizable BGE-M3 de forma segura y concurrente."""
+    if model_name is None:
+        model_name = EMBEDDINGS_MODEL
+
+    with _bloqueo_carga:
+        return _load_bge_m3_cached(model_name, device, use_fp16)
+
+
+__all__ = [
+    "BgeM3Client",
+    "load_bge_m3_client",
+    "get_bge_m3_client",
+    "QUERY_PREFIX",
+    "PASSAGE_PREFIX",
+]

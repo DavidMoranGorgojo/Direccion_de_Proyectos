@@ -19,7 +19,7 @@ El flujo previsto es:
 8. Comprobación de vigencia y recuperación de chunks vecinos.
 9. Generación del JSON de evidencias para el Agente 1.
 
-**Estado:** los componentes RRF, reranker, configuración, carga reutilizable del modelo y pruebas de resiliencia están implementados y probados. Se han añadido validaciones, control de concurrencia y limitación de candidatos. La integración completa del pipeline sigue pendiente.
+**Estado revisado (17/11/2026):** el orquestador `src/services/pipeline.py` y el enlace local con el Agente 1 están implementados y tienen pruebas automatizadas con simuladores. La ejecución con Backend real y pesos BGE-M3/reranker, así como el despliegue y la calibración final, **no se han validado en esta revisión**. La interfaz pública `recuperar_evidencias()` exige el reranker por defecto; las pruebas de RRF pueden desactivarlo mediante `Agent2Pipeline(require_reranker=False)`.
 
 ## 2. Requisitos
 
@@ -464,3 +464,17 @@ Para completar la integración del Agente 2 quedan pendientes:
 9. Comprobar la instalación de dependencias en un entorno limpio.
 
 Las pruebas de los componentes individuales no sustituyen las pruebas de integración del sistema completo.
+
+
+## Revisión técnica prepublicación (17/11/2026)
+
+- **Probar sin modelos pesados:** `python -m pytest Test/test_Models Test/test_Agents Test/test_Performance -q` desde la raíz del proyecto.
+- **Entorno sintético explícito:** en PowerShell, establecer `$env:ARSOFT_ENV = "test"` antes de ejecutar los tests en una copia sin catálogos reales. La carpeta `fixtures/catalogos/` contiene **solo datos de prueba**; `fixtures/bbdd_sintetica_chunks.json` es un corpus sintético para la batería de filtros y RRF.
+- **En producción:** configurar los catálogos reales accesibles desde Backend; sin catálogos requeridos se devuelve `indice_no_disponible`. `ARSOFT_ENV=production` impide el fallback a datos sintéticos, incluso con un permiso accidental.
+- **Contrato:** la entrada pública acepta `texto_preprocesado` y la salida mantiene `resultados` con `metadatos`; el adaptador interno utiliza además `evidencias`.
+- **Vigencia:** `vigente_para` determina la aplicabilidad de documentos sustituidos. Para documentos actuales con lista vacía se permite la alternativa `versiones` utilizada por el corpus sintético; no se relajan filtros confirmados de versión/componente.
+- **Vecinos:** los chunks de contexto que no han sido reranqueados no se publican como evidencias puntuadas, y se filtran por versión y componente.
+- **Reintento CTR-002:** si una consulta no devuelve resultados y se había filtrado por `tipo_documento`, el pipeline realiza un único reintento sin ese filtro y conserva siempre los de versión/componente.
+- **Limitaciones:** no se ha verificado en esta revisión la exactitud de modelos reales, la API Backend ni la ejecución final en Apptainer; los benchmarks de GPU siguen siendo dependencias de infraestructura.
+
+Véase `docs/AUDITORIA_CORRECCIONES_2026-11-17.md` para los cambios y pruebas exactas.
