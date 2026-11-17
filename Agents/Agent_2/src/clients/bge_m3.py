@@ -1,11 +1,13 @@
-"""Adaptador local del modelo BGE-M3.
+"""Adaptador local del modelo BGE-M3 (A2-01).
 
 Importar este módulo no descarga ni instancia BGE-M3. La dependencia
 FlagEmbedding se importa únicamente al llamar a load_bge_m3_client(),
 de modo que las pruebas y el resto del servicio funcionan sin el modelo.
 """
 
-from ..core.config import EMBEDDINGS_MODEL, USE_QUERY_PREFIX
+from __future__ import annotations
+
+from ..core.config import EMBEDDINGS_MODEL
 
 
 QUERY_PREFIX = "query: "
@@ -14,7 +16,6 @@ PASSAGE_PREFIX = "passage: "
 
 def _with_prefix(text, prefix):
     """Antepone el prefijo sin duplicarlo si ya está presente."""
-
     if text.startswith(prefix):
         return text
     return f"{prefix}{text}"
@@ -26,10 +27,14 @@ class BgeM3Client:
         self.use_prefix = use_prefix
 
     def encode_query(self, text):
+        """Antepone 'query: ' si use_prefix está activo (ALB-7)."""
         if not isinstance(text, str):
             raise TypeError("text debe ser texto.")
 
-        query = _with_prefix(text, QUERY_PREFIX) if self.use_prefix else text
+        if self.use_prefix:
+            query = _with_prefix(text, QUERY_PREFIX)
+        else:
+            query = text
         return self._encode([query])[0]
 
     def encode_passages(self, texts):
@@ -84,17 +89,9 @@ def load_bge_m3_client(
     use_prefix=None,
     use_fp16=True,
 ):
-    """Carga BGE-M3 en local y devuelve un BgeM3Client.
-
-    La importación de FlagEmbedding se hace dentro de esta función para
-    que importar el paquete no requiera el modelo ni sus dependencias.
-    """
-
+    """Carga BGE-M3 en local y devuelve un BgeM3Client."""
     if model_name is None:
         model_name = EMBEDDINGS_MODEL
-
-    if use_prefix is None:
-        use_prefix = USE_QUERY_PREFIX
 
     try:
         from FlagEmbedding import BGEM3FlagModel
@@ -109,4 +106,7 @@ def load_bge_m3_client(
         model_kwargs["device"] = device
 
     encoder = BGEM3FlagModel(model_name, **model_kwargs)
-    return BgeM3Client(encoder, use_prefix=use_prefix)
+    return BgeM3Client(encoder, use_prefix=use_prefix if use_prefix is not None else True)
+
+
+__all__ = ["BgeM3Client", "load_bge_m3_client", "QUERY_PREFIX", "PASSAGE_PREFIX"]

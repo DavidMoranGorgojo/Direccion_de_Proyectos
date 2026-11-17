@@ -1,60 +1,53 @@
-"""Estados de recuperación y vigencia de los candidatos (A2-06).
+"""Cálculo de estados de recuperación y vigencia documental (A2-06).
 
-El estado se decide con los candidatos que ya superaron el umbral del reranker
-(A2-05):
+A2-06 no redacta respuestas: calcula el estado a partir de los metadatos y de
+los filtros confirmados, y solicita los vecinos de los fragmentos que superan
+el umbral. Los estados son:
 
-* ``suficiente``: hay evidencia vigente y la consulta permite elegir.
-* ``ambiguo``: hay evidencia vigente de versiones o componentes distintos y la
-  consulta no fija ese campo. Se indica ``campo_ambiguo``.
-* ``solo_obsoleto``: todo lo recuperado está obsoleto o sustituido.
-* ``insuficiente``: no hay candidatos (lista vacía válida).
-* ``error``: fallo del Backend al recuperar los vecinos. Nunca se confunde con
-  ``insuficiente``.
-
-La vigencia se calcula con ``versiones``, ``vigente_para``, ``obsoleto`` y
-``sustituido_por``. Un documento sustituido sigue vigente para las versiones
-que figuran en ``vigente_para``.
+* ``suficiente``: hay al menos un fragmento vigente aplicable a la versión.
+* ``ambiguo``: falta contexto crítico (versión o componente) para resolver
+  la consulta de forma unívoca.
+* ``solo_obsoleto``: todos los fragmentos recuperados corresponden a ediciones
+  sustituidas del manual que no aplican a la versión consultada.
+* ``insuficiente``: ningún fragmento supera el umbral del reranker.
+* ``error``: el Backend falló o devolvió datos que no cumplen el contrato.
 """
 
 from __future__ import annotations
 
-from ..core.errors import BackendRequestError, CODIGO_ERROR_POR_DEFECTO
-from ..models.retrieval import RetrievalDecision, RetrievalResult
+from ..core.errors import CODIGO_ERROR_POR_DEFECTO, BackendRequestError
+from ..models.retrieval import ESTADOS, RetrievalDecision, RetrievalResult
 from .filters import normalize_component, normalize_version, version_applies
 from .neighbors import expand_with_neighbors
 
-
-DOCUMENT_STATES = frozenset({"vigente", "obsoleto", "sustituido"})
+DOCUMENT_STATES = ("vigente", "obsoleto", "sustituido")
 
 
 def _require_candidates(candidates):
     if not isinstance(candidates, (list, tuple)):
-        raise TypeError("candidates debe ser una lista.")
+        raise TypeError("candidates debe ser una lista o tupla.")
 
-    for position, candidate in enumerate(candidates):
+    for index, candidate in enumerate(candidates):
         if not isinstance(candidate, dict):
             raise TypeError(
-                f"El candidato en la posición {position} debe ser un objeto."
+                f"cada candidato debe ser un diccionario; el elemento {index} "
+                f"es {type(candidate).__name__}."
             )
-
-        chunk_id = candidate.get("chunk_id")
-        if not isinstance(chunk_id, str) or not chunk_id.strip():
+        cid = candidate.get("chunk_id")
+        if not isinstance(cid, str) or not cid.strip():
             raise ValueError(
-                f"El candidato en la posición {position} no tiene 'chunk_id'."
+                f"el candidato {index} debe tener un chunk_id de texto no vacío."
             )
 
     return list(candidates)
 
 
 def document_state(chunk, version=None):
-    """Calcula ``vigente``, ``obsoleto`` o ``sustituido`` para un chunk."""
-
-    if not isinstance(chunk, dict):
-        raise TypeError("chunk debe ser un diccionario.")
-
+    """Calcula el estado del fragmento para la versión indicada."""
     version = normalize_version(version)
-    obsoleto = chunk.get("obsoleto") is True
+
     sustituido = chunk.get("sustituido_por") is not None
+    obsoleto = chunk.get("obsoleto") is True
 
     if version is not None:
         # Un documento sustituido sigue vigente para versiones anteriores.
@@ -78,7 +71,6 @@ def document_state(chunk, version=None):
 
 def is_current(chunk, version=None):
     """Indica si el chunk está vigente para la versión solicitada."""
-
     return document_state(chunk, version) == "vigente"
 
 
@@ -88,7 +80,6 @@ def common_version(candidates):
     Evita marcar como ambiguos dos fragmentos que comparten al menos una
     versión, aunque sus rangos no sean idénticos.
     """
-
     common = None
 
     for candidate in candidates:
@@ -107,7 +98,6 @@ def common_version(candidates):
 
 def classify_state(candidates, filters=None):
     """Decide el estado a partir de los candidatos sobre el umbral."""
-
     candidates = _require_candidates(candidates)
     filters = filters or {}
 
@@ -129,8 +119,15 @@ def classify_state(candidates, filters=None):
     if version is None and common_version(current) is None:
         return RetrievalDecision("ambiguo", campo_ambiguo="version")
 
-    if component is None:
-        components = {candidate.get("componente") for candidate in current}
+    # Ambigüedad de componente (ALB-5): solo si no hay códigos explícitos
+    # y hay al menos dos componentes específicos distintos (ignorando sistema y general).
+    codigos = filters.get("codigos")
+    if component is None and not codigos:
+        components = {
+            candidate.get("componente")
+            for candidate in current
+            if candidate.get("componente") and candidate.get("componente") not in {"sistema", "general"}
+        }
         if len(components) > 1:
             return RetrievalDecision("ambiguo", campo_ambiguo="componente")
 
@@ -143,7 +140,6 @@ def resolve_retrieval(candidates, filters=None, fetch_neighbors=None):
     Si el Backend falla al recuperar vecinos, el resultado es ``error`` con el
     ``codigo_error`` estándar; nunca una lista vacía.
     """
-
     filters = filters or {}
     decision = classify_state(candidates, filters)
 

@@ -3,14 +3,14 @@
 La inferencia es conservadora:
 
 * ``version`` solo se infiere cuando aparece una única versión explícita.
-* ``componente`` solo se infiere a partir de un conjunto cerrado de componentes
-  (motor, batería, refrigeración, electrónica de potencia, calefacción y control
-  TCU). No se deduce del componente de un código porque un mismo código puede
-  aparecer en documentos clasificados en otro componente.
-* ``tipo_documento`` puede devolver varios valores: es el único filtro que se
-  amplía.
+* ``componente`` solo se infiere a partir de alias inequívocos. No se infiere con
+  la palabra suelta ``motor``/``motores`` ni ``sistema``/``general``.
+* ``tipo_documento`` infiere solo con formas explícitas y poco ambiguas
+  (boletín, catálogo, manual de taller/servicio, plan de mantenimiento...).
 * ``codigos`` conserva los códigos canónicos exactos del catálogo.
 """
+
+from __future__ import annotations
 
 import json
 import re
@@ -29,12 +29,72 @@ from .filters import (
     normalize_key,
     normalize_version,
 )
+from .filter_vocab import adapt_explicit_filters
 
 
 _VERSION_RE = re.compile(
     r"\b(?:v|versi[oó]n)\s*([12])\s*[.,]\s*(\d)\b",
     re.IGNORECASE,
 )
+
+# Alias seguros para inferir componente (excluye palabras genéricas sueltas como "motor").
+INFERRED_COMPONENT_ALIASES = {
+    "motor": "motor",
+    "motores": "motor",
+    "circuito_motor": "motor",
+    "circuito_de_motor": "motor",
+    "bateria": "bateria",
+    "baterias": "bateria",
+    "bateria_de_alta_tension": "bateria",
+    "circuito_bateria": "bateria",
+    "circuito_de_bateria": "bateria",
+    "refrigeracion": "refrigeracion",
+    "refrigerante": "refrigeracion",
+    "circuito_de_refrigeracion": "refrigeracion",
+    "electronica_de_potencia": "electronica_potencia",
+    "electronica_potencia": "electronica_potencia",
+    "inversor": "electronica_potencia",
+    "calefaccion": "calefaccion",
+    "calentador_ptc": "calefaccion",
+    "calefactor_ptc": "calefaccion",
+    "control_tcu": "control_tcu",
+    "tcu": "control_tcu",
+    "unidad_de_control_termico": "control_tcu",
+    "sistema_de_seguridad": "seguridad",
+    "componente_de_seguridad": "seguridad",
+}
+
+# Alias inequívocos para inferir tipo_documento (excluye siglas cortas y sustantivos ambiguos sueltos).
+INFERRED_DOCUMENT_TYPE_ALIASES = {
+    "manual_de_taller": "manual",
+    "manuales_de_taller": "manual",
+    "manual_de_servicio": "manual",
+    "manuales_de_servicio": "manual",
+    "procedimiento": "procedimiento",
+    "procedimientos": "procedimiento",
+    "boletin": "boletin",
+    "boletines": "boletin",
+    "boletin_tecnico": "boletin",
+    "catalogo": "catalogo",
+    "catalogos": "catalogo",
+    "catalogo_de_piezas": "catalogo",
+    "plan_de_mantenimiento": "mantenimiento",
+    "planes_de_mantenimiento": "mantenimiento",
+    "codigo_averia": "codigo_averia",
+    "codigo_de_averia": "codigo_averia",
+    "codigos_de_averia": "codigo_averia",
+    "dtc": "codigo_averia",
+    "arbol_de_diagnostico": "diagnostico",
+    "arboles_de_diagnostico": "diagnostico",
+    "diagnostico": "diagnostico",
+    "diagnosticos": "diagnostico",
+    "documento_de_seguridad": "seguridad",
+    "caso_de_servicio": "casos_servicio",
+    "casos_de_servicio": "casos_servicio",
+    "esquema_electrico": "esquemas",
+    "esquemas_electricos": "esquemas",
+    "diccionario_tecnico": "diccionario",
+}
 
 
 def _alias_matches(normalized_text, alias):
@@ -85,14 +145,12 @@ def _load_catalogs_cached(path_str):
 
 def load_catalogs(catalog_dir=None):
     """Carga los catálogos usados para validar códigos exactos."""
-
     path = Path(catalog_dir) if catalog_dir is not None else CATALOG_DIR
     return _load_catalogs_cached(str(path))
 
 
 def infer_version(text):
     """Devuelve la versión solo si la consulta menciona exactamente una."""
-
     text = _require_text(text)
     versions = {
         f"V{int(match.group(1))}.{int(match.group(2))}"
@@ -106,14 +164,17 @@ def infer_version(text):
 
 
 def infer_component(text):
-    """Infiere un componente a partir de un conjunto cerrado de componentes."""
-
+    """Infiere un componente solo a partir de alias inequívocos."""
     normalized = normalize_key(_require_text(text))
     candidates = set()
 
-    for alias, canonical in COMPONENT_ALIASES.items():
+    for alias, canonical in INFERRED_COMPONENT_ALIASES.items():
         if _alias_matches(normalized, alias):
             candidates.add(canonical)
+
+    if "motor" in candidates:
+        if re.search(r"(?:^|_)electroventilador(?:_|$)", normalized):
+            candidates.discard("motor")
 
     if len(candidates) == 1:
         return candidates.pop()
@@ -122,12 +183,11 @@ def infer_component(text):
 
 
 def infer_document_types(text):
-    """Devuelve los tipos de documento mencionados, sin duplicados."""
-
+    """Devuelve los tipos de documento mencionados con formas explícitas."""
     normalized = normalize_key(_require_text(text))
     found = []
 
-    for alias, canonical in DOCUMENT_TYPE_ALIASES.items():
+    for alias, canonical in INFERRED_DOCUMENT_TYPE_ALIASES.items():
         if (
             _alias_matches(normalized, alias)
             and canonical not in found
@@ -151,7 +211,6 @@ def _canonical_code(token, catalogs):
 
 def infer_codes(text, catalogs=None):
     """Extrae códigos exactos y los normaliza a su forma canónica."""
-
     catalogs = catalogs or load_catalogs()
     codes = []
 
@@ -165,7 +224,6 @@ def infer_codes(text, catalogs=None):
 
 def infer_filters(text, catalog_dir=None):
     """Construye los filtros inferidos a partir del texto de la consulta."""
-
     if not isinstance(text, str):
         raise TypeError("text debe ser texto.")
 
@@ -211,7 +269,6 @@ def merge_filters(explicit=None, inferred=None):
     ``version`` y ``componente`` explícitos sustituyen a los inferidos y nunca
     se combinan entre sí. ``tipo_documento`` y ``codigos`` se amplían por unión.
     """
-
     explicit = explicit or {}
     inferred = inferred or {}
 
@@ -221,13 +278,35 @@ def merge_filters(explicit=None, inferred=None):
     if not isinstance(inferred, dict):
         raise TypeError("inferred debe ser un diccionario o None.")
 
+    for field in ("version", "componente"):
+        if field in explicit and explicit[field] is not None and not isinstance(explicit[field], str):
+            raise TypeError(f"{field} debe ser texto.")
+    if "tipo_documento" in explicit and explicit["tipo_documento"] is not None:
+        td = explicit["tipo_documento"]
+        if not isinstance(td, (str, list, tuple)):
+            raise TypeError("tipo_documento debe ser texto o lista de textos.")
+        if isinstance(td, (list, tuple)) and any(not isinstance(x, str) for x in td):
+            raise TypeError("tipo_documento debe contener solo textos.")
+    if "codigos" in explicit and explicit["codigos"] is not None:
+        c = explicit["codigos"]
+        if not isinstance(c, (str, list, tuple)):
+            raise TypeError("codigos debe ser texto o lista de textos.")
+        if isinstance(c, (list, tuple)) and any(not isinstance(x, str) for x in c):
+            raise TypeError("codigos debe contener solo textos.")
+    if "incluir_obsoletos" in explicit and explicit["incluir_obsoletos"] is not None:
+        if not isinstance(explicit["incluir_obsoletos"], bool):
+            raise TypeError("incluir_obsoletos debe ser booleano.")
+
+    # Adapta los filtros explícitos (ALB-4): traduce tipos y descarta inválidos
+    adapted_explicit, _ = adapt_explicit_filters(explicit)
+
     merged = dict(inferred)
 
     for field, normalizer in (
         ("version", normalize_version),
         ("componente", normalize_component),
     ):
-        value = explicit.get(field)
+        value = adapted_explicit.get(field)
 
         # Un valor explícito ausente o en blanco deja actuar a la inferencia.
         if value is None or (isinstance(value, str) and not value.strip()):
@@ -236,7 +315,7 @@ def merge_filters(explicit=None, inferred=None):
         merged[field] = normalizer(value)
 
     explicit_types = normalize_document_types(
-        explicit.get("tipo_documento")
+        adapted_explicit.get("tipo_documento")
     )
     inferred_types = normalize_document_types(
         inferred.get("tipo_documento")
@@ -248,14 +327,14 @@ def merge_filters(explicit=None, inferred=None):
             inferred_types,
         )
 
-    explicit_codes = normalize_codes(explicit.get("codigos"))
+    explicit_codes = normalize_codes(adapted_explicit.get("codigos"))
     inferred_codes = normalize_codes(inferred.get("codigos"))
 
     if explicit_codes is not None or inferred_codes is not None:
         merged["codigos"] = _union(explicit_codes, inferred_codes)
 
-    if "incluir_obsoletos" in explicit:
-        include_obsolete = explicit["incluir_obsoletos"]
+    if "incluir_obsoletos" in adapted_explicit:
+        include_obsolete = adapted_explicit["incluir_obsoletos"]
         if not isinstance(include_obsolete, bool):
             raise TypeError("incluir_obsoletos debe ser booleano.")
         merged["incluir_obsoletos"] = include_obsolete
@@ -265,7 +344,6 @@ def merge_filters(explicit=None, inferred=None):
 
 def build_filters(text, explicit=None, catalog_dir=None):
     """Infiere filtros del texto y los combina con los explícitos."""
-
     return merge_filters(
         explicit,
         infer_filters(text, catalog_dir),

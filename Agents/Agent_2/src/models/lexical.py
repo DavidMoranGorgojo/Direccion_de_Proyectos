@@ -49,6 +49,29 @@ class LexicalCandidate:
     score_lexico: float
     metadatos: LexicalMetadata
 
+    def to_rrf_dict(self) -> dict:
+        """Convierte el candidato a un diccionario plano compatible con RRF (ALB-8)."""
+        meta = self.metadatos
+        return {
+            "chunk_id": self.chunk_id,
+            "texto": self.texto,
+            "score_bm25": self.score_lexico,
+            "documento": meta.documento,
+            "seccion": meta.seccion,
+            "pagina": meta.pagina,
+            "versiones": list(meta.versiones),
+            "componente": meta.componente,
+            "tipo_documento": meta.tipo_documento,
+            "obsoleto": meta.obsoleto,
+            "sustituido_por": meta.sustituido_por,
+            "vigente_para": list(meta.vigente_para),
+            "fecha_revision": meta.fecha_revision,
+            "orden_en_seccion": meta.orden_en_seccion,
+            "version_documento": meta.version_documento,
+            "afectado_por": list(meta.afectado_por),
+            "ids_referenciados": list(meta.ids_referenciados),
+        }
+
 
 @dataclass
 class LexicalSearchResponse:
@@ -56,3 +79,15 @@ class LexicalSearchResponse:
 
     indice: LexicalIndexInfo
     resultados: list[LexicalCandidate]
+
+    def as_rrf_input(self) -> list[dict]:
+        """Devuelve todos los candidatos como lista de diccionarios planos para RRF (ALB-8)."""
+        return [candidate.to_rrf_dict() for candidate in self.resultados]
+
+
+__all__ = [
+    "LexicalCandidate",
+    "LexicalIndexInfo",
+    "LexicalMetadata",
+    "LexicalSearchResponse",
+]

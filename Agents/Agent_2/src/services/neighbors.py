@@ -8,6 +8,10 @@ Los vecinos no tienen puntuación de reranking. Se marcan con ``es_vecino`` y
 el empaquetado CTR-004 (A2-07) decide su ``score_final``.
 """
 
+from __future__ import annotations
+
+from concurrent.futures import ThreadPoolExecutor
+
 from ..core.errors import BackendRequestError
 
 
@@ -102,7 +106,7 @@ def _neighbor_item(neighbor, parent):
     return item
 
 
-def expand_with_neighbors(candidates, fetch_neighbors=None):
+def expand_with_neighbors(candidates, fetch_neighbors=None, max_workers=4):
     """Devuelve los candidatos con sus vecinos de sección ya integrados.
 
     ``fetch_neighbors(chunk_id)`` debe devolver la lista de chunks vecinos que
@@ -110,7 +114,6 @@ def expand_with_neighbors(candidates, fetch_neighbors=None):
     candidatos como no vecinos. Un fallo del Backend se propaga como
     :class:`BackendRequestError` para que el estado final sea ``error``.
     """
-
     if fetch_neighbors is not None and not callable(fetch_neighbors):
         raise TypeError("fetch_neighbors debe ser invocable o None.")
 
@@ -121,13 +124,24 @@ def expand_with_neighbors(candidates, fetch_neighbors=None):
             parent["es_vecino"] = False
         return parents
 
+    # Pide los vecinos en paralelo conservando el orden y propagando excepciones (ALB-6)
+    fetched_by_id = {}
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_id = {
+            executor.submit(_fetch, fetch_neighbors, parent["chunk_id"]): parent["chunk_id"]
+            for parent in parents
+        }
+        for future in future_to_id:
+            cid = future_to_id[future]
+            fetched_by_id[cid] = future.result()
+
     expanded = []
     emitted = set()
 
     for parent in parents:
         fetched = [
             _neighbor_item(neighbor, parent)
-            for neighbor in _fetch(fetch_neighbors, parent["chunk_id"])
+            for neighbor in fetched_by_id[parent["chunk_id"]]
         ]
         neighbor_items = [
             item
