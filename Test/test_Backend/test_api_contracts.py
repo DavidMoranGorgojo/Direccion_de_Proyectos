@@ -53,7 +53,8 @@ class Links(unittest.TestCase):
         real_consultar = service.consultar_asistente
         with serve(service.app) as url, TestClient(app) as client, \
                 patch.dict(os.environ, {"AGENTES_URL": url, "ARSOFT_SERVICE_TOKEN": TOKEN}), \
-                patch.dict(app.dependency_overrides, {authorize_consultation: lambda: None}), \
+                patch.dict(app.dependency_overrides, {authorize_consultation: lambda: {"id": 1}}), \
+                patch("Backend.api.app.main.reservar"), patch("Backend.api.app.main.guardar"), \
                 patch.object(service.Agente1, "_consultar_llm", return_value="INVALIDA"), \
                 patch("Agents.agente1.core.registrar_turno_auditoria"), \
                 patch.object(service, "consultar_asistente", wraps=real_consultar) as consulted:

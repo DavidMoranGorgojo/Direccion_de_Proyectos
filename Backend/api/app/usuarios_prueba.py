@@ -1,10 +1,15 @@
 """Crea los usuarios de prueba en aplicacion.usuario (CTR-005). Es idempotente: no toca los que ya existen.
 
-Solo para desarrollo y pruebas. Con el despliegue de Apptainer levantado:
-    apptainer exec instance://arsoft-api python -m app.usuarios_prueba
+NO EJECUTAR EN PRODUCCIÓN: las contraseñas son públicas (están en este archivo y en Backend/readme.md)
+y el usuario «admin» puede leer todo el registro de consultas. Por eso el script exige --desarrollo.
+
+Con el despliegue de Apptainer levantado:
+    apptainer exec instance://arsoft-api python -m app.usuarios_prueba --desarrollo
 Fuera del contenedor (desde Backend/api, con DATABASE_URL y el PYTHONPATH de shared/):
-    python -m app.usuarios_prueba
+    python -m app.usuarios_prueba --desarrollo
 """
+
+import sys
 
 from .links import connect
 from .sesiones import hash_password
@@ -32,6 +37,9 @@ def crear_usuarios_prueba(conn) -> list[str]:
 
 
 if __name__ == "__main__":
+    if "--desarrollo" not in sys.argv[1:]:
+        sys.exit("Usuarios de prueba con contraseñas públicas: solo para desarrollo, nunca en producción.\n"
+                 "Si es un entorno de desarrollo, repite el comando con --desarrollo.")
     with connect() as conexion:
         nuevos = crear_usuarios_prueba(conexion)
     print("Creados: " + (", ".join(nuevos) if nuevos else "ninguno (ya existían)"))

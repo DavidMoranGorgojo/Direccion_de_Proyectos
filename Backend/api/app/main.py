@@ -11,6 +11,7 @@ import httpx
 import psycopg
 from arsoft_http import GENERIC_ERROR, invalid_question
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
@@ -18,13 +19,14 @@ from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .conocimiento import router as knowledge
-from .historial import guardar_turno, propietario
+from .historial import ConversacionAjena, guardar_turno, reservar_chat
 from .historial import router as historial
-from .links import connect, service_headers
+from .links import connect, service_access, service_headers
 from .registro import registrar
 from .registro import router as registro
 from .sesiones import router as sesiones
 from .sesiones import usuario_actual
+from .vectorial import crear_router as crear_router_vectorial
 
 AGENT_TIMEOUT_SECONDS = 25.0
 bearer = HTTPBearer(auto_error=False)
@@ -45,6 +47,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="ARSOFT Backend API", version="0.2.0", lifespan=lifespan)
 app.include_router(knowledge)
+app.include_router(crear_router_vectorial(connect, service_access))  # POST /conocimiento/vectorial (CTR-002)
 app.include_router(sesiones)
 app.include_router(historial)
 app.include_router(registro)
@@ -143,25 +146,28 @@ def ready():
 
 @app.post("/consulta", response_model=RespuestaConsulta)
 async def consulta(data: Pregunta, request: Request,
-                   usuario: Annotated[dict | None, Depends(authorize_consultation)]):
+                   usuario: Annotated[dict, Depends(authorize_consultation)]):
     cid = data.conversacion_id or uuid4().hex
     if invalid_question(data.pregunta):
         return failed(cid, "entrada_invalida", "La pregunta debe contener entre 1 y 2000 caracteres.")
-    if usuario is not None and data.conversacion_id:
-        try:
-            with connect() as conn:
-                dueno = propietario(conn, cid)
-        except psycopg.Error:
-            log.exception("No se pudo comprobar la propiedad de la conversación")
-            return failed(cid, "servicio_no_disponible")
-        if dueno is not None and dueno != usuario["id"]:  # CTR-006: cada usuario solo usa sus chats
-            raise HTTPException(404, detail={"codigo_error": "conversacion_no_encontrada",
-                                             "mensaje": "La conversación no existe."})
+    # psycopg es síncrono: el acceso a la base va a un hilo aparte para no bloquear el event loop
+    try:
+        await run_in_threadpool(reservar, usuario["id"], cid, data.pregunta)
+    except ConversacionAjena:  # CTR-006: cada usuario solo usa sus chats; no se reenvía a Agentes
+        raise HTTPException(404, detail={"codigo_error": "conversacion_no_encontrada",
+                                         "mensaje": "La conversación no existe."})
+    except psycopg.Error:
+        log.exception("No se pudo reservar la conversación")
+        return failed(cid, "servicio_no_disponible")
     inicio = time.perf_counter()
     result = await consultar_agentes(cid, data.pregunta, request.app.state.agents_client)
-    if usuario is not None:
-        guardar(usuario, data.pregunta, result, latencia_ms=(time.perf_counter() - inicio) * 1000)
+    await run_in_threadpool(guardar, usuario, data.pregunta, result, (time.perf_counter() - inicio) * 1000)
     return result
+
+
+def reservar(usuario_id: int, cid: str, pregunta: str) -> None:
+    with connect() as conn:
+        reservar_chat(conn, usuario_id=usuario_id, conversacion_id=cid, pregunta=pregunta)
 
 
 async def consultar_agentes(cid: str, pregunta: str, client: httpx.AsyncClient) -> RespuestaConsulta:
@@ -195,5 +201,5 @@ def guardar(usuario: dict, pregunta: str, result: RespuestaConsulta, latencia_ms
                       conversacion_id=result.conversacion_id, trace_id=result.trace_id,
                       codigo_error=result.codigo_error, chunk_ids=[f.chunk_id for f in result.fuentes],
                       latencia_ms=round(latencia_ms, 2))
-    except psycopg.Error:
+    except (psycopg.Error, ConversacionAjena):
         log.exception("No se pudo guardar el turno en el historial ni en el registro")

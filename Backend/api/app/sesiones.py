@@ -9,11 +9,15 @@ Los errores llevan siempre "codigo_error" y "mensaje", como el resto de la API.
 
 La sesión es un JWT firmado con ARSOFT_JWT_SECRET. Si no está configurado se deriva de
 ARSOFT_SERVICE_TOKEN, que el despliegue ya exige; sin ninguno de los dos el login no se habilita.
+Un token no se puede revocar antes de que caduque (ARSOFT_SESSION_MINUTES): no hay lista de sesiones.
+Lo único que lo invalida antes es desactivar el usuario, que se comprueba en cada petición, o cambiar
+la clave, que invalida las sesiones de todos.
 """
 
 import hashlib
 import hmac
 import os
+import threading
 import time
 from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
@@ -49,8 +53,16 @@ def _secreto() -> str:
     return ""
 
 
+MINUTOS_SESION_POR_DEFECTO = 480
+
+
 def _minutos_sesion() -> int:
-    return int(os.getenv("ARSOFT_SESSION_MINUTES", "480"))
+    """Duración de la sesión. Un valor no numérico o menor que 1 usa el valor por defecto."""
+    try:
+        minutos = int(os.getenv("ARSOFT_SESSION_MINUTES", ""))
+    except ValueError:
+        return MINUTOS_SESION_POR_DEFECTO
+    return minutos if minutos > 0 else MINUTOS_SESION_POR_DEFECTO
 
 
 def hash_password(password: str) -> str:
@@ -87,7 +99,8 @@ def usuario_actual(credentials: Annotated[HTTPAuthorizationCredentials | None, D
     if not secreto:
         raise HTTPException(503, detail=NO_DISPONIBLE)
     try:
-        datos = jwt.decode(credentials.credentials, secreto, algorithms=[JWT_ALGORITHM])
+        datos = jwt.decode(credentials.credentials, secreto, algorithms=[JWT_ALGORITHM],
+                           options={"require": ["exp", "sub"]})
         usuario_id = int(datos["sub"])
     except (jwt.InvalidTokenError, KeyError, ValueError):
         raise HTTPException(401, detail=SESION_CADUCADA, headers={"WWW-Authenticate": "Bearer"})
@@ -110,10 +123,16 @@ def solo_admin(usuario: Annotated[dict, Depends(usuario_actual)]) -> dict:
 
 
 # ------------------------------------------------------------------ login
-# Límite de intentos fallidos en memoria, por usuario e IP. Con varias réplicas habría que llevarlo a la base.
-MAX_FALLOS = 5
+# Límite de intentos fallidos, en memoria, con dos claves: (usuario, IP) y la IP sola.
+# La IP es request.client.host. Uvicorn la toma de X-Forwarded-For cuando el proxy está en
+# FORWARDED_ALLOW_IPS (por defecto 127.0.0.1, que es donde escucha el backend), así que detrás de un
+# proxy local se limita por la IP real del cliente. Con varias réplicas habría que llevarlo a la base.
+MAX_FALLOS = 5        # por usuario e IP
+MAX_FALLOS_IP = 20    # por IP, sea cual sea el usuario
 VENTANA_S = 300
-_fallos: dict[tuple[str, str], deque] = defaultdict(deque)
+MAX_CLAVES = 10_000   # tope de memoria: claves distintas que se recuerdan a la vez
+_fallos: dict[tuple, deque] = defaultdict(deque)
+_candado = threading.Lock()  # login es síncrono: FastAPI lo ejecuta en varios hilos a la vez
 
 
 class Login(BaseModel):
@@ -125,12 +144,47 @@ def _no_autenticado(status: int, mensaje: str, codigo: str) -> JSONResponse:
     return JSONResponse({"estado": "no_autenticado", "mensaje": mensaje, "codigo_error": codigo}, status_code=status)
 
 
-def _bloqueado(clave: tuple[str, str]) -> bool:
-    intentos = _fallos[clave]
+def _recientes(clave: tuple) -> int:
+    """Fallos de la clave dentro de la ventana. Borra la clave si se queda vacía."""
+    intentos = _fallos.get(clave)
+    if intentos is None:
+        return 0
     limite = time.monotonic() - VENTANA_S
     while intentos and intentos[0] < limite:
         intentos.popleft()
-    return len(intentos) >= MAX_FALLOS
+    if not intentos:
+        del _fallos[clave]
+        return 0
+    return len(intentos)
+
+
+def _purgar() -> None:
+    """Quita las claves caducadas y, si aun así se pasa del tope, las más antiguas."""
+    for clave in list(_fallos):
+        _recientes(clave)
+    if len(_fallos) >= MAX_CLAVES:
+        for clave in sorted(_fallos, key=lambda c: _fallos[c][-1])[:len(_fallos) - MAX_CLAVES + 1]:
+            del _fallos[clave]
+
+
+def _bloqueado(nombre: str, ip: str) -> bool:
+    with _candado:
+        return _recientes((nombre, ip)) >= MAX_FALLOS or _recientes(("ip", ip)) >= MAX_FALLOS_IP
+
+
+def _anotar_fallo(nombre: str, ip: str) -> None:
+    with _candado:
+        if len(_fallos) >= MAX_CLAVES:
+            _purgar()
+        ahora = time.monotonic()
+        _fallos[(nombre, ip)].append(ahora)
+        _fallos[("ip", ip)].append(ahora)
+
+
+def _olvidar_fallos(nombre: str, ip: str) -> None:
+    """Tras un login correcto se perdonan los fallos de ese usuario; los de la IP siguen contando."""
+    with _candado:
+        _fallos.pop((nombre, ip), None)
 
 
 @router.post("/login")
@@ -138,8 +192,8 @@ def login(datos: Login, request: Request):
     if not _secreto():
         return _no_autenticado(503, NO_DISPONIBLE["mensaje"], "servicio_no_disponible")
     nombre = datos.usuario.strip().lower()
-    clave = (nombre, request.client.host if request.client else "?")
-    if _bloqueado(clave):
+    ip = request.client.host if request.client else "?"
+    if _bloqueado(nombre, ip):
         return _no_autenticado(429, "Demasiados intentos. Espera unos minutos antes de reintentar.",
                                "demasiados_intentos")
     try:
@@ -149,12 +203,12 @@ def login(datos: Login, request: Request):
                 "WHERE nombre_usuario=%s", (nombre,)).fetchone()
             valido = verificar_password(datos.contrasena, usuario["password_hash"] if usuario else _HASH_FICTICIO)
             if not usuario or not usuario["activo"] or not valido:
-                _fallos[clave].append(time.monotonic())
+                _anotar_fallo(nombre, ip)
                 return _no_autenticado(401, "Usuario o contraseña incorrectos.", "credenciales_invalidas")
             conn.execute("UPDATE aplicacion.usuario SET ultimo_login=now() WHERE id=%s", (usuario["id"],))
     except psycopg.Error:
         return _no_autenticado(503, NO_DISPONIBLE["mensaje"], "servicio_no_disponible")
-    _fallos.pop(clave, None)
+    _olvidar_fallos(nombre, ip)
     return {
         "estado": "autenticado",
         "mensaje": "Inicio de sesión correcto.",

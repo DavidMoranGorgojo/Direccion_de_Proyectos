@@ -56,19 +56,27 @@ def _mensajes(conn, ids: list[str]) -> dict[str, list[dict]]:
     return por_chat
 
 
-def propietario(conn, conversacion_id: str) -> int | None:
-    """Id del usuario dueño del chat, o None si no existe."""
-    fila = conn.execute("SELECT usuario_id FROM aplicacion.chat WHERE conversacion_id=%s",
-                        (conversacion_id,)).fetchone()
-    return fila["usuario_id"] if fila else None
+class ConversacionAjena(Exception):
+    """El conversacion_id ya pertenece a otro usuario."""
+
+
+def reservar_chat(conn, *, usuario_id: int, conversacion_id: str, pregunta: str) -> None:
+    """Crea el chat o lo marca como actualizado, solo si es del usuario. Es atómico: si dos usuarios
+    usan a la vez el mismo conversacion_id, el segundo no actualiza ninguna fila y recibe
+    ConversacionAjena (404 en /consulta)."""
+    fila = conn.execute("""
+        INSERT INTO aplicacion.chat (conversacion_id, usuario_id, titulo) VALUES (%s, %s, %s)
+        ON CONFLICT (conversacion_id) DO UPDATE SET updated_at = now()
+            WHERE aplicacion.chat.usuario_id = EXCLUDED.usuario_id
+        RETURNING conversacion_id
+    """, (conversacion_id, usuario_id, pregunta.strip()[:80] or TITULO_POR_DEFECTO)).fetchone()
+    if fila is None:
+        raise ConversacionAjena(conversacion_id)
 
 
 def guardar_turno(conn, *, usuario_id: int, conversacion_id: str, pregunta: str, respuesta: dict) -> None:
-    """Guarda la pregunta y la respuesta de un turno de /consulta. Crea el chat si es nuevo."""
-    conn.execute("""
-        INSERT INTO aplicacion.chat (conversacion_id, usuario_id, titulo) VALUES (%s, %s, %s)
-        ON CONFLICT (conversacion_id) DO UPDATE SET updated_at = now()
-    """, (conversacion_id, usuario_id, pregunta.strip()[:80] or TITULO_POR_DEFECTO))
+    """Guarda la pregunta y la respuesta de un turno de /consulta en un chat del usuario."""
+    reservar_chat(conn, usuario_id=usuario_id, conversacion_id=conversacion_id, pregunta=pregunta)
     trace = respuesta.get("trace_id", "")
     conn.execute("""
         INSERT INTO aplicacion.mensaje (conversacion_id, trace_id, role, contenido, estado)
