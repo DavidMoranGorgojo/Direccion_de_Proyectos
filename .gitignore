@@ -40,3 +40,6 @@ coverage.xml
 /INFORME_INTEGRACION_PR8_PR9.md
 /pruebas_regresion_origen.json
 /revision_integracion_pr8_pr9.zip
+
+# Evitar subir copias de trabajo locales completas
+.worktrees/
