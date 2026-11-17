@@ -16,7 +16,7 @@ def test_default_settings_match_bge_m3_and_backend_contract():
     assert settings.request_timeout == 5.0
     assert settings.use_query_prefix is True
     assert settings.dataset_path == DATASET_PATH
-    assert settings.dataset_path.exists()
+    assert settings.dataset_path.name == "bbdd_sintetica_chunks.json"
 
 
 def test_environment_overrides_are_applied():

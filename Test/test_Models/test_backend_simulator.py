@@ -21,7 +21,7 @@ DATA_FILE = (
     Path(__file__).resolve().parents[2]
     / "Agents"
     / "Agent_2"
-    / "data"
+    / "fixtures"
     / "bbdd_sintetica_chunks.json"
 )
 CATALOG_DIR = DATA_FILE.parent / "catalogos"

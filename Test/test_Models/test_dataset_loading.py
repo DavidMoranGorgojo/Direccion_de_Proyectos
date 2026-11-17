@@ -10,7 +10,7 @@ DATA_FILE = (
     PROJECT_ROOT
     / "Agents"
     / "Agent_2"
-    / "data"
+    / "fixtures"
     / "bbdd_sintetica_chunks.json"
 )
 REQUIRED_CHUNK_FIELDS = {
