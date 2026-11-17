@@ -37,6 +37,28 @@ class BgeM3Client:
             query = text
         return self._encode([query])[0]
 
+    def encode(self, text, use_prefix=None):
+        """Método unificado de codificación para compatibilidad directa."""
+        if isinstance(text, str):
+            if use_prefix is not None:
+                old = self.use_prefix
+                self.use_prefix = use_prefix
+                try:
+                    return self.encode_query(text)
+                finally:
+                    self.use_prefix = old
+            return self.encode_query(text)
+        elif isinstance(text, (list, tuple)):
+            if use_prefix is not None:
+                old = self.use_prefix
+                self.use_prefix = use_prefix
+                try:
+                    return self.encode_passages(text)
+                finally:
+                    self.use_prefix = old
+            return self.encode_passages(text)
+        raise TypeError("text debe ser texto o una secuencia de textos.")
+
     def encode_passages(self, texts):
         passages = list(texts)
 

@@ -141,3 +141,22 @@ class TestAlbaRegresiones(unittest.TestCase):
         fused = rrf([], [rrf_dict])
         self.assertEqual(len(fused), 1)
         self.assertEqual(fused[0]["chunk_id"], "c1")
+
+
+    def test_bge_m3_encode_soporta_query_y_passages(self):
+        from Agents.Agent_2.src.clients.bge_m3 import BgeM3Client
+
+        class FakeEncoder:
+            def encode(self, texts, **kwargs):
+                return {"dense_vecs": [[0.1, 0.2] for _ in texts]}
+
+        client = BgeM3Client(FakeEncoder(), use_prefix=True)
+        # Codificación de query
+        vec = client.encode("consulta de prueba")
+        self.assertEqual(len(vec), 2)
+        # Codificación de passages
+        vecs = client.encode(["texto uno", "texto dos"])
+        self.assertEqual(len(vecs), 2)
+        # Codificación sin prefijo
+        vec_no_prefix = client.encode("consulta", use_prefix=False)
+        self.assertEqual(len(vec_no_prefix), 2)
