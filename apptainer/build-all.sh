@@ -26,5 +26,9 @@ for name in "$@"; do
     echo "Posible secreto en el contexto de construcción: $secret" >&2
     exit 2
   fi
-  apptainer build --fakeroot "$IMAGES/$name.sif" "$def"
+  sudo env \
+  APPTAINER_TMPDIR="$APPTAINER_TMPDIR" \
+  TMPDIR="$APPTAINER_TMPDIR" \
+  apptainer build "$IMAGES/$name.sif" "$def"
+  sudo chown "$(id -u):$(id -g)" "$IMAGES/$name.sif"
 done
