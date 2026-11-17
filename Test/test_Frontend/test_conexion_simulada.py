@@ -168,7 +168,10 @@ class TestCTR001LecturaRespuestas(BaseFrontendTestCase):
         self.assertEqual(res.fuentes, [])
 
     def test_ctr001_contrato_mock_call_formato_exacto(self):
-        """Verifica que _mock_call devuelve exactamente los campos especificados en CTR-001."""
+        """Verifica que _mock_call devuelve exactamente los campos especificados en CTR-001.
+
+        El Backend devuelve también el conversacion_id de la consulta (ver services/api.py).
+        """
         status, data = api._mock_call("POST", api.CONSULTA_PATH, {
             "conversacion_id": "test-conv",
             "pregunta": "revisar refrigerante en el motor"
@@ -176,8 +179,10 @@ class TestCTR001LecturaRespuestas(BaseFrontendTestCase):
 
         self.assertEqual(status, 200)
         self.assertIsInstance(data, dict)
-        campos_esperados = {"trace_id", "estado", "texto", "fuentes", "codigo_error"}
+        campos_esperados = {"conversacion_id", "trace_id", "estado", "texto", "fuentes",
+                            "codigo_error"}
         self.assertEqual(set(data.keys()), campos_esperados)
+        self.assertEqual(data["conversacion_id"], "test-conv")
         self.assertIsInstance(data["fuentes"], list)
 
         # Campos de cada fuente
@@ -260,20 +265,36 @@ class TestCTR006LecturaHistorial(BaseFrontendTestCase):
         self.assertIn("total", data)
         self.assertEqual(len(data["chats"]), data["total"])
 
-    def test_ctr006_conversation_serializacion(self):
-        """Comprueba el mapeo bidireccional de Conversation (to_dict y from_dict)."""
-        conv = Conversation(title="Prueba de motor")
-        conv.messages.append(Message(ROLE_USER, "¿Nivel de aceite?"))
-        d = conv.to_dict()
+    def test_ctr006_conversation_from_dict(self):
+        """Comprueba la lectura de un chat de CTR-006 con Conversation.from_dict.
 
-        self.assertEqual(d["conversacion_id"], conv.id)
-        self.assertEqual(d["titulo"], "Prueba de motor")
-        self.assertEqual(len(d["mensajes"]), 1)
+        El historial lo gestiona el Backend, así que el Frontend solo lee chats (no los serializa).
+        """
+        raw = {
+            "conversacion_id": "conv-aceite",
+            "titulo": "Prueba de motor",
+            "created_at": "2026-11-16T10:00:00",
+            "updated_at": "2026-11-16T10:05:00",
+            "mensajes": [
+                {"role": ROLE_USER, "contenido": "¿Nivel de aceite?", "message_id": "m-1"},
+            ],
+        }
+        conv = Conversation.from_dict(raw)
 
-        conv_recuperada = Conversation.from_dict(d)
-        self.assertEqual(conv_recuperada.id, conv.id)
-        self.assertEqual(conv_recuperada.title, conv.title)
-        self.assertEqual(len(conv_recuperada.messages), 1)
+        self.assertEqual(conv.id, "conv-aceite")
+        self.assertEqual(conv.title, "Prueba de motor")
+        self.assertEqual(conv.created_at, "2026-11-16T10:00:00")
+        self.assertEqual(conv.updated_at, "2026-11-16T10:05:00")
+        self.assertEqual(len(conv.messages), 1)
+        self.assertEqual(conv.messages[0].role, ROLE_USER)
+        self.assertEqual(conv.messages[0].text, "¿Nivel de aceite?")
+
+    def test_ctr006_conversation_from_dict_sin_titulo(self):
+        """Un chat de CTR-006 sin título usa el título por defecto."""
+        conv = Conversation.from_dict({"conversacion_id": "conv-sin-titulo"})
+
+        self.assertEqual(conv.title, DEFAULT_TITLE)
+        self.assertEqual(conv.messages, [])
 
 
 # ==============================================================================
