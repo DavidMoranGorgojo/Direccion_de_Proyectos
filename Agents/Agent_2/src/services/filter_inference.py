@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import json
 import os
+import threading
+import time
 import re
 from functools import lru_cache
 from pathlib import Path
@@ -160,34 +162,133 @@ def _load_catalogs_cached(path_str):
     return _build_catalog_maps(codigos, componentes)
 
 
+class CatalogCacheEntry(dict):
+    """Entrada de caché de catálogos que almacena los mapeos y metadatos de versión y tiempo."""
+
+    def __init__(self, maps, *, timestamp=None, versions=None, backend_id=None):
+        super().__init__(maps)
+        self.timestamp = timestamp if timestamp is not None else time.time()
+        self.versions = dict(versions or {})
+        self.backend_id = backend_id
+
+    def is_expired(self, ttl):
+        if ttl is None:
+            return False
+        if ttl <= 0:
+            return True
+        return (time.time() - self.timestamp) > ttl
+
+
+_CATALOG_CACHE_LOCK = threading.RLock()
 _BACKEND_CATALOG_CACHE = {}
+DEFAULT_CATALOG_CACHE_TTL = float(os.getenv("AGENT2_CATALOG_CACHE_TTL", "300.0"))
 
 
-def load_catalogs_from_backend(backend_client, *, use_cache=True):
-    """Descarga y parsea los catálogos desde el Backend vía CTR-002 §2."""
+def _backend_cache_key(backend_client):
+    """Calcula la clave de identidad única del Backend a partir de su configuración."""
+    base_url = str(getattr(backend_client, "base_url", "default")).rstrip("/")
+    token = getattr(backend_client, "token", None)
+    model = getattr(backend_client, "model_embeddings", None)
+    return (base_url, token, model)
+
+
+def invalidate_backend_catalog_cache(backend_client=None):
+    """Invalida explícitamente la caché de catálogos en memoria.
+
+    Si backend_client es None, invalida todas las entradas registradas.
+    Si se proporciona un cliente, invalida únicamente su clave correspondiente.
+    """
+    with _CATALOG_CACHE_LOCK:
+        if backend_client is None:
+            _BACKEND_CATALOG_CACHE.clear()
+        else:
+            key = _backend_cache_key(backend_client)
+            _BACKEND_CATALOG_CACHE.pop(key, None)
+
+
+def load_catalogs_from_backend(
+    backend_client,
+    *,
+    use_cache=True,
+    force_reload=False,
+    ttl=None,
+    stale_if_error=False,
+):
+    """Descarga y parsea los catálogos desde el Backend vía CTR-002 §2.
+
+    Contempla:
+    1. Identidad del Backend: clave compuesta (base_url, token, model_embeddings).
+    2. Versión de catálogo o índice: almacena versiones anunciadas por Backend.
+    3. Invalidación explícita: force_reload=True o invalidate_backend_catalog_cache().
+    4. Caducidad configurable (TTL): parámetro ttl o AGENT2_CATALOG_CACHE_TTL.
+    5. Concurrencia: protegida por threading.RLock.
+    6. Comportamiento controlado si falla la actualización: propaga el error sin
+       corromper la caché previa (o devuelve la previa si stale_if_error=True).
+    """
     if backend_client is None:
         raise ValueError("backend_client no puede ser None.")
 
-    cache_key = str(getattr(backend_client, "base_url", "default"))
-    if use_cache and cache_key in _BACKEND_CATALOG_CACHE:
-        return _BACKEND_CATALOG_CACHE[cache_key]
+    cache_key = _backend_cache_key(backend_client)
+    effective_ttl = ttl if ttl is not None else DEFAULT_CATALOG_CACHE_TTL
 
-    codigos_resp = backend_client.get_catalogo("codigos")
-    componentes_resp = backend_client.get_catalogo("componentes")
+    with _CATALOG_CACHE_LOCK:
+        entry = _BACKEND_CATALOG_CACHE.get(cache_key)
 
-    codigos_raw = codigos_resp.get("contenido", codigos_resp) if isinstance(codigos_resp, dict) else codigos_resp
-    componentes_raw = componentes_resp.get("contenido", componentes_resp) if isinstance(componentes_resp, dict) else componentes_resp
+        # Si hay caché válida no expirada y no se fuerza recarga, reutilizar
+        if use_cache and not force_reload and entry is not None:
+            if not entry.is_expired(effective_ttl):
+                return entry
 
-    maps = _build_catalog_maps(codigos_raw, componentes_raw)
-    if use_cache:
-        _BACKEND_CATALOG_CACHE[cache_key] = maps
-    return maps
+        # Descargar catálogos frescos del Backend
+        try:
+            codigos_resp = backend_client.get_catalogo("codigos")
+            componentes_resp = backend_client.get_catalogo("componentes")
+        except Exception:
+            if stale_if_error and entry is not None:
+                return entry
+            raise
+
+        codigos_raw = (
+            codigos_resp.get("contenido", codigos_resp)
+            if isinstance(codigos_resp, dict)
+            else codigos_resp
+        )
+        componentes_raw = (
+            componentes_resp.get("contenido", componentes_resp)
+            if isinstance(componentes_resp, dict)
+            else componentes_resp
+        )
+
+        versions = {
+            "codigos": codigos_resp.get("version") if isinstance(codigos_resp, dict) else None,
+            "componentes": componentes_resp.get("version") if isinstance(componentes_resp, dict) else None,
+        }
+
+        maps = _build_catalog_maps(codigos_raw, componentes_raw)
+        new_entry = CatalogCacheEntry(
+            maps,
+            timestamp=time.time(),
+            versions=versions,
+            backend_id=cache_key,
+        )
+
+        if use_cache:
+            _BACKEND_CATALOG_CACHE[cache_key] = new_entry
+
+        return new_entry
 
 
 FIXTURE_CATALOG_DIR = Path(__file__).resolve().parents[2] / "fixtures" / "catalogos"
 
 
-def load_catalogs(catalog_dir=None, *, allow_synthetic=None, backend_client=None):
+def load_catalogs(
+    catalog_dir=None,
+    *,
+    allow_synthetic=None,
+    backend_client=None,
+    force_reload=False,
+    ttl=None,
+):
     """Carga los catálogos usados para validar códigos exactos.
 
     Orden de precedencia seguro:
@@ -202,18 +303,15 @@ def load_catalogs(catalog_dir=None, *, allow_synthetic=None, backend_client=None
     """
     if backend_client is not None and hasattr(backend_client, "get_catalogo"):
         try:
-            return load_catalogs_from_backend(backend_client)
+            return load_catalogs_from_backend(
+                backend_client,
+                force_reload=force_reload,
+                ttl=ttl,
+            )
         except Exception:
             env = os.getenv("ARSOFT_ENV", "").strip().casefold()
             if env in {"production", "prod"}:
                 raise
-    """Carga los catálogos usados para validar códigos exactos.
-
-    En modo producción (por defecto), si faltan los catálogos obligatorios en
-    CATALOG_DIR se produce un error controlado (FileNotFoundError).
-    El fallback a fixtures sintéticos solo se permite mediante un opt-in
-    explícito o con ARSOFT_ENV=test; en producción siempre está prohibido.
-    """
     if catalog_dir is not None:
         path = Path(catalog_dir)
         environment = os.getenv("ARSOFT_ENV", "").strip().casefold()
@@ -467,5 +565,7 @@ __all__ = [
     "infer_version",
     "load_catalogs",
     "load_catalogs_from_backend",
+    "invalidate_backend_catalog_cache",
+    "CatalogCacheEntry",
     "merge_filters",
 ]
