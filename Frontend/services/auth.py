@@ -2,14 +2,15 @@
 
 CONTRATO CTR-005 (Backend es la única autoridad que concede el acceso):
 
-    POST {ARSOFT_API_URL}/auth/login
+    POST {ARSOFT_API_URL}{ARSOFT_LOGIN_PATH}     (por defecto /auth/login; ver config.py)
     Petición:  {"usuario": "...", "contrasena": "..."}
     200:  {"estado": "autenticado", "mensaje": "...", "usuario": {"id": "u-123", "nombre_usuario": "..."}}
     401:  {"estado": "no_autenticado", "mensaje": "...", "codigo_error": "credenciales_invalidas"}
     También: 422 (datos incompletos), 429 (demasiados intentos), 500.
 La contraseña solo viaja en el cuerpo (nunca en la URL), no se guarda ni se registra.
 El contrato aún no define token ni cookie de sesión: si la respuesta trae "token" se usará.
-Sin ARSOFT_API_URL, api.call proporciona las respuestas del MODO SIMULADO.
+En MODO SIMULADO (sin ARSOFT_API_URL o con ARSOFT_MODO=simulado), api.call proporciona las
+respuestas simuladas.
 """
 from __future__ import annotations
 from dataclasses import dataclass
@@ -36,7 +37,7 @@ def _remote_login(username: str, password: str) -> AuthResult:
     try:
         status, d = api.call("POST", api.LOGIN_PATH, {"usuario": username, "contrasena": password})
     except api.ConnectionFailed as e:
-        msg = str(e) if "HTTPS" in str(e) else "No se pudo conectar con el servidor."
+        msg = str(e) if isinstance(e, api.ConfigError) else "No se pudo conectar con el servidor."
         return AuthResult(False, error=msg)            # sin respuesta: nunca se concede acceso
     d = d or {}
     if status == 200 and d.get("estado") == "autenticado" and isinstance(d.get("usuario"), dict):

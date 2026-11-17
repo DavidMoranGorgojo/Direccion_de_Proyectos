@@ -76,6 +76,7 @@ from models.response import (
 )
 from models.source import Source
 from services import api, auth, session
+import config
 
 
 class BaseFrontendTestCase(unittest.TestCase):
@@ -87,6 +88,9 @@ class BaseFrontendTestCase(unittest.TestCase):
         if "ARSOFT_API_URL" in os.environ:
             del os.environ["ARSOFT_API_URL"]
         api.API_URL = ""
+        # Ignorar el ARSOFT_MODO que pueda haber en el .env local del desarrollador
+        self._orig_modo = api.MODO
+        api.MODO = config.MODO_AUTO
 
         # Evitar los 1.2 segundos de sleep intencionales del mock en los tests
         self._sleep_patcher = patch("time.sleep", return_value=None)
@@ -102,6 +106,7 @@ class BaseFrontendTestCase(unittest.TestCase):
             api.API_URL = self._orig_api_url.rstrip("/")
         else:
             api.API_URL = ""
+        api.MODO = self._orig_modo
         session.clear()
 
 
