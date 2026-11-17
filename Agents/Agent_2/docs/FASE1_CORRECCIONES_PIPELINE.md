@@ -1,8 +1,8 @@
 # Informe de Resultados: Fase 1/4 — Corrección Profunda del Pipeline del Agente 2
 
-**Fecha:** 17 de noviembre de 2026  
-**Repositorio:** `Direccion_de_Proyectos`  
-**Rama Activa:** `fix/agente2-pipeline` (worktree `.worktrees/pipeline`)  
+**Fecha:** 17 de noviembre de 2026
+**Repositorio:** `Direccion_de_Proyectos`
+**Rama Activa:** `fix/agente2-pipeline` (worktree `.worktrees/pipeline`)
 **Documento de Referencia:** Auditoría final Agente 2 (`auditoria_final_agente2_2026-11-17.md`)
 
 ---

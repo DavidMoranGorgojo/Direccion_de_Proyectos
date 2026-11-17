@@ -1,7 +1,7 @@
 # Auditoría independiente y correcciones de prepublicación — Agente 2
 
-**Fecha:** 17/11/2026  
-**Origen:** `Direccion_de_Proyectos (2).zip`, subárbol `.worktrees/pipeline/` (`fix/agente2-pipeline`).  
+**Fecha:** 17/11/2026
+**Origen:** `Direccion_de_Proyectos (2).zip`, subárbol `.worktrees/pipeline/` (`fix/agente2-pipeline`).
 **Alcance:** código de Agentes, tests y `.gitignore`. Sin alterar otros departamentos ni fusionar ramas.
 
 ## Verificación ejecutada

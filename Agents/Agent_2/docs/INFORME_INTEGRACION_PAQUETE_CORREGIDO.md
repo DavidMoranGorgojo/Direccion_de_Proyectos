@@ -1,8 +1,8 @@
 # Informe de Integración — Paquete de Correcciones ARSOFT_SOLO_CAMBIOS
 
-**Fecha:** 2026-11-17  
-**Rama:** `fix/agente2-pipeline`  
-**Worktree:** `.worktrees/pipeline`  
+**Fecha:** 2026-11-17
+**Rama:** `fix/agente2-pipeline`
+**Worktree:** `.worktrees/pipeline`
 **Hash base del worktree:** `16ed309`
 
 ---
@@ -21,7 +21,7 @@ Todos los archivos listados en `MANIFIESTO_CAMBIOS.txt` fueron copiados al workt
 ### Código fuente (MODIFICADOS)
 
 | Archivo | Tamaño paquete | Tamaño anterior WT | Acción |
-|---------|---------------|--------------------|---------| 
+|---------|---------------|--------------------|---------|
 | `.gitignore` | 735 | 713 | Reemplazado |
 | `Agents/Agent_2/README.md` | 20.891 | 19.311 | Reemplazado |
 | `Agents/Agent_2/src/models/ctr_002.py` | 1.054 | 1.094 | Reemplazado |
@@ -36,7 +36,7 @@ Todos los archivos listados en `MANIFIESTO_CAMBIOS.txt` fueron copiados al workt
 ### Tests (MODIFICADOS)
 
 | Archivo | Tamaño paquete | Tamaño anterior WT | Acción |
-|---------|---------------|--------------------|---------| 
+|---------|---------------|--------------------|---------|
 | `Test/test_Models/test_fase1_aceptacion.py` | 15.317 | 15.057 | Reemplazado |
 | `Test/test_Models/test_fase1_verificacion_final.py` | 12.034 | 11.825 | Reemplazado |
 | `Test/test_Models/test_filter_inference.py` | 9.851 | 10.000 | Reemplazado |
