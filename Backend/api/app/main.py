@@ -1,6 +1,8 @@
 """Pasarela HTTP de ARSOFT hacia Agentes y PostgreSQL."""
 
+import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 from uuid import uuid4
@@ -11,15 +13,22 @@ from arsoft_http import GENERIC_ERROR, invalid_question
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPBearer
 from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .conocimiento import router as knowledge
+from .historial import guardar_turno, propietario
+from .historial import router as historial
 from .links import connect, service_headers
+from .registro import registrar
+from .registro import router as registro
+from .sesiones import router as sesiones
+from .sesiones import usuario_actual
 
 AGENT_TIMEOUT_SECONDS = 25.0
 bearer = HTTPBearer(auto_error=False)
+log = logging.getLogger("arsoft.backend")
 
 
 @asynccontextmanager
@@ -36,6 +45,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="ARSOFT Backend API", version="0.2.0", lifespan=lifespan)
 app.include_router(knowledge)
+app.include_router(sesiones)
+app.include_router(historial)
+app.include_router(registro)
 
 
 class Pregunta(BaseModel):
@@ -64,14 +76,9 @@ class RespuestaConsulta(RespuestaAgentes):
     conversacion_id: str
 
 
-def authorize_consultation(
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
-) -> None:
-    """Punto de conexión para CTR-005 cuando exista el verificador de sesiones."""
-    if credentials is None:
-        raise HTTPException(401, detail={"codigo_error": "sesion_caducada", "mensaje": "Tu sesión ha caducado."})
-    raise HTTPException(503, detail={"codigo_error": "servicio_no_disponible",
-                                     "mensaje": "La validación de sesión aún no está disponible."})
+def authorize_consultation(usuario: Annotated[dict, Depends(usuario_actual)]) -> dict:
+    """CTR-005: /consulta exige una sesión válida (401 sesion_caducada si no la hay)."""
+    return usuario
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -94,6 +101,9 @@ async def postgres_error(request: Request, error: psycopg.Error):
 
 @app.exception_handler(RequestValidationError)
 async def validation_error(request: Request, error: RequestValidationError):
+    if request.url.path == "/auth/login":  # CTR-005: 422 con el cuerpo de login
+        return JSONResponse({"estado": "no_autenticado", "codigo_error": "datos_incompletos",
+                             "mensaje": "Faltan datos o el formato es incorrecto."}, status_code=422)
     if request.url.path == "/consulta" and await bearer(request) is None:
         return JSONResponse({"codigo_error": "sesion_caducada", "mensaje": "Tu sesión ha caducado."},
                             status_code=401)
@@ -131,15 +141,33 @@ def ready():
     return {"status": "ok", "postgres": "ok", "agentes": "ok"}
 
 
-@app.post("/consulta", response_model=RespuestaConsulta, dependencies=[Depends(authorize_consultation)])
-async def consulta(data: Pregunta, request: Request):
+@app.post("/consulta", response_model=RespuestaConsulta)
+async def consulta(data: Pregunta, request: Request,
+                   usuario: Annotated[dict | None, Depends(authorize_consultation)]):
     cid = data.conversacion_id or uuid4().hex
     if invalid_question(data.pregunta):
         return failed(cid, "entrada_invalida", "La pregunta debe contener entre 1 y 2000 caracteres.")
-    client: httpx.AsyncClient = request.app.state.agents_client
+    if usuario is not None and data.conversacion_id:
+        try:
+            with connect() as conn:
+                dueno = propietario(conn, cid)
+        except psycopg.Error:
+            log.exception("No se pudo comprobar la propiedad de la conversación")
+            return failed(cid, "servicio_no_disponible")
+        if dueno is not None and dueno != usuario["id"]:  # CTR-006: cada usuario solo usa sus chats
+            raise HTTPException(404, detail={"codigo_error": "conversacion_no_encontrada",
+                                             "mensaje": "La conversación no existe."})
+    inicio = time.perf_counter()
+    result = await consultar_agentes(cid, data.pregunta, request.app.state.agents_client)
+    if usuario is not None:
+        guardar(usuario, data.pregunta, result, latencia_ms=(time.perf_counter() - inicio) * 1000)
+    return result
+
+
+async def consultar_agentes(cid: str, pregunta: str, client: httpx.AsyncClient) -> RespuestaConsulta:
     try:
         upstream = await client.post(f"{agents_url()}/agentes/consulta", headers=service_headers(),
-                                     json={"conversacion_id": cid, "pregunta": data.pregunta})
+                                     json={"conversacion_id": cid, "pregunta": pregunta})
         upstream.raise_for_status()
         result = RespuestaAgentes.model_validate(upstream.json())
         if (result.estado == "respuesta") != bool(result.fuentes):
@@ -154,3 +182,18 @@ async def consulta(data: Pregunta, request: Request):
     except (httpx.HTTPError, ValueError):
         return failed(cid, "servicio_no_disponible")
     return RespuestaConsulta(**result.model_dump(), conversacion_id=cid)
+
+
+def guardar(usuario: dict, pregunta: str, result: RespuestaConsulta, latencia_ms: float) -> None:
+    """Historial (CTR-006) y registro (CTR-003) del turno. Si falla, la respuesta se entrega igual."""
+    respuesta = result.model_dump()
+    try:
+        with connect() as conn:
+            guardar_turno(conn, usuario_id=usuario["id"], conversacion_id=result.conversacion_id,
+                          pregunta=pregunta, respuesta=respuesta)
+            registrar(conn, pregunta=pregunta, estado=result.estado, usuario_id=usuario["id"],
+                      conversacion_id=result.conversacion_id, trace_id=result.trace_id,
+                      codigo_error=result.codigo_error, chunk_ids=[f.chunk_id for f in result.fuentes],
+                      latencia_ms=round(latencia_ms, 2))
+    except psycopg.Error:
+        log.exception("No se pudo guardar el turno en el historial ni en el registro")

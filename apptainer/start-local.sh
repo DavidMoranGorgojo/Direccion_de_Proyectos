@@ -40,6 +40,7 @@ done
 
 if ! grep -q '^arsoft-api[[:space:]]' <<< "$instances"; then
   APPTAINERENV_ARSOFT_SERVICE_TOKEN="${ARSOFT_SERVICE_TOKEN:-}" \
+  APPTAINERENV_ARSOFT_JWT_SECRET="${ARSOFT_JWT_SECRET:-}" \
   APPTAINERENV_DATABASE_URL="$DATABASE_URL" \
   APPTAINERENV_AGENTES_URL="${AGENTES_URL:-http://127.0.0.1:8001}" \
     apptainer instance start --cleanenv "$IMAGES/backend.sif" arsoft-api

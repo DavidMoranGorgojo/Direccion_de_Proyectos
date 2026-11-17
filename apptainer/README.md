@@ -30,7 +30,7 @@ apptainer run --cleanenv --env-file "$HOME/.config/arsoft/agentes.env" \
   "$HOME/arsoft-images/agentes.sif" --serve
 ```
 
-`/health` comprueba FastAPI, `/ready` comprueba las dependencias y `/docs` muestra las rutas. PySide6 usa la demo local con `ARSOFT_API_URL` vacía. El flujo conectado queda protegido hasta que se implemente el verificador de sesiones de CTR-005. Para detener los servicios, cierra Agentes con Ctrl+C y ejecuta `bash apptainer/stop-local.sh`.
+`/health` comprueba FastAPI, `/ready` comprueba las dependencias y `/docs` muestra las rutas. PySide6 usa la demo local con `ARSOFT_API_URL` vacía. El flujo conectado exige sesión (CTR-005): crea los usuarios de prueba con `apptainer exec instance://arsoft-api python -m app.usuarios_prueba` y entra con ellos (ver `Backend/readme.md`). El esquema `aplicacion` (usuarios, chats, mensajes y registro) lo crea `Backend/db/init/02_usuarios.sql` al iniciar una base nueva; en una base ya creada, ejecútalo una vez con `psql`. Para detener los servicios, cierra Agentes con Ctrl+C y ejecuta `bash apptainer/stop-local.sh`.
 
 ## Frontend e ingesta
 
