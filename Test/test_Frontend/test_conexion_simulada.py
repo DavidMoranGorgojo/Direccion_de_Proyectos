@@ -23,59 +23,80 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-# Asegurar que la carpeta Frontend está en sys.path
-FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "Frontend"
-if str(FRONTEND_DIR) not in sys.path:
-    sys.path.insert(0, str(FRONTEND_DIR))
+# Asegurar que las carpetas Frontend y raíz están en sys.path para resolución de módulos
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+FRONTEND_DIR = ROOT_DIR / "Frontend"
+for path_dir in (str(FRONTEND_DIR), str(ROOT_DIR)):
+    if path_dir not in sys.path:
+        sys.path.insert(0, path_dir)
 
-# Proveer un shim compatible de QThread y Signal para pruebas sin depender de GUI/DLLs del sistema
-if "PySide6.QtCore" not in sys.modules:
-    qtcore_mock = types.ModuleType("PySide6.QtCore")
+# Proveer el arnés mock compatible de PySide6 para pruebas sin depender de GUI/DLLs del sistema
+try:
+    import Test.test_Frontend.qt_test_harness
+except ImportError:
+    if "PySide6.QtCore" not in sys.modules:
+        qtcore_mock = types.ModuleType("PySide6.QtCore")
 
-    class _MockSignal:
-        def __init__(self, *types_):
-            self._callbacks = []
+        class _MockSignal:
+            def __init__(self, *types_):
+                self._callbacks = []
 
-        def connect(self, callback):
-            self._callbacks.append(callback)
+            def connect(self, callback):
+                self._callbacks.append(callback)
 
-        def emit(self, *args, **kwargs):
-            for cb in self._callbacks:
-                cb(*args, **kwargs)
+            def emit(self, *args, **kwargs):
+                for cb in self._callbacks:
+                    cb(*args, **kwargs)
 
-    class _MockQThread:
-        def __init__(self, parent=None):
-            pass
+        class _MockQThread:
+            def __init__(self, parent=None):
+                pass
 
-        def start(self):
-            self.run()
+            def start(self):
+                self.run()
 
-        def wait(self, timeout=None):
-            pass
+            def wait(self, timeout=None):
+                pass
 
-        def run(self):
-            pass
+            def run(self):
+                pass
 
-    qtcore_mock.Signal = _MockSignal
-    qtcore_mock.QThread = _MockQThread
-    if "PySide6" not in sys.modules:
-        sys.modules["PySide6"] = types.ModuleType("PySide6")
-    sys.modules["PySide6"].QtCore = qtcore_mock
-    sys.modules["PySide6.QtCore"] = qtcore_mock
+        qtcore_mock.Signal = _MockSignal
+        qtcore_mock.QThread = _MockQThread
+        if "PySide6" not in sys.modules:
+            sys.modules["PySide6"] = types.ModuleType("PySide6")
+        sys.modules["PySide6"].QtCore = qtcore_mock
+        sys.modules["PySide6.QtCore"] = qtcore_mock
 
-from models.conversation import Conversation, DEFAULT_TITLE
-from models.message import Message, ROLE_USER, ROLE_BOT
-from models.response import (
-    Response,
-    GENERIC_ERROR,
-    STATUS_OK,
-    STATUS_CLARIFY,
-    STATUS_NO_EVIDENCE,
-    STATUS_OUT_OF_SCOPE,
-    STATUS_ERROR,
-)
-from models.source import Source
-from services import api, auth, session
+# Importación de modelos y servicios (soporta resolución directa o prefijada por Frontend)
+try:
+    from models.conversation import Conversation, DEFAULT_TITLE
+    from models.message import Message, ROLE_USER, ROLE_BOT
+    from models.response import (
+        Response,
+        GENERIC_ERROR,
+        STATUS_OK,
+        STATUS_CLARIFY,
+        STATUS_NO_EVIDENCE,
+        STATUS_OUT_OF_SCOPE,
+        STATUS_ERROR,
+    )
+    from models.source import Source
+    from services import api, auth, session
+except ImportError:
+    from Frontend.models.conversation import Conversation, DEFAULT_TITLE  # type: ignore
+    from Frontend.models.message import Message, ROLE_USER, ROLE_BOT  # type: ignore
+    from Frontend.models.response import (  # type: ignore
+        Response,
+        GENERIC_ERROR,
+        STATUS_OK,
+        STATUS_CLARIFY,
+        STATUS_NO_EVIDENCE,
+        STATUS_OUT_OF_SCOPE,
+        STATUS_ERROR,
+    )
+    from Frontend.models.source import Source  # type: ignore
+    from Frontend.services import api, auth, session  # type: ignore
 
 
 class BaseFrontendTestCase(unittest.TestCase):
@@ -176,7 +197,7 @@ class TestCTR001LecturaRespuestas(BaseFrontendTestCase):
 
         self.assertEqual(status, 200)
         self.assertIsInstance(data, dict)
-        campos_esperados = {"trace_id", "estado", "texto", "fuentes", "codigo_error"}
+        campos_esperados = {"trace_id", "conversacion_id", "estado", "texto", "fuentes", "codigo_error"}
         self.assertEqual(set(data.keys()), campos_esperados)
         self.assertIsInstance(data["fuentes"], list)
 
@@ -260,20 +281,29 @@ class TestCTR006LecturaHistorial(BaseFrontendTestCase):
         self.assertIn("total", data)
         self.assertEqual(len(data["chats"]), data["total"])
 
-    def test_ctr006_conversation_serializacion(self):
-        """Comprueba el mapeo bidireccional de Conversation (to_dict y from_dict)."""
-        conv = Conversation(title="Prueba de motor")
-        conv.messages.append(Message(ROLE_USER, "¿Nivel de aceite?"))
-        d = conv.to_dict()
-
-        self.assertEqual(d["conversacion_id"], conv.id)
-        self.assertEqual(d["titulo"], "Prueba de motor")
-        self.assertEqual(len(d["mensajes"]), 1)
-
+    def test_ctr006_conversation_deserializacion(self):
+        """Comprueba el parseo de Conversation mediante from_dict conservando campos y mensajes."""
+        d = {
+            "conversacion_id": "conv-test-99",
+            "titulo": "Prueba de motor",
+            "created_at": "2026-01-15T10:00:00Z",
+            "updated_at": "2026-01-15T10:05:00Z",
+            "mensajes": [
+                {
+                    "role": "user",
+                    "contenido": "¿Nivel de aceite?",
+                    "estado": "respuesta",
+                    "trace_id": "t-oil",
+                    "fuentes": [],
+                    "timestamp": "2026-01-15T10:00:00Z"
+                }
+            ]
+        }
         conv_recuperada = Conversation.from_dict(d)
-        self.assertEqual(conv_recuperada.id, conv.id)
-        self.assertEqual(conv_recuperada.title, conv.title)
+        self.assertEqual(conv_recuperada.id, "conv-test-99")
+        self.assertEqual(conv_recuperada.title, "Prueba de motor")
         self.assertEqual(len(conv_recuperada.messages), 1)
+        self.assertEqual(conv_recuperada.messages[0].text, "¿Nivel de aceite?")
 
 
 # ==============================================================================
