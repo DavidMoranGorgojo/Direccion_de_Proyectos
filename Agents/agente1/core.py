@@ -675,7 +675,7 @@ class RespuestaSimuladorAgente2(dict):
             evidencias=evidencias,
             campo_ambiguo=campo_ambiguo,
             mensaje_error=mensaje_error,
-            codigo_error=codigo_error or ""
+            codigo_error=codigo_error
         )
 
     def __iter__(self):
@@ -1348,11 +1348,11 @@ def normalizar_respuesta_agente2(respuesta: Any) -> RespuestaSimuladorAgente2:
     if any(not evidencia_valida(e) for e in chunks_normalizados):
         return error
 
-    codigo_error = respuesta.get("codigo_error", "")
-    if codigo_error not in {"entrada_invalida", "modelo_no_disponible", "modelo_incompatible",
+    codigo_error = respuesta.get("codigo_error")
+    if codigo_error not in {"entrada_invalida", "filtro_invalido", "modelo_no_disponible", "modelo_incompatible",
                             "indice_no_disponible", "tiempo_agotado", "error_verificacion",
                             "servicio_no_disponible"}:
-        codigo_error = ""
+        codigo_error = None
     if estado == "error" and not codigo_error:
         codigo_error = "error_verificacion"
 

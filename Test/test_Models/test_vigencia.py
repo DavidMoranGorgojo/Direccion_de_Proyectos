@@ -18,7 +18,7 @@ DATA_FILE = (
     Path(__file__).resolve().parents[2]
     / "Agents"
     / "Agent_2"
-    / "data"
+    / "fixtures"
     / "bbdd_sintetica_chunks.json"
 )
 
@@ -195,7 +195,7 @@ def test_common_version_is_none_for_disjoint_versions():
     assert common_version(candidates) is None
 
 
-def test_solo_obsoleto_takes_precedence_over_ambiguity():
+def test_obsolete_incompatible_versions_still_require_clarification():
     candidates = [
         make_chunk(
             "a",
@@ -211,7 +211,10 @@ def test_solo_obsoleto_takes_precedence_over_ambiguity():
         ),
     ]
 
-    assert classify_state(candidates, {}).estado == "solo_obsoleto"
+    # CTR-004 §4: el aviso de obsolescencia no resuelve una versión ambigua.
+    decision = classify_state(candidates, {})
+    assert decision.estado == "ambiguo"
+    assert decision.campo_ambiguo == "version"
 
 
 def test_classify_rejects_invalid_inputs():
@@ -280,11 +283,11 @@ def test_resolve_expands_neighbors_in_section_order():
 
 def test_resolve_marks_neighbors_with_their_version_state():
     parent = make_chunk("centro", orden_en_seccion=2, versiones=["V1.1"])
-    old_neighbor = make_chunk("antiguo", orden_en_seccion=1, versiones=["V1.0"])
+    old_neighbor = make_chunk("antiguo", orden_en_seccion=1, obsoleto=True)
 
     result = resolve_retrieval(
         [parent],
-        {"version": "V1.1"},
+        {},
         lambda chunk_id: [old_neighbor],
     )
 
@@ -294,6 +297,23 @@ def test_resolve_marks_neighbors_with_their_version_state():
     }
 
     assert states == {"centro": "vigente", "antiguo": "obsoleto"}
+
+
+def test_resolve_discards_neighbors_incompatible_with_version_filter():
+    parent = make_chunk("centro", orden_en_seccion=2, versiones=["V1.1"])
+    incompatible_neighbor = make_chunk(
+        "incompatible",
+        orden_en_seccion=1,
+        versiones=["V1.0"],
+    )
+
+    result = resolve_retrieval(
+        [parent],
+        {"version": "V1.1"},
+        lambda chunk_id: [incompatible_neighbor],
+    )
+
+    assert [c["chunk_id"] for c in result.candidatos] == ["centro"]
 
 
 def test_resolve_returns_error_when_the_backend_fails():

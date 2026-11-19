@@ -21,7 +21,7 @@ DATA_FILE = (
     Path(__file__).resolve().parents[2]
     / "Agents"
     / "Agent_2"
-    / "data"
+    / "fixtures"
     / "bbdd_sintetica_chunks.json"
 )
 CATALOG_DIR = DATA_FILE.parent / "catalogos"
@@ -365,8 +365,9 @@ def test_simulated_timeouts_reach_the_client_as_tiempo_agotado(simulator):
         timeout=2,
     )
 
-    with pytest.raises(requests.Timeout):
+    with pytest.raises(BackendRequestError) as exc_info:
         client.search_lexical(text="batería")
+    assert exc_info.value.codigo_error == "tiempo_agotado"
 
     with pytest.raises(BackendRequestError) as error:
         client.get_chunk("HTM240-MAN-001@1.1_p1_man_001_02")
@@ -421,13 +422,39 @@ def test_version_filter_agrees_with_the_client_filter(chunks):
 
 
 def test_end_to_end_from_lexical_to_vigencia_with_neighbours(simulator, client):
+    # Caso 1: Con filtro generico de componente, los vecinos en la seccion se expanden.
+    crudo_amplio = client.search_lexical(
+        text="HTM-0142",
+        filtros={"componente": "bateria"},
+        k=5,
+    )
+    candidatos_amplios = []
+    for candidato in parse_lexical_response(crudo_amplio).resultados:
+        datos = dataclasses.asdict(candidato.metadatos)
+        datos.update(
+            {
+                "chunk_id": candidato.chunk_id,
+                "texto": candidato.texto,
+                "score": candidato.score_lexico,
+            }
+        )
+        candidatos_amplios.append(datos)
+
+    resultado_amplio = resolve_retrieval(
+        candidatos_amplios,
+        {"componente": "bateria"},
+        client.get_neighbors,
+    )
+    assert any(c["es_vecino"] for c in resultado_amplio.candidatos)
+
+    # Caso 2: Con version 'V1.1', el vecino de seccion HTM240-DTC-001@1.0_p1_htm0142_v20
+    # pertenece a V2.0 y por tanto es descartado correctamente por los filtros hard.
     crudo = client.search_lexical(
         text="HTM-0142",
         filtros={"version": "V1.1", "componente": "bateria"},
         k=5,
     )
     candidatos = []
-
     for candidato in parse_lexical_response(crudo).resultados:
         datos = dataclasses.asdict(candidato.metadatos)
         datos.update(
@@ -461,7 +488,8 @@ def test_end_to_end_from_lexical_to_vigencia_with_neighbours(simulator, client):
         for candidato in resultado.candidatos
         if candidato["chunk_id"] in centros
     )
-    assert any(
+    # El vecino V2.0 es incompatible con el filtro V1.1 y se descarta conforme a CTR-002
+    assert not any(
         candidato["es_vecino"] for candidato in resultado.candidatos
     )
 

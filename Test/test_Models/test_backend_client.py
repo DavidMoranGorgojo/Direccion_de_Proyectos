@@ -121,8 +121,11 @@ def test_lexical_search_sends_plain_text_and_preserves_common_response():
     assert "HTM-0142" in session.calls[0]["json"]["texto"]
     assert "score" in result["resultados"][0]
 
-@pytest.mark.parametrize("status_code", [409, 503])
-def test_vector_search_propagates_backend_http_errors(status_code):
+@pytest.mark.parametrize(
+    "status_code,expected_code",
+    [(409, "modelo_incompatible"), (503, "indice_no_disponible")],
+)
+def test_vector_search_propagates_backend_http_errors(status_code, expected_code):
     session = FakeSession(
         FakeResponse({}, status_code=status_code)
     )
@@ -133,12 +136,13 @@ def test_vector_search_propagates_backend_http_errors(status_code):
         timeout=2,
     )
 
-    with pytest.raises(requests.HTTPError):
+    with pytest.raises(BackendRequestError) as exc_info:
         client.search_vector(
             vector=[0.0] * 1024,
             filtros={"version": "V1.1"},
             k=30,
         )
+    assert exc_info.value.codigo_error == expected_code
 
 
 def test_client_strips_trailing_slash_from_base_url():
@@ -231,8 +235,9 @@ def test_lexical_search_propagates_backend_http_errors():
         timeout=2,
     )
 
-    with pytest.raises(requests.HTTPError):
+    with pytest.raises(BackendRequestError) as exc_info:
         client.search_lexical(text="HTM-0142")
+    assert exc_info.value.codigo_error == "indice_no_disponible"
 
 
 def test_search_lexical_candidates_requests_and_parses():

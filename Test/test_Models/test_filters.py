@@ -113,6 +113,8 @@ def test_component_aliases_are_normalized_and_unknown_components_excluded():
 
 
 def test_substituted_chunk_uses_vigente_para_only_when_it_was_substituted():
+    # CTR-002: vigente_para prevalece cuando se informa aplicabilidad.
+    # Un chunk no sustituido con vigente_para vacio recurre a sus versiones.
     chunks = [
         {
             "chunk_id": "sustituido",
@@ -125,7 +127,7 @@ def test_substituted_chunk_uses_vigente_para_only_when_it_was_substituted():
         {
             "chunk_id": "no-sustituido",
             "versiones": ["V2.0"],
-            "vigente_para": ["V1.0"],
+            "vigente_para": [],
             "componente": "bateria",
             "tipo_documento": "procedimiento",
             "sustituido_por": None,
@@ -138,7 +140,7 @@ def test_substituted_chunk_uses_vigente_para_only_when_it_was_substituted():
 
     assert [c["chunk_id"] for c in v1] == ["sustituido"]
     assert v11 == []
-    assert [c["chunk_id"] for c in v2] == ["sustituido", "no-sustituido"]
+    assert [c["chunk_id"] for c in v2] == ["no-sustituido"]
 
 
 def test_document_type_accepts_one_or_several_canonical_values():

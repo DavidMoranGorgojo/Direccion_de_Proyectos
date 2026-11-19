@@ -13,11 +13,15 @@ La inferencia es conservadora:
 from __future__ import annotations
 
 import json
+import os
+import threading
+import time
 import re
 from functools import lru_cache
 from pathlib import Path
 
-from ..core.config import CATALOG_DIR
+from ..core import config
+from ..core.errors import BackendRequestError
 from .filters import (
     COMPONENT_ALIASES,
     DOCUMENT_TYPE_ALIASES,
@@ -39,10 +43,9 @@ _VERSION_RE = re.compile(
 
 # Alias seguros para inferir componente (excluye palabras genéricas sueltas como "motor").
 INFERRED_COMPONENT_ALIASES = {
-    "motor": "motor",
-    "motores": "motor",
     "circuito_motor": "motor",
     "circuito_de_motor": "motor",
+    "circuito_del_motor": "motor",
     "bateria": "bateria",
     "baterias": "bateria",
     "bateria_de_alta_tension": "bateria",
@@ -86,8 +89,6 @@ INFERRED_DOCUMENT_TYPE_ALIASES = {
     "dtc": "codigo_averia",
     "arbol_de_diagnostico": "diagnostico",
     "arboles_de_diagnostico": "diagnostico",
-    "diagnostico": "diagnostico",
-    "diagnosticos": "diagnostico",
     "documento_de_seguridad": "seguridad",
     "caso_de_servicio": "casos_servicio",
     "casos_de_servicio": "casos_servicio",
@@ -114,6 +115,40 @@ def _require_text(value):
     return value
 
 
+def _extract_items(data, key):
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        val = data.get(key)
+        if isinstance(val, list):
+            return val
+    return []
+
+
+def _build_catalog_maps(codigos_raw, componentes_raw):
+    code_items = _extract_items(codigos_raw, "codigos")
+    comp_items = _extract_items(componentes_raw, "componentes")
+
+    code_by_key = {}
+    for item in code_items:
+        if isinstance(item, dict):
+            code = item.get("codigo")
+            if isinstance(code, str) and code.strip():
+                code_by_key[code_key(code)] = code
+
+    component_id_by_key = {}
+    for item in comp_items:
+        if isinstance(item, dict):
+            cid = item.get("id") or item.get("codigo")
+            if isinstance(cid, str) and cid.strip():
+                component_id_by_key[code_key(cid)] = cid
+
+    return {
+        "code_by_key": code_by_key,
+        "component_id_by_key": component_id_by_key,
+    }
+
+
 @lru_cache(maxsize=None)
 def _load_catalogs_cached(path_str):
     path = Path(path_str)
@@ -125,28 +160,201 @@ def _load_catalogs_cached(path_str):
         (path / "componentes.json").read_text(encoding="utf-8-sig")
     )
 
-    code_by_key = {}
-    for item in codigos.get("codigos", []):
-        code = item.get("codigo")
-        if isinstance(code, str) and code.strip():
-            code_by_key[code_key(code)] = code
-
-    component_id_by_key = {}
-    for item in componentes.get("componentes", []):
-        component_id = item.get("id")
-        if isinstance(component_id, str) and component_id.strip():
-            component_id_by_key[code_key(component_id)] = component_id
-
-    return {
-        "code_by_key": code_by_key,
-        "component_id_by_key": component_id_by_key,
-    }
+    return _build_catalog_maps(codigos, componentes)
 
 
-def load_catalogs(catalog_dir=None):
-    """Carga los catálogos usados para validar códigos exactos."""
-    path = Path(catalog_dir) if catalog_dir is not None else CATALOG_DIR
-    return _load_catalogs_cached(str(path))
+class CatalogCacheEntry(dict):
+    """Entrada de caché de catálogos que almacena los mapeos y metadatos de versión y tiempo."""
+
+    def __init__(self, maps, *, timestamp=None, versions=None, backend_id=None):
+        super().__init__(maps)
+        self.timestamp = timestamp if timestamp is not None else time.time()
+        self.versions = dict(versions or {})
+        self.backend_id = backend_id
+
+    def is_expired(self, ttl):
+        if ttl is None:
+            return False
+        if ttl <= 0:
+            return True
+        return (time.time() - self.timestamp) > ttl
+
+
+_CATALOG_CACHE_LOCK = threading.RLock()
+_BACKEND_CATALOG_CACHE = {}
+DEFAULT_CATALOG_CACHE_TTL = float(os.getenv("AGENT2_CATALOG_CACHE_TTL", "300.0"))
+
+
+def _backend_cache_key(backend_client):
+    """Calcula la clave de identidad única del Backend a partir de su configuración."""
+    base_url = str(getattr(backend_client, "base_url", "default")).rstrip("/")
+    token = getattr(backend_client, "token", None)
+    model = getattr(backend_client, "model_embeddings", None)
+    return (base_url, token, model)
+
+
+def invalidate_backend_catalog_cache(backend_client=None):
+    """Invalida explícitamente la caché de catálogos en memoria.
+
+    Si backend_client es None, invalida todas las entradas registradas.
+    Si se proporciona un cliente, invalida únicamente su clave correspondiente.
+    """
+    with _CATALOG_CACHE_LOCK:
+        if backend_client is None:
+            _BACKEND_CATALOG_CACHE.clear()
+        else:
+            key = _backend_cache_key(backend_client)
+            _BACKEND_CATALOG_CACHE.pop(key, None)
+
+
+def load_catalogs_from_backend(
+    backend_client,
+    *,
+    use_cache=True,
+    force_reload=False,
+    ttl=None,
+    stale_if_error=False,
+):
+    """Descarga y parsea los catálogos desde el Backend vía CTR-002 §2.
+
+    Contempla:
+    1. Identidad del Backend: clave compuesta (base_url, token, model_embeddings).
+    2. Versión de catálogo o índice: almacena versiones anunciadas por Backend.
+    3. Invalidación explícita: force_reload=True o invalidate_backend_catalog_cache().
+    4. Caducidad configurable (TTL): parámetro ttl o AGENT2_CATALOG_CACHE_TTL.
+    5. Concurrencia: protegida por threading.RLock.
+    6. Comportamiento controlado si falla la actualización: propaga el error sin
+       corromper la caché previa (o devuelve la previa si stale_if_error=True).
+    """
+    if backend_client is None:
+        raise ValueError("backend_client no puede ser None.")
+
+    cache_key = _backend_cache_key(backend_client)
+    effective_ttl = ttl if ttl is not None else DEFAULT_CATALOG_CACHE_TTL
+
+    with _CATALOG_CACHE_LOCK:
+        entry = _BACKEND_CATALOG_CACHE.get(cache_key)
+
+        # Si hay caché válida no expirada y no se fuerza recarga, reutilizar
+        if use_cache and not force_reload and entry is not None:
+            if not entry.is_expired(effective_ttl):
+                return entry
+
+        # Descargar catálogos frescos del Backend
+        try:
+            codigos_resp = backend_client.get_catalogo("codigos")
+            componentes_resp = backend_client.get_catalogo("componentes")
+        except Exception:
+            if stale_if_error and entry is not None:
+                return entry
+            raise
+
+        codigos_raw = (
+            codigos_resp.get("contenido", codigos_resp)
+            if isinstance(codigos_resp, dict)
+            else codigos_resp
+        )
+        componentes_raw = (
+            componentes_resp.get("contenido", componentes_resp)
+            if isinstance(componentes_resp, dict)
+            else componentes_resp
+        )
+
+        versions = {
+            "codigos": codigos_resp.get("version") if isinstance(codigos_resp, dict) else None,
+            "componentes": componentes_resp.get("version") if isinstance(componentes_resp, dict) else None,
+        }
+
+        # No cachear un catálogo malformado como un catálogo vacío válido.
+        for name, raw in (("codigos", codigos_raw), ("componentes", componentes_raw)):
+            items = raw if isinstance(raw, list) else raw.get(name) if isinstance(raw, dict) else None
+            if not isinstance(items, list) or any(
+                not isinstance(item, dict) or not isinstance(item.get("codigo") or item.get("id"), str)
+                or not (item.get("codigo") or item.get("id")).strip()
+                for item in items
+            ):
+                raise BackendRequestError("servicio_no_disponible", f"Catálogo {name} malformado.")
+
+        maps = _build_catalog_maps(codigos_raw, componentes_raw)
+        new_entry = CatalogCacheEntry(
+            maps,
+            timestamp=time.time(),
+            versions=versions,
+            backend_id=cache_key,
+        )
+
+        if use_cache:
+            _BACKEND_CATALOG_CACHE[cache_key] = new_entry
+
+        return new_entry
+
+
+FIXTURE_CATALOG_DIR = Path(__file__).resolve().parents[2] / "fixtures" / "catalogos"
+
+
+def load_catalogs(
+    catalog_dir=None,
+    *,
+    allow_synthetic=None,
+    backend_client=None,
+    force_reload=False,
+    ttl=None,
+):
+    """Carga los catálogos usados para validar códigos exactos.
+
+    Orden de precedencia seguro:
+    1. Si se proporciona backend_client, se consultan los catálogos vía API Backend (CTR-002).
+    2. Si se proporciona catalog_dir o existen archivos reales en config.CATALOG_DIR,
+       se cargan desde el sistema de archivos local.
+    3. Si faltan los catálogos reales obligatorios:
+       - En producción (ARSOFT_ENV=production), está estrictamente prohibido el uso de fixtures.
+       - En entorno no especificado, se aplica comportamiento seguro (error controlado).
+       - En test (ARSOFT_ENV=test) o desarrollo con opt-in (ARSOFT_ALLOW_SYNTHETIC_CATALOGS=1),
+         se permite fallback a fixtures/catalogos.
+    """
+    if backend_client is not None and hasattr(backend_client, "get_catalogo"):
+        try:
+            return load_catalogs_from_backend(
+                backend_client,
+                force_reload=force_reload,
+                ttl=ttl,
+            )
+        except Exception:
+            env = os.getenv("ARSOFT_ENV", "").strip().casefold()
+            if env in {"production", "prod"}:
+                raise
+    if catalog_dir is not None:
+        path = Path(catalog_dir)
+        environment = os.getenv("ARSOFT_ENV", "").strip().casefold()
+        if environment in {"production", "prod"} and path.resolve() == FIXTURE_CATALOG_DIR.resolve():
+            raise FileNotFoundError("En producción no se pueden utilizar catálogos sintéticos.")
+        return _load_catalogs_cached(str(path))
+
+    path = Path(config.CATALOG_DIR)
+    codigos_file = path / "codigos.json"
+    componentes_file = path / "componentes.json"
+
+    if codigos_file.exists() and componentes_file.exists():
+        return _load_catalogs_cached(str(path))
+
+    # Nunca recurrir a fixtures en producción, ni siquiera si la variable de
+    # autorización quedó activada por error en el entorno de despliegue.
+    environment = os.getenv("ARSOFT_ENV", "").strip().casefold()
+    explicit_opt_in = os.getenv("ARSOFT_ALLOW_SYNTHETIC_CATALOGS", "0").strip().casefold() in ("1", "true", "yes")
+    if environment in {"production", "prod"}:
+        allow_synthetic = False
+    elif allow_synthetic is None:
+        allow_synthetic = environment == "test" or (environment in {"development", "dev"} and explicit_opt_in)
+
+    if allow_synthetic:
+        if (FIXTURE_CATALOG_DIR / "codigos.json").exists() and (FIXTURE_CATALOG_DIR / "componentes.json").exists():
+            return _load_catalogs_cached(str(FIXTURE_CATALOG_DIR))
+
+    raise FileNotFoundError(
+        f"Catálogos reales obligatorios no encontrados en '{path}'. "
+        "En modo de producción no está permitido el uso silencioso de catálogos sintéticos. "
+        "Instale los catálogos de producción o habilite ARSOFT_ALLOW_SYNTHETIC_CATALOGS para pruebas."
+    )
 
 
 def infer_version(text):
@@ -172,9 +380,11 @@ def infer_component(text):
         if _alias_matches(normalized, alias):
             candidates.add(canonical)
 
-    if "motor" in candidates:
-        if re.search(r"(?:^|_)electroventilador(?:_|$)", normalized):
-            candidates.discard("motor")
+    # "motor de la batería" no significa necesariamente la batería como
+    # componente de la avería. Ante referencias cruzadas es más seguro no
+    # imponer un filtro hasta obtener aclaración del Agente 1.
+    if "bateria" in candidates and re.search(r"(?:^|_)motor(?:es)?(?:_|$)", normalized):
+        return None
 
     if len(candidates) == 1:
         return candidates.pop()
@@ -222,7 +432,7 @@ def infer_codes(text, catalogs=None):
     return codes or None
 
 
-def infer_filters(text, catalog_dir=None):
+def infer_filters(text, catalog_dir=None, backend_client=None):
     """Construye los filtros inferidos a partir del texto de la consulta."""
     if not isinstance(text, str):
         raise TypeError("text debe ser texto.")
@@ -230,7 +440,7 @@ def infer_filters(text, catalog_dir=None):
     if not text.strip():
         return {}
 
-    catalogs = load_catalogs(catalog_dir)
+    catalogs = load_catalogs(catalog_dir, backend_client=backend_client)
     filters = {}
 
     version = infer_version(text)
@@ -278,6 +488,10 @@ def merge_filters(explicit=None, inferred=None):
     if not isinstance(inferred, dict):
         raise TypeError("inferred debe ser un diccionario o None.")
 
+    unknown = set(explicit) - {"version", "componente", "tipo_documento", "codigos", "incluir_obsoletos"}
+    if unknown:
+        raise ValueError(f"Campos de filtro no admitidos: {', '.join(sorted(unknown))}")
+
     for field in ("version", "componente"):
         if field in explicit and explicit[field] is not None and not isinstance(explicit[field], str):
             raise TypeError(f"{field} debe ser texto.")
@@ -297,8 +511,15 @@ def merge_filters(explicit=None, inferred=None):
         if not isinstance(explicit["incluir_obsoletos"], bool):
             raise TypeError("incluir_obsoletos debe ser booleano.")
 
-    # Adapta los filtros explícitos (ALB-4): traduce tipos y descarta inválidos
-    adapted_explicit, _ = adapt_explicit_filters(explicit)
+    # Ninguna restricción explícita inválida puede desaparecer silenciosamente.
+    # De lo contrario la consulta se ampliaría sin autorización del Agente 1.
+    adapted_explicit, discarded = adapt_explicit_filters(explicit)
+    discarded = {
+        key: val for key, val in discarded.items()
+        if not (val is None or (isinstance(val, str) and not val.strip()))
+    }
+    if discarded:
+        raise ValueError(f"Filtros explícitos no admitidos: {', '.join(sorted(discarded))}")
 
     merged = dict(inferred)
 
@@ -358,5 +579,8 @@ __all__ = [
     "infer_filters",
     "infer_version",
     "load_catalogs",
+    "load_catalogs_from_backend",
+    "invalidate_backend_catalog_cache",
+    "CatalogCacheEntry",
     "merge_filters",
 ]

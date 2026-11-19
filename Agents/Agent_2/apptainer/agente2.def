@@ -1,0 +1,25 @@
+Bootstrap: docker
+From: python:3.10-slim
+
+%labels
+    Project ARSOFT
+    Service Agente2-RAG
+
+%files
+    Agents/Agent_2 /opt/arsoft/Agents/Agent_2
+
+%post
+    python -m pip install --no-cache-dir -r /opt/arsoft/Agents/Agent_2/requirements.txt
+
+%environment
+    export PYTHONPATH=/opt/arsoft
+    export PYTHONUNBUFFERED=1
+    export ARSOFT_ENV=production
+    export HF_HOME=/models/huggingface
+
+%runscript
+    cd /opt/arsoft
+    exec python -m Agents.Agent_2 "$@"
+
+%test
+    python -c 'from Agents.Agent_2.src.services.pipeline import recuperar_evidencias; from Agents.Agent_2.src.services.runtime import check_readiness'

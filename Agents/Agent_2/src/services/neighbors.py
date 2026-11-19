@@ -101,6 +101,10 @@ def _neighbor_item(neighbor, parent):
             f"El vecino {chunk_id} no pertenece a la sección {seccion}.",
         )
 
+    edition = parent.get("version_documento")
+    if edition is not None and neighbor.get("version_documento") != edition:
+        return None
+
     item = dict(neighbor)
     item["es_vecino"] = True
     return item
@@ -143,6 +147,7 @@ def expand_with_neighbors(candidates, fetch_neighbors=None, max_workers=4):
             _neighbor_item(neighbor, parent)
             for neighbor in fetched_by_id[parent["chunk_id"]]
         ]
+        fetched = [item for item in fetched if item is not None]
         neighbor_items = [
             item
             for item in fetched

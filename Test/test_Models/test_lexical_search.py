@@ -57,7 +57,7 @@ def test_lexical_search_applies_filters_before_top_k():
     )
 
     assert [chunk["chunk_id"] for chunk in results] == ["correcto"]
-    
+
 def test_lexical_search_normalizes_case_and_accents():
     chunks = [
         {

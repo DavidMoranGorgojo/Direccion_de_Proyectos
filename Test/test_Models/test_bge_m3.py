@@ -48,8 +48,10 @@ def test_bge_client_can_disable_prefix_for_benchmark():
     client.encode_query("HTM-0142")
     client.encode_passages(["Texto del manual"])
 
+    # CTR-002: el prefijo 'query: ' es obligatorio e incondicional en consultas.
+    # use_prefix=False desactiva el prefijo 'passage: ' en pasajes.
     assert encoder.received_texts == [
-        "HTM-0142",
+        "query: HTM-0142",
         "Texto del manual",
     ]
 
