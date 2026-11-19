@@ -88,6 +88,7 @@ class Agent2Pipeline:
                 base_url=config.BACKEND_BASE_URL,
                 model_embeddings=config.EMBEDDINGS_MODEL,
                 timeout=config.REQUEST_TIMEOUT,
+                connect_timeout=config.CONNECT_TIMEOUT,
             )
         return self._backend_client
 

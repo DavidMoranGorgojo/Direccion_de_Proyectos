@@ -24,6 +24,8 @@ DEFAULT_EMBEDDINGS_MODEL = "BAAI/bge-m3"
 DEFAULT_EMBEDDING_DIMENSION = 1024
 DEFAULT_SEARCH_TOP_K = 30
 DEFAULT_REQUEST_TIMEOUT = 5.0
+# Establecer la conexión TCP debe ser rápido; la lectura incluye la búsqueda.
+DEFAULT_CONNECT_TIMEOUT = 3.0
 DEFAULT_USE_QUERY_PREFIX = True
 DEFAULT_RRF_K = 60
 DEFAULT_RERANKER_MODEL = "BAAI/bge-reranker-v2-m3"
@@ -152,6 +154,7 @@ class Agent2Settings:
     embedding_dimension: int = DEFAULT_EMBEDDING_DIMENSION
     search_top_k: int = DEFAULT_SEARCH_TOP_K
     request_timeout: float = DEFAULT_REQUEST_TIMEOUT
+    connect_timeout: float = DEFAULT_CONNECT_TIMEOUT
     use_query_prefix: bool = DEFAULT_USE_QUERY_PREFIX
     dataset_path: Path = DEFAULT_DATASET_PATH
     rrf_k: int = DEFAULT_RRF_K
@@ -198,6 +201,11 @@ class Agent2Settings:
                 "AGENT2_REQUEST_TIMEOUT",
                 DEFAULT_REQUEST_TIMEOUT,
             ),
+            connect_timeout=_positive_float(
+                env,
+                "AGENT2_CONNECT_TIMEOUT",
+                DEFAULT_CONNECT_TIMEOUT,
+            ),
             use_query_prefix=_boolean(
                 env,
                 "AGENT2_USE_QUERY_PREFIX",
@@ -231,6 +239,7 @@ EMBEDDINGS_MODEL = SETTINGS.embeddings_model
 EMBEDDING_DIMENSION = SETTINGS.embedding_dimension
 SEARCH_TOP_K = SETTINGS.search_top_k
 REQUEST_TIMEOUT = SETTINGS.request_timeout
+CONNECT_TIMEOUT = SETTINGS.connect_timeout
 USE_QUERY_PREFIX = SETTINGS.use_query_prefix
 DATASET_PATH = SETTINGS.dataset_path
 

@@ -112,7 +112,7 @@ La prueba histórica de ausencia de catálogos se ajustó para simular un 503 co
 
 ## 10. Configuración y ejecución real
 
-Variables principales: `AGENT2_BACKEND_BASE_URL`, `ARSOFT_SERVICE_TOKEN`, `AGENT2_EMBEDDINGS_MODEL`, `AGENT2_EMBEDDING_DIMENSION`, `AGENT2_REQUEST_TIMEOUT`, `AGENT2_SEARCH_TOP_K`, `AGENT2_RRF_K`, `AGENT2_RERANKER_MODEL`, `AGENT2_RERANK_TOP_K`, `AGENT2_RERANK_THRESHOLD`, `AGENT2_CATALOG_CACHE_TTL` y `ARSOFT_ENV`.
+Variables principales: `AGENT2_BACKEND_BASE_URL`, `ARSOFT_SERVICE_TOKEN`, `AGENT2_EMBEDDINGS_MODEL`, `AGENT2_EMBEDDING_DIMENSION`, `AGENT2_REQUEST_TIMEOUT` (lectura, 5 s), `AGENT2_CONNECT_TIMEOUT` (conexión, 3 s), `AGENT2_SEARCH_TOP_K`, `AGENT2_RRF_K`, `AGENT2_RERANKER_MODEL`, `AGENT2_RERANK_TOP_K`, `AGENT2_RERANK_THRESHOLD`, `AGENT2_CATALOG_CACHE_TTL` y `ARSOFT_ENV`.
 
 Desde la raíz, instalar `Agents/Agent_2/requirements.txt` en un entorno de inferencia aislado. Las versiones heredadas se conservan; su instalación conjunta desde cero no está certificada en esta ejecución.
 

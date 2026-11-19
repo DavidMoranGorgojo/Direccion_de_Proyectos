@@ -146,10 +146,16 @@ class BackendAPIClient:
         session=None,
         timeout=5,
         token=None,
+        connect_timeout=None,
     ):
+        """``timeout`` es el de lectura; con ``connect_timeout`` se envía a
+        ``requests`` el par ``(conexión, lectura)`` para fallar rápido si el
+        Backend no acepta la conexión sin recortar el tiempo de búsqueda."""
         self.base_url = base_url.rstrip("/")
         self.model_embeddings = model_embeddings
-        self.timeout = timeout
+        self.timeout = (
+            timeout if connect_timeout is None else (connect_timeout, timeout)
+        )
         self.token = (
             SERVICE_TOKEN if token is None else str(token)
         ).strip()
@@ -158,6 +164,14 @@ class BackendAPIClient:
             session = requests.Session()
 
         self.session = session
+
+    def __repr__(self):
+        # Nunca mostrar el token de servicio (logs, trazas, depuración).
+        return (
+            f"BackendAPIClient(base_url={self.base_url!r}, "
+            f"model_embeddings={self.model_embeddings!r}, "
+            f"timeout={self.timeout!r}, token={'***' if self.token else None})"
+        )
 
     def _auth_kwargs(self):
         """Cabecera de servicio solo cuando hay token configurado."""
@@ -193,7 +207,10 @@ class BackendAPIClient:
         except requests.RequestException as error:
             raise BackendRequestError(
                 "servicio_no_disponible",
-                f"Error de red al contactar con el Backend en {ruta}: {error}",
+                # Sin el texto de la excepción: podría incluir datos de la
+                # petición. La causa queda encadenada para depurar.
+                f"Error de red al contactar con el Backend en {ruta} "
+                f"({type(error).__name__}).",
             ) from error
 
         if response.status_code >= 400:
@@ -355,7 +372,8 @@ class BackendAPIClient:
         except requests.RequestException as error:
             raise BackendRequestError(
                 "servicio_no_disponible",
-                f"No se pudo contactar con el Backend al recuperar el catálogo {nombre}: {error}",
+                f"No se pudo contactar con el Backend al recuperar el catálogo "
+                f"{nombre} ({type(error).__name__}).",
             ) from error
 
         if response.status_code == 404:

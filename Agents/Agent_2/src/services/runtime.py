@@ -15,7 +15,8 @@ def check_readiness(backend_client=None, *, load_models=True):
     parcial. La comprobación completa puede cargar pesos; no es un liveness.
     """
     client = backend_client if backend_client is not None else BackendAPIClient(
-        config.BACKEND_BASE_URL, config.EMBEDDINGS_MODEL, timeout=config.REQUEST_TIMEOUT
+        config.BACKEND_BASE_URL, config.EMBEDDINGS_MODEL, timeout=config.REQUEST_TIMEOUT,
+        connect_timeout=config.CONNECT_TIMEOUT,
     )
     try:
         info = client.get_info()

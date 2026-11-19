@@ -98,7 +98,8 @@ def test_public_production_boot_downloads_before_search(monkeypatch):
     assert paths[:2] == ["codigos", "componentes"]
     assert "vectorial" in paths and "lexica" in paths
     assert result["evidencias"][0]["chunk_id"] == "parent"
-    assert all(kwargs["timeout"] == config.REQUEST_TIMEOUT for _, kwargs in session.calls)
+    esperado = (config.CONNECT_TIMEOUT, config.REQUEST_TIMEOUT)
+    assert all(kwargs["timeout"] == esperado for _, kwargs in session.calls)
 
 
 @pytest.mark.parametrize("failure,code", [(requests.Timeout(), "tiempo_agotado"),
