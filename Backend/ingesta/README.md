@@ -41,7 +41,7 @@ export DATABASE_URL=postgresql://usuario:clave@localhost:5432/bd
 PYTHONPATH=src python -m ingesta --entrada /ruta/ThermoDrive_HTM240_Alumnos_PDF --salida salida_ingesta --cargar --crear-esquema
 ```
 
-`--crear-esquema` aplica `Backend/db/init/01_conocimiento.sql` (no hace falta si la base de datos ya lo ejecutó al arrancar). Otras opciones: `--indice-version v1.0`, `--no-activar`, `--incluir-sustituidos`. Por defecto los documentos sustituidos (`MNT-001 v1.0` y `PRC-003 v1.0`) no se indexan y aparecen en `excluidos` del informe. La versión activa nunca se recarga: para reindexar se usa una versión nueva.
+`--crear-esquema` aplica el esquema único `Backend/db/init/01_conocimiento.sql`, idempotente (no hace falta si la base de datos ya lo ejecutó al arrancar). Otras opciones: `--indice-version v1.0`, `--no-activar`, `--incluir-sustituidos`. Por defecto los documentos sustituidos (`MNT-001 v1.0` y `PRC-003 v1.0`) no se indexan y aparecen en `excluidos` del informe. La versión activa nunca se recarga: para reindexar se usa una versión nueva.
 
 Para probar sin la infraestructura del departamento basta un pgvector suelto:
 

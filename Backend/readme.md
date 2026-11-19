@@ -5,7 +5,7 @@ Estructura según el diseño «Arquitectura del backend y dockerización» (§7.
 | Carpeta | Contenido | Estado |
 |---|---|---|
 | `ingesta/` | Ingesta a demanda: PDF → fragmentos JSONL con metadatos y embeddings bge-m3 → pgvector. Ver [`ingesta/README.md`](ingesta/README.md). | Implementada |
-| `db/init/` | Scripts SQL que PostgreSQL ejecuta al crear el contenedor. `01_conocimiento.sql`: esquema `conocimiento` (índice versionado, documentos, chunks y catálogos). `02_usuarios.sql`: esquema `aplicacion` (usuarios, chats, mensajes y registro de consultas). | Propuesta para Base de datos y carga |
+| `db/init/` | Esquema único de la base (`01_conocimiento.sql`), que PostgreSQL ejecuta al crear el contenedor: esquema `conocimiento` (índice versionado, documentos, chunks con `vector(1024)` y catálogos) y esquema `aplicacion` (usuarios, chats, mensajes y registro de consultas). Es idempotente. | Implementado |
 | `api/` | FastAPI: pasarela hacia Agentes, búsquedas, login, historial y registro. | Pendiente (Infraestructura) |
 | `compose.yaml` | Servicios `backend-db`, `backend-api` y `backend-ingesta`. | Pendiente (Infraestructura) |
 
@@ -13,9 +13,9 @@ Los PDF de ARSOFT (`data/manuales`), las credenciales (`.env`) y las salidas de 
 
 ## Login, historial y registro de consultas (CTR-005, CTR-006 y CTR-003)
 
-Código en `api/app/sesiones.py`, `api/app/historial.py` y `api/app/registro.py`; tablas en `db/init/02_usuarios.sql` (esquema `aplicacion`, sin `fragmentos_rag`). `postgres.def` copia el script para que se cree al arrancar una base nueva.
+Código en `api/app/sesiones.py`, `api/app/historial.py` y `api/app/registro.py`; tablas en el esquema `aplicacion` de `db/init/01_conocimiento.sql` (sin `fragmentos_rag`). `postgres.def` copia el script para que se cree al arrancar una base nueva.
 
-> **Migración en bases ya creadas.** PostgreSQL solo ejecuta `db/init/` la primera vez que inicia un directorio de datos vacío. En una base que ya exista hay que crear el esquema a mano, una vez: `psql "$DATABASE_URL" -f Backend/db/init/02_usuarios.sql` (es idempotente).
+> **Migración en bases ya creadas.** PostgreSQL solo ejecuta `db/init/` la primera vez que inicia un directorio de datos vacío. En una base que ya exista hay que aplicar el esquema a mano, una vez: `psql "$DATABASE_URL" -f Backend/db/init/01_conocimiento.sql` (es idempotente: crea lo que falte y no toca los datos).
 
 **Usuarios de prueba.**
 

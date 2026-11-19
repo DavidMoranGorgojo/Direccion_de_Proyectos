@@ -1,7 +1,8 @@
 """Login (CTR-005), historial (CTR-006) y registro de consultas (CTR-003).
 
-Las pruebas con base de datos necesitan un PostgreSQL de pruebas vacío en ARSOFT_TEST_DATABASE_URL
-(cada prueba recrea el esquema «aplicacion» con Backend/db/init/02_usuarios.sql). Sin él se omiten.
+Las pruebas con base de datos necesitan un PostgreSQL de pruebas vacío con pgvector en
+ARSOFT_TEST_DATABASE_URL (cada prueba borra el esquema «aplicacion» y aplica el esquema único
+Backend/db/init/01_conocimiento.sql, que es idempotente). Sin él se omiten.
 """
 
 import os
@@ -26,7 +27,7 @@ from Backend.api.app.links import connect
 from Backend.api.app.main import app
 
 RAIZ = Path(__file__).resolve().parents[2]
-SQL = (RAIZ / "Backend" / "db" / "init" / "02_usuarios.sql").read_text(encoding="utf-8")
+SQL = (RAIZ / "Backend" / "db" / "init" / "01_conocimiento.sql").read_text(encoding="utf-8")
 TOKEN_SERVICIO = "arsoft-test"
 DB = os.getenv("ARSOFT_TEST_DATABASE_URL")
 
