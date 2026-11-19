@@ -1,0 +1,7 @@
+--- a/Agents/apptainer/agentes.def
++++ b/Agents/apptainer/agentes.def
+@@ -11,0 +12 @@
++    Agents/Agent_2 /opt/arsoft/Agents/Agent_2
+@@ -19,0 +21,2 @@
++
++    python -m pip install --no-cache-dir -r /opt/arsoft/Agents/Agent_2/requirements.txt

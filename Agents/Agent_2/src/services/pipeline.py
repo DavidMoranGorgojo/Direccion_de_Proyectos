@@ -14,20 +14,20 @@ CTR-002 y CTR-004, integrando:
 from __future__ import annotations
 
 import logging
+import math
+from contextlib import contextmanager
 import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import requests
 
 from ..clients.backend import BackendAPIClient, split_ctr002_requests
-from ..clients.bge_m3 import BgeM3Client, get_bge_m3_client
+from ..clients.bge_m3 import get_bge_m3_client
 from ..core import config
 from ..core.errors import BackendRequestError
-from ..models.retrieval import RetrievalDecision
 from ..services.candidate_adapter import to_fusion_candidates
 from ..services.evidence_builder import build_evidence_response
 from ..services.filter_inference import infer_filters, merge_filters
-from ..services.filter_vocab import adapt_explicit_filters
 from ..services.filters import filter_chunks
 from ..services.fusion import rrf
 from ..services.reranker import apply_threshold, rerank_results, rerank_with_threshold
@@ -46,22 +46,48 @@ class Agent2Pipeline:
         embedding_client: Optional[Any] = None,
         reranker_model: Optional[Any] = None,
         threshold: Optional[float] = None,
-        default_top_k: int = 30,
+        default_top_k: Optional[int] = None,
         require_reranker: bool = False,
+        timeout_s: Optional[float] = None,
+        trace_retrieval: bool = False,
     ):
         self._backend_client = backend_client
         self._embedding_client = embedding_client
         self.reranker_model = reranker_model
         self.threshold = threshold if threshold is not None else config.RERANK_THRESHOLD
-        self.default_top_k = default_top_k
+        self.default_top_k = default_top_k if default_top_k is not None else config.SEARCH_TOP_K
         self.require_reranker = require_reranker
+        if timeout_s is not None and (isinstance(timeout_s, bool) or not isinstance(timeout_s, (int, float))
+                                      or not math.isfinite(timeout_s) or timeout_s <= 0):
+            raise ValueError("timeout_s debe ser positivo y finito")
+        self.timeout_s = timeout_s
+        self.trace_retrieval = trace_retrieval
+
+    @contextmanager
+    def _stage(self, metricas, name):
+        start = time.monotonic()
+        try:
+            self._remaining()
+            yield
+            self._remaining()
+        finally:
+            metricas[name] = metricas.get(name, 0.0) + (time.monotonic() - start) * 1000
+
+    def _remaining(self):
+        if self._deadline is not None and time.monotonic() >= self._deadline:
+            raise BackendRequestError("tiempo_agotado", "Presupuesto total de A2 agotado.")
+
+    def _call(self, metricas, name, function, *args, **kwargs):
+        with self._stage(metricas, name):
+            return function(*args, **kwargs)
 
     @property
     def backend_client(self) -> BackendAPIClient:
         if self._backend_client is None:
             self._backend_client = BackendAPIClient(
-                base_url=config.BACKEND_API_BASE,
+                base_url=config.BACKEND_BASE_URL,
                 model_embeddings=config.EMBEDDINGS_MODEL,
+                timeout=config.REQUEST_TIMEOUT,
             )
         return self._backend_client
 
@@ -74,7 +100,31 @@ class Agent2Pipeline:
     def procesar_consulta(self, query_json: Dict[str, Any]) -> Dict[str, Any]:
         """Ejecuta el pipeline completo y devuelve el formato contractual CTR-004."""
         t_inicio = time.monotonic()
-        metricas: Dict[str, Any] = {}
+        metricas = {name: 0.0 for name in (
+            "tiempo_catalogos_ms", "tiempo_embedding_ms", "tiempo_vectorial_ms",
+            "tiempo_lexica_ms", "tiempo_rrf_ms", "tiempo_reranker_ms",
+            "tiempo_vecinos_ms", "tiempo_evidencias_ms",
+        )}
+        # Presupuesto opcional hasta acordar el SLA; no cancela inferencias
+        # GPU ya iniciadas. Cada llamada pública crea una instancia por turno.
+        self._deadline = None if self.timeout_s is None else t_inicio + self.timeout_s
+        try:
+            self._remaining()
+            result = self._procesar_consulta(query_json, metricas)
+            self._remaining()
+        except BackendRequestError as error:
+            result = {"estado": "error", "resultados": [], "evidencias": [],
+                      "codigo_error": error.codigo_error, "mensaje_error": error.mensaje}
+        except Exception:
+            logger.exception("Error no controlado en el pipeline A2")
+            result = {"estado": "error", "resultados": [], "evidencias": [],
+                      "codigo_error": "servicio_no_disponible", "mensaje_error": "Error interno de recuperación."}
+        metricas.update(result.get("metricas", {}))
+        metricas["tiempo_total_ms"] = (time.monotonic() - t_inicio) * 1000
+        result["metricas"] = metricas
+        return result
+
+    def _procesar_consulta(self, query_json, metricas):
 
         # 1. Validación inicial de entrada (F07)
         if not isinstance(query_json, dict):
@@ -160,7 +210,9 @@ class Agent2Pipeline:
                     "codigo_error": "entrada_invalida",
                     "mensaje_error": "El campo 'top_k' debe ser un entero mayor o igual a 1.",
                 }
-            top_k = raw_top_k
+            # top_k es el número final solicitado por A1; no debe reducir el
+            # pool de recuperación configurado para RRF/reranking.
+            top_k = max(self.default_top_k, raw_top_k)
 
         # Validación estricta de incluir_obsoletos (F07: no aceptar bool("false") ingenua)
         incluir_obsoletos_opt = None
@@ -178,7 +230,8 @@ class Agent2Pipeline:
 
         # 3, 4, 5. Inferencia y combinación de filtros
         try:
-            inferred = infer_filters(texto_busqueda, backend_client=self._backend_client)
+            with self._stage(metricas, "tiempo_catalogos_ms"):
+                inferred = infer_filters(texto_busqueda, backend_client=self.backend_client)
             merged_filters = merge_filters(filtros_explicit, inferred)
             if incluir_obsoletos_opt is not None:
                 merged_filters["incluir_obsoletos"] = incluir_obsoletos_opt
@@ -187,7 +240,7 @@ class Agent2Pipeline:
                 "estado": "error",
                 "resultados": [],
                 "evidencias": [],
-                "codigo_error": "filtro_invalido" if isinstance(err, ValueError) else "entrada_invalida",
+                "codigo_error": "entrada_invalida",
                 "mensaje_error": f"Filtros inválidos: {err}",
             }
         except (FileNotFoundError, BackendRequestError) as err:
@@ -209,13 +262,12 @@ class Agent2Pipeline:
 
         try:
             # Generar vector con prefijo obligatorio según CTR-002 (F01, F12)
-            t_vec0 = time.monotonic()
             if hasattr(self.embedding_client, "encode_query"):
-                vector = self.embedding_client.encode_query(texto_busqueda)
+                vector = self._call(metricas, "tiempo_embedding_ms", self.embedding_client.encode_query, texto_busqueda)
             elif hasattr(self.embedding_client, "encode"):
-                vector = self.embedding_client.encode(texto_busqueda, use_prefix=True)
+                vector = self._call(metricas, "tiempo_embedding_ms", self.embedding_client.encode, texto_busqueda, use_prefix=True)
             elif callable(self.embedding_client):
-                vector = self.embedding_client(texto_busqueda)
+                vector = self._call(metricas, "tiempo_embedding_ms", self.embedding_client, texto_busqueda)
             else:
                 raise RuntimeError("El cliente de embeddings no es invocable ni contiene método encode.")
 
@@ -229,12 +281,10 @@ class Agent2Pipeline:
                     "mensaje_error": f"Dimensión del vector ({len(vector)}) no coincide con la esperada ({config.EMBEDDING_DIMENSION}).",
                 }
 
-            metricas["tiempo_embedding_ms"] = int((time.monotonic() - t_vec0) * 1000)
-
             t_search0 = time.monotonic()
             for req_filtros in sub_requests:
                 # Búsqueda vectorial
-                raw_vec = self.backend_client.search_vector(
+                raw_vec = self._call(metricas, "tiempo_vectorial_ms", self.backend_client.search_vector,
                     vector=vector,
                     filtros=req_filtros,
                     k=top_k,
@@ -262,7 +312,7 @@ class Agent2Pipeline:
                 vector_candidates_all.extend(to_fusion_candidates(parsed_vec.resultados))
 
                 # Búsqueda léxica (BM25 recibe el texto limpio original sin prefijo query:)
-                parsed_lex = self.backend_client.search_lexical_candidates(
+                parsed_lex = self._call(metricas, "tiempo_lexica_ms", self.backend_client.search_lexical_candidates,
                     text=texto_busqueda,
                     filtros=req_filtros,
                     k=top_k,
@@ -325,7 +375,7 @@ class Agent2Pipeline:
 
         # 9 & 10. Fusión RRF
         try:
-            fused = rrf(vector_candidates_all, bm25_candidates_all, k=config.RRF_K)
+            fused = self._call(metricas, "tiempo_rrf_ms", rrf, vector_candidates_all, bm25_candidates_all, k=config.RRF_K)
         except Exception as err:
             logger.error("Error en fusión RRF: %s", err)
             return {
@@ -343,10 +393,10 @@ class Agent2Pipeline:
             filtros_ampliados = {k: v for k, v in merged_filters.items() if k != "tipo_documento"}
             try:
                 req = split_ctr002_requests(filtros_ampliados)[0]
-                retry_vec = parse_vector_response(self.backend_client.search_vector(
+                retry_vec = parse_vector_response(self._call(metricas, "tiempo_vectorial_ms", self.backend_client.search_vector,
                     vector=vector, filtros=req, k=top_k,
                 ))
-                retry_lex = self.backend_client.search_lexical_candidates(
+                retry_lex = self._call(metricas, "tiempo_lexica_ms", self.backend_client.search_lexical_candidates,
                     text=texto_busqueda, filtros=req, k=top_k,
                 )
                 retry_iv = retry_vec.indice
@@ -362,7 +412,7 @@ class Agent2Pipeline:
                     return {"estado": "error", "resultados": [], "evidencias": [],
                             "codigo_error": "indice_no_disponible",
                             "mensaje_error": "Índices incompatibles durante reintento documental."}
-                fused = rrf(to_fusion_candidates(retry_vec.resultados),
+                fused = self._call(metricas, "tiempo_rrf_ms", rrf, to_fusion_candidates(retry_vec.resultados),
                             [c.to_rrf_dict() for c in retry_lex.resultados], k=config.RRF_K)
                 merged_filters = filtros_ampliados
                 metricas["tipo_documento_ampliado"] = True
@@ -390,6 +440,12 @@ class Agent2Pipeline:
 
         # 11 & 12. Filtrado duro
         candidatos_filtrados = filter_chunks(fused, merged_filters)
+        if self.trace_retrieval:
+            metricas["rankings"] = {
+                "vectorial": list(dict.fromkeys(c["chunk_id"] for c in vector_candidates_all)),
+                "lexica": list(dict.fromkeys(c["chunk_id"] for c in bm25_candidates_all)),
+                "fusion": [c["chunk_id"] for c in candidatos_filtrados],
+            }
         if not candidatos_filtrados:
             return {
                 "estado": "sin_evidencia",
@@ -417,7 +473,7 @@ class Agent2Pipeline:
         if modelo_reranker is not None:
             metricas["modo_recuperacion"] = "reranker"
             try:
-                candidatos_umbral, metricas_rerank = rerank_with_threshold(
+                candidatos_umbral, metricas_rerank = self._call(metricas, "tiempo_reranker_ms", rerank_with_threshold,
                     query=texto_busqueda,
                     results=candidatos_filtrados,
                     model=modelo_reranker,
@@ -455,12 +511,23 @@ class Agent2Pipeline:
 
         # 15, 16, 17. Estados, vigencia y vecinos
         try:
+            decision_completa = classify_state(candidatos_umbral, merged_filters)
+            candidatos_umbral = candidatos_umbral[:opciones.get("top_k", self.default_top_k)]
             fetch_fn = getattr(self.backend_client, "get_neighbors", None)
-            resultado_vigencia = resolve_retrieval(
+            if isinstance(self.backend_client, BackendAPIClient):
+                def fetch_fn(chunk_id):
+                    response = self.backend_client.get_chunk(chunk_id, vecinos=1)
+                    if response["indice"]["version"] != version_indice_global:
+                        raise BackendRequestError("indice_no_disponible", "El índice cambió durante la expansión de vecinos.")
+                    return response["vecinos"]
+            resultado_vigencia = self._call(metricas, "tiempo_vecinos_ms", resolve_retrieval,
                 candidatos_umbral,
                 filters=merged_filters,
                 fetch_neighbors=fetch_fn,
             )
+            if decision_completa.estado == "ambiguo" and resultado_vigencia.estado != "error":
+                resultado_vigencia.estado = "ambiguo"
+                resultado_vigencia.campo_ambiguo = decision_completa.campo_ambiguo
         except BackendRequestError as err:
             return {
                 "estado": "error",
@@ -496,6 +563,30 @@ class Agent2Pipeline:
                 "mensaje_error": None,
             }
 
+        # Los vecinos pasan por el mismo modelo y umbral que los padres.
+        # Se evalúan TODOS por lotes limitados, sin heredar puntuaciones y sin
+        # truncarlos por RRF (los vecinos no tienen ranking del recuperador).
+        vecinos = [c for c in resultado_vigencia.candidatos if c.get("es_vecino")]
+        if vecinos and modelo_reranker is not None:
+            evaluados = []
+            for start in range(0, len(vecinos), config.RERANK_TOP_K):
+                evaluados.extend(self._call(
+                    metricas, "tiempo_reranker_ms", rerank_results,
+                    texto_busqueda, vecinos[start:start + config.RERANK_TOP_K], modelo_reranker,
+                ))
+            vecinos_validos = {c["chunk_id"]: c for c in apply_threshold(evaluados, self.threshold)}
+            resultado_vigencia.candidatos = [
+                vecinos_validos[c["chunk_id"]] if c.get("es_vecino") else c
+                for c in resultado_vigencia.candidatos
+                if not c.get("es_vecino") or c["chunk_id"] in vecinos_validos
+            ]
+            # Una expansión puede introducir otra versión o componente. La
+            # decisión debe considerar las evidencias realmente entregadas.
+            decision = classify_state(resultado_vigencia.candidatos, merged_filters)
+            if resultado_vigencia.estado != "ambiguo":
+                resultado_vigencia.estado = decision.estado
+                resultado_vigencia.campo_ambiguo = decision.campo_ambiguo
+
         # 18 & 19. Construcción contractual de evidencias (CTR-004 §5, F06, F09)
         candidatos_finales = []
         for candidate in resultado_vigencia.candidatos:
@@ -511,7 +602,7 @@ class Agent2Pipeline:
             cand["score_final"] = float(score)
             candidatos_finales.append(cand)
         try:
-            evidencias_ctr004 = build_evidence_response(candidatos_finales)["resultados"]
+            evidencias_ctr004 = self._call(metricas, "tiempo_evidencias_ms", build_evidence_response, candidatos_finales)["resultados"]
         except Exception as err:
             logger.error("No se pueden construir evidencias CTR-004 válidas: %s", err)
             return {
@@ -546,8 +637,6 @@ class Agent2Pipeline:
         estado_out = resultado_vigencia.estado
         if not evidencias_ctr004 and estado_out in {"suficiente", "solo_obsoleto"}:
             estado_out = "sin_evidencia"
-
-        metricas["tiempo_total_ms"] = int((time.monotonic() - t_inicio) * 1000)
 
         # Salida que cumple tanto CTR-004 (campo obligatorio 'resultados')
         # como la interfaz del Agente 1 ('evidencias', 'estado', 'campo_ambiguo', etc.)

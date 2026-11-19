@@ -21,6 +21,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from ..core import config
+from ..core.errors import BackendRequestError
 from .filters import (
     COMPONENT_ALIASES,
     DOCUMENT_TYPE_ALIASES,
@@ -264,6 +265,16 @@ def load_catalogs_from_backend(
             "componentes": componentes_resp.get("version") if isinstance(componentes_resp, dict) else None,
         }
 
+        # No cachear un catálogo malformado como un catálogo vacío válido.
+        for name, raw in (("codigos", codigos_raw), ("componentes", componentes_raw)):
+            items = raw if isinstance(raw, list) else raw.get(name) if isinstance(raw, dict) else None
+            if not isinstance(items, list) or any(
+                not isinstance(item, dict) or not isinstance(item.get("codigo") or item.get("id"), str)
+                or not (item.get("codigo") or item.get("id")).strip()
+                for item in items
+            ):
+                raise BackendRequestError("servicio_no_disponible", f"Catálogo {name} malformado.")
+
         maps = _build_catalog_maps(codigos_raw, componentes_raw)
         new_entry = CatalogCacheEntry(
             maps,
@@ -476,6 +487,10 @@ def merge_filters(explicit=None, inferred=None):
 
     if not isinstance(inferred, dict):
         raise TypeError("inferred debe ser un diccionario o None.")
+
+    unknown = set(explicit) - {"version", "componente", "tipo_documento", "codigos", "incluir_obsoletos"}
+    if unknown:
+        raise ValueError(f"Campos de filtro no admitidos: {', '.join(sorted(unknown))}")
 
     for field in ("version", "componente"):
         if field in explicit and explicit[field] is not None and not isinstance(explicit[field], str):

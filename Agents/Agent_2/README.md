@@ -1,6 +1,11 @@
 
 # Agente 2 — Recuperación de evidencias (RAG)
 
+**Entrega vigente:** [Informe general del Agente 2](docs/INFORME_GENERAL_AGENTE2.md).
+Incluye arranque real, contratos, validación reproducible y limitaciones actuales.
+Las métricas y estados de las secciones históricas siguientes corresponden a sus
+fechas originales y no certifican esta entrega ni un despliegue de producción.
+
 ## 1. Descripción
 
 El Agente 2 del proyecto ARSOFT/FaCyL se encarga de recuperar y seleccionar evidencias documentales relevantes para responder a las consultas recibidas.

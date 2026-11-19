@@ -1,0 +1,50 @@
+--- a/Agents/service.py
++++ b/Agents/service.py
+@@ -3,0 +4 @@
++import os
+@@ -19 +20,9 @@
+-from .agente1.core import Agente1, MODELO_LLM, OLLAMA_URL, consultar_asistente
++from .agente1.core import Agente1, MODELO_LLM, OLLAMA_URL, consultar_asistente, simulador_agente_2
++
++try:
++    from .Agent_2.src.services.pipeline import recuperar_evidencias
++    from .Agent_2.src.services.runtime import check_readiness
++except ImportError:
++    recuperar_evidencias = None
++
++USE_REAL_AGENT2 = os.getenv("USE_REAL_AGENT2", "0").lower() in ("1", "true", "yes")
+@@ -113 +122,16 @@
+-            result = consultar_asistente(data.pregunta, current.agent)
++
++            # Separación estricta entre servicio real y simulador (B11):
++            if USE_REAL_AGENT2:
++                if recuperar_evidencias is None:
++                    return {
++                        "trace_id": uuid4().hex,
++                        "estado": "error",
++                        "texto": GENERIC_ERROR,
++                        "fuentes": [],
++                        "codigo_error": "servicio_no_disponible",
++                    }
++                agente2_impl = recuperar_evidencias
++            else:
++                agente2_impl = simulador_agente_2
++
++            result = consultar_asistente(data.pregunta, current.agent, agente2=agente2_impl)
+@@ -142,0 +167,7 @@
++    if USE_REAL_AGENT2:
++        if recuperar_evidencias is None:
++            return JSONResponse({"status": "unavailable", "recuperacion": "agente2_no_disponible"}, status_code=503)
++        recuperacion_modo = "agente2"
++    else:
++        recuperacion_modo = "mock"
++
+@@ -149,2 +180,6 @@
+-        return JSONResponse({"status": "unavailable", "recuperacion": "mock"}, status_code=503)
+-    return {"status": "ok", "recuperacion": "mock"}
++        return JSONResponse({"status": "unavailable", "recuperacion": recuperacion_modo}, status_code=503)
++    if USE_REAL_AGENT2:
++        readiness = check_readiness()
++        if readiness["status"] != "ok":
++            return JSONResponse({**readiness, "recuperacion": recuperacion_modo}, status_code=503)
++    return {"status": "ok", "recuperacion": recuperacion_modo}

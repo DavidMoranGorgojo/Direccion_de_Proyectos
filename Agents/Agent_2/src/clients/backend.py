@@ -393,6 +393,30 @@ class BackendAPIClient:
 
         return payload
 
+    def get_info(self):
+        """Consulta la ficha real del índice sin sustituirla por datos locales."""
+        try:
+            response = self.session.get(
+                f"{self.base_url}/conocimiento/info", timeout=self.timeout, **self._auth_kwargs()
+            )
+        except requests.Timeout as error:
+            raise BackendRequestError("tiempo_agotado", "Tiempo agotado consultando el índice.") from error
+        except requests.RequestException as error:
+            raise BackendRequestError("servicio_no_disponible", "Backend no disponible.") from error
+        if response.status_code >= 400:
+            raise BackendRequestError(_backend_error_code(response), "No se pudo consultar la ficha del índice.")
+        try:
+            info = response.json()
+        except (TypeError, ValueError) as error:
+            raise BackendRequestError("servicio_no_disponible", "Ficha del índice no JSON.") from error
+        if not isinstance(info, dict) or not isinstance(info.get("version"), str) or not info["version"].strip():
+            raise BackendRequestError("indice_no_disponible", "Ficha del índice malformada.")
+        if info.get("modelo_embeddings") != self.model_embeddings:
+            raise BackendRequestError("modelo_incompatible", "El modelo de la ficha no coincide con A2.")
+        if info.get("dimensiones") != EMBEDDING_DIMENSION:
+            raise BackendRequestError("modelo_incompatible", "Dimensión de índice incompatible.")
+        return info
+
 
 def _invalid_chunk_fields(chunk, require_fecha_revision=True):
     problems = []

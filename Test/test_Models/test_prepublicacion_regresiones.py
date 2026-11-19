@@ -122,11 +122,18 @@ def test_vecino_sin_rerank_score_no_recibe_score_parental():
 
 
 def test_punto_publico_falla_controladamente_sin_catalogos_reales(monkeypatch):
+    from unittest.mock import Mock
+    from Agents.Agent_2.src.clients.backend import BackendAPIClient
     from Agents.Agent_2.src.services.pipeline import Agent2Pipeline
     monkeypatch.setenv("ARSOFT_ENV", "production")
     monkeypatch.setenv("ARSOFT_ALLOW_SYNTHETIC_CATALOGS", "0")
     monkeypatch.setattr(config, "CATALOG_DIR", Path("/sin/catalogos/empresa"))
-    pipeline = Agent2Pipeline()
+    # Tras corregir el arranque, la ausencia local obliga a consultar Backend.
+    # Simular su 503 contractual evita depender del puerto localhost:8000.
+    response = Mock(status_code=503, json=lambda: {"codigo": "indice_no_disponible"})
+    backend = BackendAPIClient("http://backend.test", "BAAI/bge-m3",
+                               session=Mock(get=Mock(return_value=response)))
+    pipeline = Agent2Pipeline(backend_client=backend)
     respuesta = pipeline.procesar_consulta({"texto_preprocesado": "avería HTM-0142"})
     assert respuesta["estado"] == "error"
     assert respuesta["codigo_error"] == "indice_no_disponible"

@@ -195,7 +195,7 @@ def test_common_version_is_none_for_disjoint_versions():
     assert common_version(candidates) is None
 
 
-def test_solo_obsoleto_takes_precedence_over_ambiguity():
+def test_obsolete_incompatible_versions_still_require_clarification():
     candidates = [
         make_chunk(
             "a",
@@ -211,7 +211,10 @@ def test_solo_obsoleto_takes_precedence_over_ambiguity():
         ),
     ]
 
-    assert classify_state(candidates, {}).estado == "solo_obsoleto"
+    # CTR-004 §4: el aviso de obsolescencia no resuelve una versión ambigua.
+    decision = classify_state(candidates, {})
+    assert decision.estado == "ambiguo"
+    assert decision.campo_ambiguo == "version"
 
 
 def test_classify_rejects_invalid_inputs():

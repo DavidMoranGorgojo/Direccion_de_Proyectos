@@ -85,7 +85,7 @@ def common_version(candidates):
     for candidate in candidates:
         versiones = {
             version
-            for version in (candidate.get("versiones") or [])
+            for version in (candidate.get("vigente_para") or candidate.get("versiones") or [])
             if isinstance(version, str) and version.strip()
         }
         common = versiones if common is None else common & versiones
@@ -113,6 +113,8 @@ def classify_state(candidates, filters=None):
     current = [candidate for candidate in candidates if is_current(candidate, version)]
 
     if not current:
+        if version is None and common_version(candidates) is None:
+            return RetrievalDecision("ambiguo", campo_ambiguo="version")
         return RetrievalDecision("solo_obsoleto")
 
     # La versión es la ambigüedad prioritaria: condiciona la compatibilidad.
