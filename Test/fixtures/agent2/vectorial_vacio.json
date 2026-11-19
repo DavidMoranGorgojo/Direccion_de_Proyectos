@@ -1,0 +1,7 @@
+{
+  "indice": {
+    "version": "v1.0-bd",
+    "modelo_embeddings": "BAAI/bge-m3"
+  },
+  "resultados": []
+}

@@ -1,0 +1,26 @@
+{
+  "indice": {
+    "version": "v1.0-bd",
+    "modelo_embeddings": "BAAI/bge-m3"
+  },
+  "resultados": [
+    {
+      "chunk_id": "c45",
+      "score": 0.8324,
+      "texto": "Fragmento de prueba al que le falta el campo componente.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "2.1",
+      "pagina": 3,
+      "versiones": ["V1.1"],
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": ["V1.1"],
+      "fecha_revision": "2026-10-15",
+      "orden_en_seccion": 3,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": []
+    }
+  ]
+}
