@@ -47,6 +47,11 @@ Las pruebas unitarias y de integración del Frontend se ubican en `Test/test_Fro
   - Resiliencia ante JSON no válido, respuestas malformadas y estados desconocidos.
   - Envío de consultas y preservación de la pregunta exacta según CTR-001.
   - Bloqueo del envío durante la respuesta y representación de errores del simulador como mensajes del asistente.
+- **`Test/test_Frontend/test_interfaz_usuario.py`**:
+  - Formulario de Login (`LoginWindow`): validación de campos vacíos, limpieza de errores en `textChanged`, alternancia de visibilidad de contraseña (Password/Normal), estados de carga y bloqueo (`_set_busy`), emisión de `authenticated` y función `reset()`.
+  - Ventana Principal (`MainWindow`): renderizado inicial de cabecera y usuario, estado vacío al iniciar chat, creación y reutilización de conversaciones vacías en `new_chat`, selección y renderizado del historial, ordenación cronológica, envío con generación automática de título (truncado a 40 caracteres con elipsis), filtro de teclado (Enter para enviar vs Shift+Enter para salto de línea), eliminación de burbuja de typing al responder y bloqueo de logout con peticiones en curso.
+  - Componentes visuales (`ChatMessage`, `SourceCard`, `ConversationItem`): renderizado de burbujas de usuario y asistente, asignación de badges según estado (`aclaracion`, `sin_evidencia`, `fuera_de_ambito`, `error`), tarjetas de fuentes documentales con aviso de obsolescencia y formateo relativo de fechas (`Hoy HH:MM` vs `DD/MM/AAAA`).
+  - Coordinador de aplicación (`App` en `main.py`): flujo completo de navegación y ciclo de vida login → chat → logout → login con almacenamiento y limpieza del estado de sesión.
 
 Ejecución de las pruebas:
 ```bash

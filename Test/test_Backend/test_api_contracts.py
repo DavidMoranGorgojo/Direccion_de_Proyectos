@@ -40,18 +40,21 @@ def serve(asgi):
 
 class Links(unittest.TestCase):
     def test_public_consultation_requires_real_session_validation(self):
-        with TestClient(app) as client:
+        with TestClient(app) as client, patch.dict(os.environ, {"ARSOFT_SERVICE_TOKEN": TOKEN}):
             body = {"conversacion_id": "", "pregunta": "Hola"}
             self.assertEqual(client.post("/consulta", json=body).status_code, 401)
+            # CTR-005 ya valida la sesión: un token que no emitió Backend se rechaza
             response = client.post("/consulta", json=body, headers={"Authorization": "Bearer dummy"})
-            self.assertEqual(response.status_code, 503)
+            self.assertEqual(response.status_code, 401)
+            self.assertEqual(response.json()["codigo_error"], "sesion_caducada")
 
     def test_gateway_reaches_existing_agent_with_exact_question(self):
         original = "  ¿Qué significa HTM-0142?\nV1.1  "
         real_consultar = service.consultar_asistente
         with serve(service.app) as url, TestClient(app) as client, \
                 patch.dict(os.environ, {"AGENTES_URL": url, "ARSOFT_SERVICE_TOKEN": TOKEN}), \
-                patch.dict(app.dependency_overrides, {authorize_consultation: lambda: None}), \
+                patch.dict(app.dependency_overrides, {authorize_consultation: lambda: {"id": 1}}), \
+                patch("Backend.api.app.main.reservar"), patch("Backend.api.app.main.guardar"), \
                 patch.object(service.Agente1, "_consultar_llm", return_value="INVALIDA"), \
                 patch("Agents.agente1.core.registrar_turno_auditoria"), \
                 patch.object(service, "consultar_asistente", wraps=real_consultar) as consulted:
