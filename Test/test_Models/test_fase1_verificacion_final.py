@@ -3,7 +3,7 @@
 Cubre exhaustivamente:
 1. Catálogos: error controlado en producción sin autorización explícita; fallback seguro en test/dev.
 2. F14: Validación de dimensión de vector, compatibilidad de modelos y coherencia de versiones de índice entre vectorial y léxico.
-3. F09 & CTR-004: Coherencia absoluta entre 'resultados' y 'evidencias', e integración con el adaptador real de Agente 1 en estados:
+3. F09 & CTR-004: Sobre único {estado, evidencias, ...} sin duplicados, e integración con el adaptador real de Agente 1 en estados:
    suficiente, ambiguo, solo_obsoleto, sin_evidencia y error técnico.
 """
 
@@ -187,8 +187,8 @@ def dataset_estados():
     ]
 
 
-def test_ctr004_coherencia_resultados_y_evidencias(dataset_estados):
-    """Punto 3: Verifica que 'resultados' y 'evidencias' son perfectamente coherentes."""
+def test_ctr004_sobre_unico_sin_duplicados(dataset_estados):
+    """Punto 2 de la revisión: CTR-004 emite una sola lista, sin duplicados."""
     sim = BackendSimulator(dataset_estados)
     backend = BackendAPIClient("http://backend.test", sim.modelo_embeddings, session=SimulatedSession(sim))
     pipeline = Agent2Pipeline(backend_client=backend, embedding_client=MockEncoderDim(1024), threshold=0.0)
@@ -196,22 +196,21 @@ def test_ctr004_coherencia_resultados_y_evidencias(dataset_estados):
     resp = pipeline.procesar_consulta({"texto_preprocesado": "apriete culata V1.1", "filtros": {"version": "V1.1"}})
 
     assert resp["estado"] == "suficiente"
-    assert len(resp["resultados"]) == len(resp["evidencias"])
+    assert set(resp) == {"estado", "evidencias", "campo_ambiguo", "codigo_error", "mensaje_error", "metricas"}
+    assert resp["evidencias"]
 
-    for res, ev in zip(resp["resultados"], resp["evidencias"]):
-        assert res["chunk_id"] == ev["chunk_id"]
-        assert res["texto"] == ev["texto"]
-        assert res["score_final"] == ev["score_final"]
-        assert res["metadatos"] == ev["metadatos"]
-        # Comprobar los 14 metadatos obligatorios de CTR-002
-        meta = res["metadatos"]
+    for ev in resp["evidencias"]:
+        assert set(ev) == {"chunk_id", "texto", "score_final", "estado_documento", "metadata"}
+        meta = ev["metadata"]
+        # Los 14 metadatos de CTR-002 más «version», que lee el Agente 1.
         for campo in (
             "documento", "seccion", "pagina", "versiones", "componente",
             "tipo_documento", "obsoleto", "sustituido_por", "vigente_para",
             "fecha_revision", "orden_en_seccion", "version_documento",
-            "afectado_por", "ids_referenciados"
+            "afectado_por", "ids_referenciados", "version"
         ):
             assert campo in meta
+        assert meta["version"] == meta["version_documento"]
 
 
 def test_adaptador_agente1_estado_suficiente(dataset_estados):

@@ -88,8 +88,8 @@ def test_pipeline_e2e_successful_retrieval(mock_dataset):
     primera = resultado["evidencias"][0]
     assert "culata" in primera["texto"].lower()
     assert "V1.1" in primera["metadata"]["versiones"]
-    assert "score" in primera
-    assert "rerank_score" in primera
+    assert "score_final" in primera
+    assert "estado_documento" in primera
 
 
 def test_pipeline_handles_backend_timeout():
@@ -153,7 +153,7 @@ def test_pipeline_integration_with_agente1(mock_dataset):
         ev = normalizado["evidencias"][0]
         assert "chunk_id" in ev
         assert "metadata" in ev
-        assert "score" in ev
+        assert "score_final" in ev
 
 
 

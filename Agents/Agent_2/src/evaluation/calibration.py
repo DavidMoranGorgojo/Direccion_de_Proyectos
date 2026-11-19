@@ -1,7 +1,7 @@
-"""Evaluación de umbrales del reranker.
+"""Evaluación de umbrales del reranker (A2-08).
 
-El módulo trabaja con puntuaciones ya calculadas. No carga el modelo
-real ni llama a servicios externos.
+El módulo trabaja con puntuaciones ya calculadas. No carga el modelo real ni
+llama a servicios externos.
 """
 
 from __future__ import annotations
@@ -10,7 +10,10 @@ import json
 import math
 from pathlib import Path
 
+from .metrics import mean_reciprocal_rank, recall_at_k
+
 DEFAULT_THRESHOLDS = [round(index * 0.05, 2) for index in range(21)]
+DEFAULT_RECALL_KS = (1, 3, 5)
 
 
 class CalibrationError(ValueError):
@@ -54,6 +57,20 @@ def normalize_thresholds(thresholds=None):
     return validated
 
 
+def _validate_recall_ks(ks):
+    if not isinstance(ks, (list, tuple)) or not ks:
+        raise CalibrationError("Los valores de k deben ser una lista no vacía")
+
+    for k in ks:
+        if isinstance(k, bool) or not isinstance(k, int) or k <= 0:
+            raise CalibrationError("Cada k debe ser un entero mayor que cero")
+
+    if len(set(ks)) != len(ks):
+        raise CalibrationError("Los valores de k no pueden estar duplicados")
+
+    return sorted(ks)
+
+
 def _validate_score(score, query_id, index):
     if (
         isinstance(score, bool)
@@ -67,51 +84,34 @@ def _validate_score(score, query_id, index):
     return float(score)
 
 
+def _validate_id(value, mensaje):
+    if not isinstance(value, str) or not value.strip():
+        raise CalibrationError(mensaje)
+    return value.strip()
+
+
 def _normalize_query(item, index):
     if not isinstance(item, dict):
         raise CalibrationError(f"La consulta {index} debe ser un diccionario")
 
-    query_id = item.get("query_id", item.get("id"))
-    if query_id is None:
-        query_id = f"Q{index + 1:03d}"
-    if not isinstance(query_id, str) or not query_id.strip():
-        raise CalibrationError(
-            f"El identificador de la consulta {index} no es válido"
-        )
-    query_id = query_id.strip()
+    query_id = item.get("query_id", f"Q{index + 1:03d}")
+    query_id = _validate_id(
+        query_id, f"El identificador de la consulta {index} no es válido"
+    )
 
-    ranking_key = None
-    for key in ("ranking", "results", "ranked_results", "resultados"):
-        if key in item:
-            ranking_key = key
-            break
+    if "ranking" not in item:
+        raise CalibrationError(f"La consulta {query_id} no contiene 'ranking'")
 
-    if ranking_key is None:
-        raise CalibrationError(
-            f"La consulta {query_id} no contiene un ranking"
-        )
-
-    raw_ranking = item[ranking_key]
+    raw_ranking = item["ranking"]
     if not isinstance(raw_ranking, list):
         raise CalibrationError(f"El ranking de {query_id} debe ser una lista")
 
-    relevant_key = None
-    for key in (
-        "relevant_chunk_ids",
-        "relevant",
-        "relevantes",
-        "relevant_ids",
-    ):
-        if key in item:
-            relevant_key = key
-            break
-
-    if relevant_key is None:
+    if "relevant_chunk_ids" not in item:
         raise CalibrationError(
-            f"La consulta {query_id} no contiene relevantes"
+            f"La consulta {query_id} no contiene 'relevant_chunk_ids'"
         )
 
-    raw_relevant = item[relevant_key]
+    raw_relevant = item["relevant_chunk_ids"]
     if isinstance(raw_relevant, (str, bytes)) or not isinstance(
         raw_relevant, (list, tuple, set, frozenset)
     ):
@@ -129,25 +129,16 @@ def _normalize_query(item, index):
                 "debe ser un diccionario"
             )
 
-        chunk_key = None
-        for key in ("chunk_id", "id", "documento_id"):
-            if key in entry:
-                chunk_key = key
-                break
-
-        if chunk_key is None:
+        if "chunk_id" not in entry:
             raise CalibrationError(
-                f"El resultado {position} de {query_id} "
-                "no contiene chunk_id"
+                f"El resultado {position} de {query_id} no contiene chunk_id"
             )
 
-        chunk_id = entry[chunk_key]
-        if not isinstance(chunk_id, str) or not chunk_id.strip():
-            raise CalibrationError(
-                f"El identificador del resultado {position} "
-                f"de {query_id} no es válido"
-            )
-        chunk_id = chunk_id.strip()
+        chunk_id = _validate_id(
+            entry["chunk_id"],
+            f"El identificador del resultado {position} "
+            f"de {query_id} no es válido",
+        )
 
         if chunk_id in seen_ids:
             raise CalibrationError(
@@ -155,24 +146,18 @@ def _normalize_query(item, index):
             )
         seen_ids.add(chunk_id)
 
-        score_key = None
-        for key in ("rerank_score", "score", "puntuacion"):
-            if key in entry:
-                score_key = key
-                break
-
-        if score_key is None:
+        if "rerank_score" not in entry:
             raise CalibrationError(
                 f"El resultado {position} de {query_id} "
                 "no contiene rerank_score"
             )
 
-        score = _validate_score(entry[score_key], query_id, position)
-
         ranking.append(
             {
                 "chunk_id": chunk_id,
-                "rerank_score": score,
+                "rerank_score": _validate_score(
+                    entry["rerank_score"], query_id, position
+                ),
             }
         )
 
@@ -180,15 +165,14 @@ def _normalize_query(item, index):
     seen_relevant = set()
 
     for relevant_id in raw_relevant:
-        if not isinstance(relevant_id, str) or not relevant_id.strip():
-            raise CalibrationError(
-                f"Los relevantes de {query_id} deben ser "
-                "identificadores no vacíos"
-            )
-        relevant_id = relevant_id.strip()
+        relevant_id = _validate_id(
+            relevant_id,
+            f"Los relevantes de {query_id} deben ser "
+            "identificadores no vacíos",
+        )
         if relevant_id in seen_relevant:
             raise CalibrationError(
-                f"El relevante {relevant_id} está duplicado " f"en {query_id}"
+                f"El relevante {relevant_id} está duplicado en {query_id}"
             )
         seen_relevant.add(relevant_id)
         relevant_ids.append(relevant_id)
@@ -204,15 +188,9 @@ def normalize_calibration_data(data):
     if isinstance(data, list):
         raw_queries = data
     elif isinstance(data, dict):
-        raw_queries = None
-        for key in ("consultas", "queries", "data", "resultados"):
-            if key in data:
-                raw_queries = data[key]
-                break
-        if raw_queries is None:
-            raise CalibrationError(
-                "Los datos deben contener una lista de consultas"
-            )
+        if "consultas" not in data:
+            raise CalibrationError("Los datos deben contener 'consultas'")
+        raw_queries = data["consultas"]
     else:
         raise CalibrationError("Los datos deben ser una lista o diccionario")
 
@@ -224,31 +202,40 @@ def normalize_calibration_data(data):
     ]
 
 
+def _ratio(numerador, denominador):
+    return numerador / denominador if denominador > 0 else None
+
+
+def _f1(precision, recall):
+    """F1 según la convención del módulo (ver docstring)."""
+
+    if recall is None:
+        return None
+    if not precision or not recall:
+        return 0.0
+    return 2 * precision * recall / (precision + recall)
+
+
+def _mean(values):
+    defined = [value for value in values if value is not None]
+    return sum(defined) / len(defined) if defined else None
+
+
 def _metrics_for_query(ranking, relevant_ids, threshold):
     relevant_set = set(relevant_ids)
-    retained = [item for item in ranking if item["rerank_score"] >= threshold]
-    retained_ids = {item["chunk_id"] for item in retained}
-
-    tp = sum(1 for item in retained if item["chunk_id"] in relevant_set)
-    fp = len(retained) - tp
-    fn = sum(
-        1 for relevant_id in relevant_set if relevant_id not in retained_ids
+    retained = sorted(
+        (item for item in ranking if item["rerank_score"] >= threshold),
+        key=lambda item: item["rerank_score"],
+        reverse=True,
     )
+    retained_ids = [item["chunk_id"] for item in retained]
 
-    # Convención para métricas no definidas (None):
-    # - precision: no definida si no se conserva nada (0/0). Así una
-    #   abstención correcta no penaliza la precisión macro.
-    # - recall y f1: no definidos si la consulta no tiene relevantes.
-    # - f1 = 0 si hay relevantes y no se conserva nada (recall = 0).
-    precision = tp / (tp + fp) if tp + fp > 0 else None
-    recall = tp / len(relevant_set) if relevant_set else None
+    tp = sum(1 for chunk_id in retained_ids if chunk_id in relevant_set)
+    fp = len(retained_ids) - tp
+    fn = len(relevant_set) - tp
 
-    if not relevant_set:
-        f1 = None
-    elif precision is None or precision + recall == 0:
-        f1 = 0.0
-    else:
-        f1 = 2 * precision * recall / (precision + recall)
+    precision = _ratio(tp, tp + fp)
+    recall = _ratio(tp, len(relevant_set))
 
     return {
         "tp": tp,
@@ -256,9 +243,10 @@ def _metrics_for_query(ranking, relevant_ids, threshold):
         "fn": fn,
         "precision": precision,
         "recall": recall,
-        "f1": f1,
-        "retained_count": len(retained),
+        "f1": _f1(precision, recall),
+        "retained_count": len(retained_ids),
         "relevant_count": len(relevant_set),
+        "retained_ids": retained_ids,
     }
 
 
@@ -285,154 +273,103 @@ def _abstention_metrics(per_query):
         "abstenciones_correctas": correctas,
         "abstenciones_falsas": falsas,
         "respuestas_sin_evidencia": len(sin_relevantes) - correctas,
-        "tasa_abstencion_correcta": (
-            correctas / len(sin_relevantes) if sin_relevantes else None
-        ),
-        "tasa_abstencion_falsa": (
-            falsas / len(con_relevantes) if con_relevantes else None
-        ),
+        "tasa_abstencion_correcta": _ratio(correctas, len(sin_relevantes)),
+        "tasa_abstencion_falsa": _ratio(falsas, len(con_relevantes)),
     }
 
 
-def evaluate_threshold(queries, threshold):
-    normalized = normalize_calibration_data(queries)
-    thresholds = normalize_thresholds([threshold])
-    result = evaluate_thresholds(normalized, thresholds)
-    return result["results"][0]
+def _ranking_metrics(per_query, normalized, recall_ks):
+    """Recall@k y MRR de ``metrics.py`` sobre las consultas con relevantes."""
+
+    rankings = []
+    relevantes = []
+
+    for metrics, query in zip(per_query, normalized):
+        if query["relevant_chunk_ids"]:
+            rankings.append(metrics["retained_ids"])
+            relevantes.append(query["relevant_chunk_ids"])
+
+    if not rankings:
+        return {
+            "mrr": None,
+            "recall_at_k": {str(k): None for k in recall_ks},
+        }
+
+    return {
+        "mrr": mean_reciprocal_rank(rankings, relevantes),
+        "recall_at_k": {
+            str(k): sum(
+                recall_at_k(ranking, relevant, k)
+                for ranking, relevant in zip(rankings, relevantes)
+            )
+            / len(rankings)
+            for k in recall_ks
+        },
+    }
 
 
-def evaluate_thresholds(queries, thresholds=None):
+def evaluate_threshold(queries, threshold, recall_ks=DEFAULT_RECALL_KS):
+    return evaluate_thresholds(queries, [threshold], recall_ks)["results"][0]
+
+
+def evaluate_thresholds(queries, thresholds=None, recall_ks=DEFAULT_RECALL_KS):
     normalized = normalize_calibration_data(queries)
     threshold_values = normalize_thresholds(thresholds)
+    recall_ks = _validate_recall_ks(recall_ks)
 
     threshold_results = []
 
     for threshold in threshold_values:
-        per_query = []
+        metrics_per_query = [
+            _metrics_for_query(
+                query["ranking"], query["relevant_chunk_ids"], threshold
+            )
+            for query in normalized
+        ]
 
-        for query in normalized:
-            metrics = _metrics_for_query(
-                query["ranking"],
-                query["relevant_chunk_ids"],
-                threshold,
-            )
-            per_query.append(
-                {
-                    "query_id": query["query_id"],
-                    "tp": metrics["tp"],
-                    "fp": metrics["fp"],
-                    "fn": metrics["fn"],
-                    "precision": metrics["precision"],
-                    "recall": metrics["recall"],
-                    "f1": metrics["f1"],
-                    "retained_count": metrics["retained_count"],
-                    "relevant_count": metrics["relevant_count"],
-                }
-            )
+        per_query = [
+            {
+                "query_id": query["query_id"],
+                **{k: v for k, v in metrics.items() if k != "retained_ids"},
+            }
+            for query, metrics in zip(normalized, metrics_per_query)
+        ]
 
         tp_total = sum(item["tp"] for item in per_query)
         fp_total = sum(item["fp"] for item in per_query)
         fn_total = sum(item["fn"] for item in per_query)
         retained_total = sum(item["retained_count"] for item in per_query)
 
-        precision_micro = (
-            tp_total / (tp_total + fp_total)
-            if tp_total + fp_total > 0
-            else 0.0
-        )
-        recall_micro = (
-            tp_total / (tp_total + fn_total)
-            if tp_total + fn_total > 0
-            else 0.0
-        )
-        f1_micro = (
-            2
-            * precision_micro
-            * recall_micro
-            / (precision_micro + recall_micro)
-            if precision_micro + recall_micro > 0
-            else 0.0
-        )
+        precision_micro = _ratio(tp_total, tp_total + fp_total)
+        recall_micro = _ratio(tp_total, tp_total + fn_total)
 
-        # Las métricas macro promedian solo las consultas en que están definidas.
-        precision_values = [
-            item["precision"]
-            for item in per_query
-            if item["precision"] is not None
-        ]
-        recall_values = [
-            item["recall"] for item in per_query if item["recall"] is not None
-        ]
-        f1_values = [
-            item["f1"] for item in per_query if item["f1"] is not None
-        ]
-
-        precision_macro = (
-            sum(precision_values) / len(precision_values)
-            if precision_values
-            else 0.0
-        )
-        recall_macro = (
-            sum(recall_values) / len(recall_values) if recall_values else 0.0
-        )
-        f1_macro = sum(f1_values) / len(f1_values) if f1_values else 0.0
-
-        query_count = len(normalized)
-        average_retained = (
-            retained_total / query_count if query_count > 0 else 0.0
+        threshold_results.append(
+            {
+                "threshold": threshold,
+                "tp": tp_total,
+                "fp": fp_total,
+                "fn": fn_total,
+                "micro": {
+                    "precision": precision_micro,
+                    "recall": recall_micro,
+                    "f1": _f1(precision_micro, recall_micro),
+                },
+                "macro": {
+                    "precision": _mean(i["precision"] for i in per_query),
+                    "recall": _mean(i["recall"] for i in per_query),
+                    "f1": _mean(i["f1"] for i in per_query),
+                },
+                "ranking": _ranking_metrics(
+                    metrics_per_query, normalized, recall_ks
+                ),
+                "abstencion": _abstention_metrics(per_query),
+                "retained_count": retained_total,
+                "average_retained_per_query": retained_total / len(normalized),
+                "queries": per_query,
+            }
         )
 
-        micro = {
-            "tp": tp_total,
-            "fp": fp_total,
-            "fn": fn_total,
-            "precision": precision_micro,
-            "recall": recall_micro,
-            "f1": f1_micro,
-        }
-        macro = {
-            "precision": precision_macro,
-            "recall": recall_macro,
-            "f1": f1_macro,
-        }
-        abstencion = _abstention_metrics(per_query)
-
-        item = {
-            "threshold": threshold,
-            "umbral": threshold,
-            "tp": tp_total,
-            "fp": fp_total,
-            "fn": fn_total,
-            "precision": precision_micro,
-            "recall": recall_micro,
-            "f1": f1_micro,
-            "precision_micro": precision_micro,
-            "recall_micro": recall_micro,
-            "f1_micro": f1_micro,
-            "micro": micro,
-            "macro": macro,
-            "precision_macro": precision_macro,
-            "recall_macro": recall_macro,
-            "f1_macro": f1_macro,
-            "abstencion": abstencion,
-            "retained_count": retained_total,
-            "retained_results": retained_total,
-            "average_retained_per_query": average_retained,
-            "media_resultados_conservados": average_retained,
-            "queries": per_query,
-            "por_consulta": per_query,
-        }
-        threshold_results.append(item)
-
-    return {
-        "thresholds": threshold_values,
-        "umbrales": threshold_values,
-        "results": threshold_results,
-        "umbrales_resultados": threshold_results,
-        "threshold_results": threshold_results,
-        "resultados": threshold_results,
-        "calibration": threshold_results,
-    }
+    return {"results": threshold_results}
 
 
 def load_calibration_data(path):
@@ -455,22 +392,26 @@ def dump_calibration_result(result, path):
         file.write("\n")
 
 
+def _fmt(value):
+    return f"{value:.4f}" if value is not None else "  -   "
+
+
 def format_calibration_table(result):
-    lines = []
     header = (
-        "umbral  precision  recall     f1         media  TP  FP  FN"
-        "  abst_ok  abst_mal"
+        "umbral  precision  recall     f1         mrr        media  "
+        "TP  FP  FN  abst_ok  abst_mal"
     )
-    lines.append(header)
-    lines.append("-" * len(header))
+    lines = [header, "-" * len(header)]
 
     for item in result["results"]:
+        micro = item["micro"]
         abstencion = item["abstencion"]
         lines.append(
             f"{item['threshold']:.2f}    "
-            f"{item['precision']:.4f}   "
-            f"{item['recall']:.4f}   "
-            f"{item['f1']:.4f}   "
+            f"{_fmt(micro['precision'])}   "
+            f"{_fmt(micro['recall'])}   "
+            f"{_fmt(micro['f1'])}   "
+            f"{_fmt(item['ranking']['mrr'])}   "
             f"{item['average_retained_per_query']:.4f}  "
             f"{item['tp']:>2}  "
             f"{item['fp']:>2}  "
@@ -478,34 +419,21 @@ def format_calibration_table(result):
             f"{abstencion['abstenciones_correctas']:>2}/"
             f"{abstencion['consultas_sin_relevantes']:<4}  "
             f"{abstencion['abstenciones_falsas']:>2}/"
-            f"{abstencion['consultas_con_relevantes']:<4}"
+            f"{abstencion['consultas_con_relevantes']}"
         )
 
     return "\n".join(lines)
 
 
-# Alias compatibles con nombres habituales.
-evaluate_calibration = evaluate_thresholds
-calibrate_thresholds = evaluate_thresholds
-calibrate_reranker = evaluate_thresholds
-run_calibration = evaluate_thresholds
-evaluate_all_thresholds = evaluate_thresholds
-
-
-class ThresholdCalibrator:
-    def evaluate_thresholds(self, queries, thresholds=None):
-        return evaluate_thresholds(queries, thresholds)
-
-    def evaluate_threshold(self, queries, threshold):
-        return evaluate_threshold(queries, threshold)
-
-
-ThresholdEvaluator = ThresholdCalibrator
-CalibrationEvaluator = ThresholdCalibrator
-RerankerCalibrator = ThresholdCalibrator
-ThresholdAnalysis = ThresholdCalibrator
-RerankerThresholdCalibrator = ThresholdCalibrator
-
-
-def _self_check():
-    return True
+__all__ = [
+    "CalibrationError",
+    "DEFAULT_RECALL_KS",
+    "DEFAULT_THRESHOLDS",
+    "dump_calibration_result",
+    "evaluate_threshold",
+    "evaluate_thresholds",
+    "format_calibration_table",
+    "load_calibration_data",
+    "normalize_calibration_data",
+    "normalize_thresholds",
+]

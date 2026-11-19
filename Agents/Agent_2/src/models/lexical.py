@@ -4,12 +4,17 @@ La respuesta de ``POST /conocimiento/lexica`` comparte estructura con la
 vectorial (``indice`` + ``resultados``), pero el score es el valor crudo de
 BM25. Este módulo no normaliza ningún texto ni código: los valores se
 conservan exactamente como los devuelve el Backend.
+
+Los metadatos usan ``ChunkMetadata`` (``models.ctr_002``), el modelo único de
+metadatos CTR-002 del Agente 2, compartido con el parser vectorial y el
+empaquetado de evidencias.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+
+from .ctr_002 import ChunkMetadata
 
 
 @dataclass
@@ -21,33 +26,13 @@ class LexicalIndexInfo:
 
 
 @dataclass
-class LexicalMetadata:
-    """Metadatos CTR-002 asociados a un chunk recuperado."""
-
-    documento: str
-    seccion: str
-    pagina: int
-    versiones: list[str]
-    componente: str
-    tipo_documento: str
-    obsoleto: bool
-    sustituido_por: Optional[str]
-    vigente_para: list[str]
-    fecha_revision: Optional[str]
-    orden_en_seccion: int
-    version_documento: str
-    afectado_por: list[str]
-    ids_referenciados: list[str]
-
-
-@dataclass
 class LexicalCandidate:
     """Candidato léxico normalizado para las etapas posteriores."""
 
     chunk_id: str
     texto: str
     score_lexico: float
-    metadatos: LexicalMetadata
+    metadatos: ChunkMetadata
 
     def to_rrf_dict(self) -> dict:
         """Convierte el candidato a un diccionario plano compatible con RRF (ALB-8)."""
@@ -88,6 +73,5 @@ class LexicalSearchResponse:
 __all__ = [
     "LexicalCandidate",
     "LexicalIndexInfo",
-    "LexicalMetadata",
     "LexicalSearchResponse",
 ]

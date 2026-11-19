@@ -3,7 +3,7 @@
 Cubre exhaustivamente:
 - F01: Inicialización diferida y reutilizable de BGE-M3.
 - F02: Carga, inferencia real y umbral del reranker, y gestión de fallos.
-- F06 y F09: Interfaz contractual CTR-004 (texto_preprocesado y resultados).
+- F06 y F09: Interfaz contractual CTR-004 (texto_preprocesado y evidencias).
 - F07: Validación estricta y exhaustiva de entradas.
 - F12: Prefijo obligatorio 'query: ' de BGE-M3 en búsquedas vectoriales.
 - F14: Validación del modelo e índice devueltos por Backend.
@@ -126,12 +126,12 @@ def test_f06_texto_preprocesado_como_entrada_contractual(dataset_prueba):
 
     resp = pipeline.procesar_consulta(entrada_ctr004)
     assert resp["estado"] in {"suficiente", "vigente"}
-    assert "resultados" in resp
-    assert len(resp["resultados"]) > 0
+    assert "evidencias" in resp
+    assert len(resp["evidencias"]) > 0
 
 
 def test_f09_estructura_resultados_ctr004(dataset_prueba):
-    """F09: La salida cumple estrictamente el esquema CTR-004 con 'resultados'."""
+    """F09: La salida cumple el sobre CTR-004 {estado, evidencias, ...}."""
     simulator = BackendSimulator(dataset_prueba)
     backend = BackendAPIClient("http://backend.test", simulator.modelo_embeddings, session=SimulatedSession(simulator))
     reranker = MockRerankerModel([0.92, 0.85])
@@ -143,19 +143,19 @@ def test_f09_estructura_resultados_ctr004(dataset_prueba):
     )
 
     resp = pipeline.procesar_consulta({"texto_preprocesado": "culata 40 Nm"})
-    assert "resultados" in resp
-    assert "evidencias" in resp  # Compatibilidad A1
+    assert "evidencias" in resp
+    assert "resultados" not in resp  # CTR-004: una sola lista
 
-    primer_resultado = resp["resultados"][0]
+    primer_resultado = resp["evidencias"][0]
     assert "chunk_id" in primer_resultado
     assert "score_final" in primer_resultado
     assert "texto" in primer_resultado
-    assert "metadatos" in primer_resultado
+    assert "metadata" in primer_resultado
     assert isinstance(primer_resultado["score_final"], float)
     assert primer_resultado["score_final"] == 0.92  # Procede del reranker real
 
     # Metadatos completos
-    meta = primer_resultado["metadatos"]
+    meta = primer_resultado["metadata"]
     for campo in ("documento", "seccion", "pagina", "versiones", "componente", "tipo_documento", "obsoleto"):
         assert campo in meta
 
@@ -185,7 +185,7 @@ def test_f07_entradas_invalidas_rechazadas_controladamente(entrada_invalida, cod
     resp = recuperar_evidencias(entrada_invalida)
     assert resp["estado"] == "error"
     assert resp["codigo_error"] == codigo_esperado
-    assert resp["resultados"] == []
+    assert resp["evidencias"] == []
     assert resp["evidencias"] == []
 
 
@@ -193,7 +193,7 @@ def test_f07_texto_vacio_devuelve_sin_evidencia():
     for vacio in ("", "   ", "\n\t"):
         resp = recuperar_evidencias({"texto_preprocesado": vacio})
         assert resp["estado"] == "sin_evidencia"
-        assert resp["resultados"] == []
+        assert resp["evidencias"] == []
 
 
 # ---------------------------------------------------------------------------
@@ -347,14 +347,14 @@ def test_recorrido_completo_e2e_aceptacion(dataset_prueba):
 
     # 1. Comprobaciones de Estado y Citas
     assert resultado["estado"] in {"suficiente", "vigente"}
-    assert len(resultado["resultados"]) >= 1
-    ev = resultado["resultados"][0]
+    assert len(resultado["evidencias"]) >= 1
+    ev = resultado["evidencias"][0]
 
     # 2. Score procede de la inferencia real del reranker
     assert ev["score_final"] == 0.95
 
     # 3. Metadatos íntegros
-    meta = ev["metadatos"]
+    meta = ev["metadata"]
     assert meta["documento"] == "HTM240-MAN-001"
     assert meta["seccion"] == "Culata"
     assert meta["pagina"] == 10

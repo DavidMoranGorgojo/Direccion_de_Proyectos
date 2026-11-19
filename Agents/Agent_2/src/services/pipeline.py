@@ -113,11 +113,11 @@ class Agent2Pipeline:
             result = self._procesar_consulta(query_json, metricas)
             self._remaining()
         except BackendRequestError as error:
-            result = {"estado": "error", "resultados": [], "evidencias": [],
+            result = {"estado": "error", "evidencias": [],
                       "codigo_error": error.codigo_error, "mensaje_error": error.mensaje}
         except Exception:
             logger.exception("Error no controlado en el pipeline A2")
-            result = {"estado": "error", "resultados": [], "evidencias": [],
+            result = {"estado": "error", "evidencias": [],
                       "codigo_error": "servicio_no_disponible", "mensaje_error": "Error interno de recuperación."}
         metricas.update(result.get("metricas", {}))
         metricas["tiempo_total_ms"] = (time.monotonic() - t_inicio) * 1000
@@ -130,7 +130,6 @@ class Agent2Pipeline:
         if not isinstance(query_json, dict):
             return {
                 "estado": "error",
-                "resultados": [],
                 "evidencias": [],
                 "codigo_error": "entrada_invalida",
                 "mensaje_error": "query_json debe ser un diccionario.",
@@ -147,7 +146,6 @@ class Agent2Pipeline:
         if raw_texto is None:
             return {
                 "estado": "error",
-                "resultados": [],
                 "evidencias": [],
                 "codigo_error": "entrada_invalida",
                 "mensaje_error": "Falta el campo de texto de búsqueda obligatorio.",
@@ -156,7 +154,6 @@ class Agent2Pipeline:
         if not isinstance(raw_texto, str):
             return {
                 "estado": "error",
-                "resultados": [],
                 "evidencias": [],
                 "codigo_error": "entrada_invalida",
                 "mensaje_error": "El texto de búsqueda debe ser una cadena de texto.",
@@ -166,7 +163,6 @@ class Agent2Pipeline:
         if not texto_busqueda:
             return {
                 "estado": "sin_evidencia",
-                "resultados": [],
                 "evidencias": [],
                 "codigo_error": None,
                 "mensaje_error": "Texto de búsqueda vacío.",
@@ -178,7 +174,6 @@ class Agent2Pipeline:
             if not isinstance(query_json["filtros"], dict):
                 return {
                     "estado": "error",
-                    "resultados": [],
                     "evidencias": [],
                     "codigo_error": "entrada_invalida",
                     "mensaje_error": "El campo 'filtros' debe ser un diccionario.",
@@ -191,7 +186,6 @@ class Agent2Pipeline:
             if not isinstance(query_json["opciones"], dict):
                 return {
                     "estado": "error",
-                    "resultados": [],
                     "evidencias": [],
                     "codigo_error": "entrada_invalida",
                     "mensaje_error": "El campo 'opciones' debe ser un diccionario.",
@@ -205,7 +199,6 @@ class Agent2Pipeline:
             if type(raw_top_k) is not int or raw_top_k < 1:
                 return {
                     "estado": "error",
-                    "resultados": [],
                     "evidencias": [],
                     "codigo_error": "entrada_invalida",
                     "mensaje_error": "El campo 'top_k' debe ser un entero mayor o igual a 1.",
@@ -221,7 +214,6 @@ class Agent2Pipeline:
             if type(raw_obsoletos) is not bool:
                 return {
                     "estado": "error",
-                    "resultados": [],
                     "evidencias": [],
                     "codigo_error": "entrada_invalida",
                     "mensaje_error": "El campo 'incluir_obsoletos' debe ser un booleano estricto.",
@@ -238,7 +230,6 @@ class Agent2Pipeline:
         except (TypeError, ValueError) as err:
             return {
                 "estado": "error",
-                "resultados": [],
                 "evidencias": [],
                 "codigo_error": "entrada_invalida",
                 "mensaje_error": f"Filtros inválidos: {err}",
@@ -247,7 +238,7 @@ class Agent2Pipeline:
             logger.error("Catálogos de Backend no disponibles para inferir filtros: %s", err)
             code = getattr(err, "codigo_error", "indice_no_disponible")
             return {
-                "estado": "error", "resultados": [], "evidencias": [],
+                "estado": "error", "evidencias": [],
                 "codigo_error": code,
                 "mensaje_error": "Los catálogos del índice no están disponibles.",
             }
@@ -275,7 +266,6 @@ class Agent2Pipeline:
             if len(vector) != config.EMBEDDING_DIMENSION:
                 return {
                     "estado": "error",
-                    "resultados": [],
                     "evidencias": [],
                     "codigo_error": "modelo_incompatible",
                     "mensaje_error": f"Dimensión del vector ({len(vector)}) no coincide con la esperada ({config.EMBEDDING_DIMENSION}).",
@@ -298,14 +288,13 @@ class Agent2Pipeline:
                 if indice_modelo_vec != esperado:
                     return {
                         "estado": "error",
-                        "resultados": [],
                         "evidencias": [],
                         "codigo_error": "modelo_incompatible",
                         "mensaje_error": f"El índice vectorial utiliza el modelo {indice_modelo_vec!r}, incompatible con el configurado {esperado!r}.",
                     }
 
                 if version_indice_global is not None and version_vec != version_indice_global:
-                    return {"estado": "error", "resultados": [], "evidencias": [],
+                    return {"estado": "error", "evidencias": [],
                             "codigo_error": "indice_no_disponible",
                             "mensaje_error": "El índice vectorial cambió de versión entre subconsultas."}
                 version_indice_global = version_vec
@@ -325,7 +314,6 @@ class Agent2Pipeline:
                 if indice_modelo_lex != esperado:
                     return {
                         "estado": "error",
-                        "resultados": [],
                         "evidencias": [],
                         "codigo_error": "modelo_incompatible",
                         "mensaje_error": f"El índice léxico utiliza el modelo {indice_modelo_lex!r}, incompatible con el configurado {esperado!r}.",
@@ -334,7 +322,6 @@ class Agent2Pipeline:
                 if version_vec and version_lex and version_vec != version_lex:
                     return {
                         "estado": "error",
-                        "resultados": [],
                         "evidencias": [],
                         "codigo_error": "indice_no_disponible",
                         "mensaje_error": f"Incompatibilidad de versiones de índice entre búsqueda vectorial ({version_vec!r}) y léxica ({version_lex!r}).",
@@ -348,7 +335,6 @@ class Agent2Pipeline:
             logger.warning("Timeout al comunicar con Backend: %s", err)
             return {
                 "estado": "error",
-                "resultados": [],
                 "evidencias": [],
                 "codigo_error": "tiempo_agotado",
                 "mensaje_error": "Tiempo agotado en Backend.",
@@ -358,7 +344,6 @@ class Agent2Pipeline:
             code = getattr(err, "codigo_error", "servicio_no_disponible")
             return {
                 "estado": "error",
-                "resultados": [],
                 "evidencias": [],
                 "codigo_error": code,
                 "mensaje_error": str(err),
@@ -367,7 +352,6 @@ class Agent2Pipeline:
             logger.error("Error inesperado en recuperación: %s", err)
             return {
                 "estado": "error",
-                "resultados": [],
                 "evidencias": [],
                 "codigo_error": "servicio_no_disponible",
                 "mensaje_error": str(err),
@@ -380,7 +364,6 @@ class Agent2Pipeline:
             logger.error("Error en fusión RRF: %s", err)
             return {
                 "estado": "error",
-                "resultados": [],
                 "evidencias": [],
                 "codigo_error": "servicio_no_disponible",
                 "mensaje_error": f"Fallo en fusión RRF: {err}",
@@ -404,12 +387,12 @@ class Agent2Pipeline:
                 esperado = getattr(self.backend_client, "model_embeddings", config.EMBEDDINGS_MODEL)
                 if (retry_iv.modelo_embeddings != esperado or
                         retry_il.modelo_embeddings != esperado):
-                    return {"estado": "error", "resultados": [], "evidencias": [],
+                    return {"estado": "error", "evidencias": [],
                             "codigo_error": "modelo_incompatible",
                             "mensaje_error": "Modelo de índice incompatible durante reintento documental."}
                 if (retry_iv.version != retry_il.version or
                         (version_indice_global is not None and retry_iv.version != version_indice_global)):
-                    return {"estado": "error", "resultados": [], "evidencias": [],
+                    return {"estado": "error", "evidencias": [],
                             "codigo_error": "indice_no_disponible",
                             "mensaje_error": "Índices incompatibles durante reintento documental."}
                 fused = self._call(metricas, "tiempo_rrf_ms", rrf, to_fusion_candidates(retry_vec.resultados),
@@ -417,23 +400,22 @@ class Agent2Pipeline:
                 merged_filters = filtros_ampliados
                 metricas["tipo_documento_ampliado"] = True
             except requests.Timeout:
-                return {"estado": "error", "resultados": [], "evidencias": [],
+                return {"estado": "error", "evidencias": [],
                         "codigo_error": "tiempo_agotado",
                         "mensaje_error": "Tiempo agotado durante reintento documental."}
             except BackendRequestError as err:
-                return {"estado": "error", "resultados": [], "evidencias": [],
+                return {"estado": "error", "evidencias": [],
                         "codigo_error": err.codigo_error,
                         "mensaje_error": str(err)}
             except Exception as err:
                 logger.error("Error de recuperación en reintento documental: %s", err)
-                return {"estado": "error", "resultados": [], "evidencias": [],
+                return {"estado": "error", "evidencias": [],
                         "codigo_error": "servicio_no_disponible",
                         "mensaje_error": "Error durante reintento documental."}
 
         if not fused:
             return {
                 "estado": "sin_evidencia",
-                "resultados": [],
                 "evidencias": [],
                 "mensaje_error": None,
             }
@@ -449,7 +431,6 @@ class Agent2Pipeline:
         if not candidatos_filtrados:
             return {
                 "estado": "sin_evidencia",
-                "resultados": [],
                 "evidencias": [],
                 "mensaje_error": None,
             }
@@ -464,7 +445,6 @@ class Agent2Pipeline:
                 logger.error("Reranker obligatorio no disponible: %s", err)
                 return {
                     "estado": "error",
-                    "resultados": [],
                     "evidencias": [],
                     "codigo_error": "servicio_no_disponible",
                     "mensaje_error": f"Reranker no disponible: {err}",
@@ -485,7 +465,6 @@ class Agent2Pipeline:
                 logger.error("Fallo durante la inferencia del reranker: %s", err)
                 return {
                     "estado": "error",
-                    "resultados": [],
                     "evidencias": [],
                     "codigo_error": "servicio_no_disponible",
                     "mensaje_error": f"Fallo durante reranking: {err}",
@@ -504,7 +483,6 @@ class Agent2Pipeline:
         if not candidatos_umbral:
             return {
                 "estado": "insuficiente",
-                "resultados": [],
                 "evidencias": [],
                 "mensaje_error": None,
             }
@@ -531,7 +509,6 @@ class Agent2Pipeline:
         except BackendRequestError as err:
             return {
                 "estado": "error",
-                "resultados": [],
                 "evidencias": [],
                 "codigo_error": err.codigo_error,
                 "mensaje_error": str(err),
@@ -540,7 +517,6 @@ class Agent2Pipeline:
             logger.error("Error resolviendo vigencia o vecinos: %s", err)
             return {
                 "estado": "error",
-                "resultados": [],
                 "evidencias": [],
                 "codigo_error": "servicio_no_disponible",
                 "mensaje_error": str(err),
@@ -549,7 +525,6 @@ class Agent2Pipeline:
         if resultado_vigencia.estado == "error":
             return {
                 "estado": "error",
-                "resultados": [],
                 "evidencias": [],
                 "codigo_error": resultado_vigencia.codigo_error or "servicio_no_disponible",
                 "mensaje_error": resultado_vigencia.mensaje_error or "Fallo en resolución de evidencias.",
@@ -558,7 +533,6 @@ class Agent2Pipeline:
         if resultado_vigencia.estado == "insuficiente":
             return {
                 "estado": "insuficiente",
-                "resultados": [],
                 "evidencias": [],
                 "mensaje_error": None,
             }
@@ -601,54 +575,34 @@ class Agent2Pipeline:
                 continue
             cand["score_final"] = float(score)
             candidatos_finales.append(cand)
+        # Estado final: sin evidencias entregables no hay respuesta posible.
+        estado_out = resultado_vigencia.estado
+        campo_ambiguo = resultado_vigencia.campo_ambiguo if estado_out == "ambiguo" else None
+        if not candidatos_finales and estado_out in {"suficiente", "solo_obsoleto", "ambiguo"}:
+            estado_out, campo_ambiguo = "sin_evidencia", None
+        if estado_out in {"sin_evidencia", "insuficiente"}:
+            candidatos_finales = []
+        for cand in candidatos_finales:
+            # El empaquetador lee la puntuación final en ``rerank_score``; en el
+            # modo explícito sin reranker es la de RRF (métricas lo indican).
+            cand["rerank_score"] = cand["score_final"]
+
         try:
-            evidencias_ctr004 = self._call(metricas, "tiempo_evidencias_ms", build_evidence_response, candidatos_finales)["resultados"]
+            respuesta = self._call(
+                metricas, "tiempo_evidencias_ms", build_evidence_response,
+                estado_out, candidatos_finales, campo_ambiguo=campo_ambiguo,
+            )
         except Exception as err:
             logger.error("No se pueden construir evidencias CTR-004 válidas: %s", err)
             return {
-                "estado": "error", "resultados": [], "evidencias": [],
+                "estado": "error", "evidencias": [],
                 "codigo_error": "error_verificacion",
                 "mensaje_error": "El Backend ha devuelto evidencias sin metadatos contractuales válidos.",
             }
 
-        # Construcción normalizada para Agente 1 (manteniendo compatibilidad total)
-        evidencias_normalizadas = []
-        document_state_by_id = {
-            cand["chunk_id"]: cand.get("estado_documento", "vigente")
-            for cand in candidatos_finales
-        }
-        for ev in evidencias_ctr004:
-            cid = ev["chunk_id"]
-            meta = dict(ev["metadatos"])
-            sc = ev["score_final"]
-            estado_doc = document_state_by_id.get(cid, "vigente")
-            evidencias_normalizadas.append({
-                "chunk_id": cid,
-                "texto": ev["texto"],
-                "metadata": meta,
-                "metadatos": meta,
-                "score": sc,
-                "score_final": sc,
-                "rerank_score": sc,
-                "estado_documento": estado_doc,
-            })
-
-        # Mapeo de estado final
-        estado_out = resultado_vigencia.estado
-        if not evidencias_ctr004 and estado_out in {"suficiente", "solo_obsoleto"}:
-            estado_out = "sin_evidencia"
-
-        # Salida que cumple tanto CTR-004 (campo obligatorio 'resultados')
-        # como la interfaz del Agente 1 ('evidencias', 'estado', 'campo_ambiguo', etc.)
-        return {
-            "estado": estado_out,
-            "resultados": evidencias_ctr004,
-            "evidencias": evidencias_normalizadas,
-            "campo_ambiguo": resultado_vigencia.campo_ambiguo,
-            "codigo_error": resultado_vigencia.codigo_error,
-            "mensaje_error": None,
-            "metricas": metricas,
-        }
+        # CTR-004: sobre único {estado, evidencias, campo_ambiguo, codigo_error,
+        # mensaje_error} (A2-07); las métricas viajan aparte para auditoría.
+        return {**respuesta, "metricas": metricas}
 
 
 def recuperar_evidencias(query_json: Dict[str, Any], **kwargs: Any) -> Dict[str, Any]:

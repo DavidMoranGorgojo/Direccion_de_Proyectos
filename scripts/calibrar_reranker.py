@@ -1,4 +1,4 @@
-"""Script de calibración de umbrales del reranker.
+"""Script de calibración de umbrales del reranker (A2-08).
 
 Trabaja únicamente con puntuaciones ya calculadas. No carga el modelo
 real ni llama a servicios externos.
@@ -7,20 +7,15 @@ real ni llama a servicios externos.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
-from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT))
-
-from Agents.Agent_2.src.evaluation.calibration import (  # noqa: E402
+from Agents.Agent_2.src.evaluation.calibration import (
     CalibrationError,
     dump_calibration_result,
+    evaluate_thresholds,
     format_calibration_table,
     load_calibration_data,
     normalize_thresholds,
-    evaluate_thresholds,
 )
 
 
@@ -62,19 +57,12 @@ def build_parser():
 
 
 def main(argv=None):
-    parser = build_parser()
-    args = parser.parse_args(argv)
+    args = build_parser().parse_args(argv)
 
     try:
         queries = load_calibration_data(args.input)
-        thresholds = parse_thresholds(args.thresholds)
-        result = evaluate_thresholds(queries, thresholds)
-    except (
-        CalibrationError,
-        OSError,
-        ValueError,
-        json.JSONDecodeError,
-    ) as error:
+        result = evaluate_thresholds(queries, parse_thresholds(args.thresholds))
+    except CalibrationError as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
 
@@ -83,7 +71,7 @@ def main(argv=None):
     if args.output:
         try:
             dump_calibration_result(result, args.output)
-        except (OSError, TypeError) as error:
+        except OSError as error:
             print(f"Error al guardar resultados: {error}", file=sys.stderr)
             return 1
         print(f"Resultados guardados en: {args.output}")

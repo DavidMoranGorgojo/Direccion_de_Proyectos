@@ -14,7 +14,11 @@ class IndexInfo:
 
 @dataclass
 class ChunkMetadata:
-    """Metadatos CTR-002 asociados a un chunk recuperado."""
+    """Metadatos CTR-002 asociados a un chunk recuperado.
+
+    Es el modelo único de metadatos del Agente 2: lo usan el parser vectorial,
+    el empaquetado de evidencias y puede reutilizarlo el parser léxico.
+    """
 
     documento: str
     seccion: str

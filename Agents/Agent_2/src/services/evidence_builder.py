@@ -1,57 +1,143 @@
+"""Empaquetado del mensaje de evidencias del Agente 2 al Agente 1 (A2-07).
+"""
+
 from __future__ import annotations
 
-import math
-import re
 from dataclasses import asdict
-from datetime import date
-from typing import Any
+from typing import Any, Iterable, Optional
 
-from ..models.ctr_002 import ChunkMetadata
-from ..models.ctr_004 import Evidence, EvidenceResponse
+from .field_parser import FieldParser
 
-_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+ESTADOS = ("suficiente", "solo_obsoleto", "ambiguo", "sin_evidencia", "error")
+ESTADOS_CON_EVIDENCIAS = ("suficiente", "solo_obsoleto")
+ESTADOS_SIN_EVIDENCIAS = ("sin_evidencia", "error")
+ESTADOS_DOCUMENTO = ("vigente", "obsoleto", "sustituido")
+CAMPOS_AMBIGUOS = ("version", "componente")
+CODIGOS_ERROR = (
+    "entrada_invalida",
+    "modelo_no_disponible",
+    "modelo_incompatible",
+    "indice_no_disponible",
+    "tiempo_agotado",
+    "error_verificacion",
+    "servicio_no_disponible",
+)
+
+# A2-06 llama «insuficiente» a lo que el Agente 1 trata como «sin_evidencia».
+_SINONIMOS_ESTADO = {"insuficiente": "sin_evidencia"}
 
 
 class EvidenceBuilderError(ValueError):
-    """Error base del empaquetado de evidencias CTR-004."""
+    """Error base del empaquetado de evidencias."""
 
 
 class EvidenceContractError(EvidenceBuilderError):
-    """El candidato no contiene la estructura obligatoria de CTR-004."""
+    """El candidato no contiene la estructura obligatoria."""
 
 
 class EvidenceValidationError(EvidenceBuilderError):
-    """Un campo del candidato no tiene un tipo o valor válido."""
+    """Un campo del candidato o del mensaje no tiene un tipo o valor válido."""
 
 
-def build_evidence_response(candidates: Any) -> dict:
-    """Construye la respuesta CTR-004 a partir de candidatos post-reranking."""
+_campos = FieldParser(EvidenceContractError, EvidenceValidationError)
+
+
+def build_evidences(candidates: Any) -> list[dict]:
+    """Convierte los candidatos post-reranking en evidencias para el Agente 1.
+    """
 
     if not isinstance(candidates, list):
         raise EvidenceContractError("Los candidatos deben ser una lista")
 
-    if not candidates:
-        return {"resultados": []}
-
-    evidencias: list[Evidence] = []
+    evidencias: list[dict] = []
     chunk_ids: set[str] = set()
 
     for posicion, candidate in enumerate(candidates):
         evidencia = _build_evidence(candidate, posicion)
 
-        if evidencia.chunk_id in chunk_ids:
+        if evidencia["chunk_id"] in chunk_ids:
             raise EvidenceValidationError(
                 f"El campo 'candidatos[{posicion}].chunk_id' está duplicado: "
-                f"'{evidencia.chunk_id}'"
+                f"'{evidencia['chunk_id']}'"
             )
 
-        chunk_ids.add(evidencia.chunk_id)
+        chunk_ids.add(evidencia["chunk_id"])
         evidencias.append(evidencia)
 
-    return asdict(EvidenceResponse(resultados=evidencias))
+    return evidencias
 
 
-def _build_evidence(candidate: Any, posicion: int) -> Evidence:
+def build_evidence_response(
+    estado: str,
+    candidates: Iterable = (),
+    *,
+    campo_ambiguo: Optional[str] = None,
+    codigo_error: Optional[str] = None,
+    mensaje_error: Optional[str] = None,
+) -> dict:
+    """Monta el mensaje completo para el Agente 1.
+
+    Reglas de coherencia:
+
+    - ``suficiente`` y ``solo_obsoleto`` llevan al menos una evidencia.
+    - ``sin_evidencia`` y ``error`` no llevan evidencias: un error nunca se
+      representa como una lista vacía sin estado.
+    - ``error`` exige un ``codigo_error`` de CTR-001; el resto de estados no
+      lleva código.
+    - ``campo_ambiguo`` solo se indica con ``ambiguo``.
+    """
+
+    estado = _SINONIMOS_ESTADO.get(estado, estado)
+
+    if estado not in ESTADOS:
+        raise EvidenceValidationError(
+            f"El estado debe ser uno de {', '.join(ESTADOS)}"
+        )
+
+    candidates = list(candidates)
+    evidencias = build_evidences(candidates)
+
+    if estado in ESTADOS_CON_EVIDENCIAS and not evidencias:
+        raise EvidenceValidationError(
+            f"El estado '{estado}' necesita al menos una evidencia"
+        )
+
+    if estado in ESTADOS_SIN_EVIDENCIAS and evidencias:
+        raise EvidenceValidationError(
+            f"El estado '{estado}' no puede llevar evidencias"
+        )
+
+    if estado == "error":
+        if codigo_error not in CODIGOS_ERROR:
+            raise EvidenceValidationError(
+                "El estado 'error' necesita un codigo_error de CTR-001"
+            )
+    elif codigo_error is not None:
+        raise EvidenceValidationError(
+            "Solo el estado 'error' puede llevar codigo_error"
+        )
+
+    if campo_ambiguo is not None and (
+        estado != "ambiguo" or campo_ambiguo not in CAMPOS_AMBIGUOS
+    ):
+        raise EvidenceValidationError(
+            "campo_ambiguo solo se indica con el estado 'ambiguo' y debe ser "
+            f"uno de {', '.join(CAMPOS_AMBIGUOS)}"
+        )
+
+    if mensaje_error is not None and not isinstance(mensaje_error, str):
+        raise EvidenceValidationError("mensaje_error debe ser un string o null")
+
+    return {
+        "estado": estado,
+        "evidencias": evidencias,
+        "campo_ambiguo": campo_ambiguo,
+        "codigo_error": codigo_error,
+        "mensaje_error": mensaje_error,
+    }
+
+
+def _build_evidence(candidate: Any, posicion: int) -> dict:
     if not isinstance(candidate, dict):
         raise EvidenceContractError(
             f"El campo 'candidatos[{posicion}]' debe ser un objeto"
@@ -59,236 +145,57 @@ def _build_evidence(candidate: Any, posicion: int) -> Evidence:
 
     base = f"candidatos[{posicion}]"
 
-    return Evidence(
-        chunk_id=_parse_string(
-            candidate,
-            "chunk_id",
-            f"{base}.chunk_id",
-            non_empty=True,
-        ),
-        score_final=_parse_rerank_score(
-            candidate,
-            f"{base}.rerank_score",
-        ),
-        texto=_parse_string(
-            candidate,
-            "texto",
-            f"{base}.texto",
-            non_empty=True,
-        ),
-        metadatos=_parse_metadata(candidate, base),
+    chunk_id = _campos.string(
+        candidate, "chunk_id", f"{base}.chunk_id", non_empty=True
     )
-
-
-def _parse_metadata(candidate: dict, base: str) -> ChunkMetadata:
-    return ChunkMetadata(
-        # CTR-004 §5: sin documento, sección y página la evidencia no es válida.
-        documento=_parse_string(
-            candidate,
-            "documento",
-            f"{base}.documento",
-            non_empty=True,
-        ),
-        seccion=_parse_string(
-            candidate,
-            "seccion",
-            f"{base}.seccion",
-            non_empty=True,
-        ),
-        pagina=_parse_positive_int(candidate, "pagina", f"{base}.pagina"),
-        versiones=_parse_string_list(
-            candidate,
-            "versiones",
-            f"{base}.versiones",
-        ),
-        componente=_parse_string(
-            candidate,
-            "componente",
-            f"{base}.componente",
-        ),
-        tipo_documento=_parse_string(
-            candidate,
-            "tipo_documento",
-            f"{base}.tipo_documento",
-        ),
-        obsoleto=_parse_bool(candidate, "obsoleto", f"{base}.obsoleto"),
-        sustituido_por=_parse_optional_string(
-            candidate,
-            "sustituido_por",
-            f"{base}.sustituido_por",
-        ),
-        vigente_para=_parse_string_list(
-            candidate,
-            "vigente_para",
-            f"{base}.vigente_para",
-        ),
-        fecha_revision=_parse_date(
-            candidate,
-            "fecha_revision",
-            f"{base}.fecha_revision",
-        ),
-        orden_en_seccion=_parse_int(
-            candidate,
-            "orden_en_seccion",
-            f"{base}.orden_en_seccion",
-        ),
-        version_documento=_parse_string(
-            candidate,
-            "version_documento",
-            f"{base}.version_documento",
-        ),
-        afectado_por=_parse_string_list(
-            candidate,
-            "afectado_por",
-            f"{base}.afectado_por",
-        ),
-        ids_referenciados=_parse_string_list(
-            candidate,
-            "ids_referenciados",
-            f"{base}.ids_referenciados",
-        ),
+    score_final = _campos.finite_number(
+        candidate, "rerank_score", f"{base}.rerank_score", unit_interval=True
     )
+    texto = _campos.string(candidate, "texto", f"{base}.texto", non_empty=True)
+    # CTR-004 §5: sin documento, sección y página la evidencia no es válida.
+    metadatos = _campos.chunk_metadata(candidate, base, citable=True)
+
+    metadata = asdict(metadatos)
+    # El Agente 1 lee la edición en ``metadata.version``.
+    metadata["version"] = metadatos.version_documento
+
+    return {
+        "chunk_id": chunk_id,
+        "texto": texto,
+        "score_final": score_final,
+        "estado_documento": _estado_documento(candidate, base, metadatos),
+        "metadata": metadata,
+    }
 
 
-def _required(data: dict, field: str, path: str) -> Any:
-    if field not in data:
-        raise EvidenceContractError(f"Falta el campo obligatorio '{path}'")
+def _estado_documento(candidate: dict, base: str, metadatos) -> str:
+    """Usa el estado de A2-06 si viene; si no, lo deduce de los metadatos."""
 
-    return data[field]
+    if "estado_documento" in candidate:
+        valor = candidate["estado_documento"]
 
-
-def _parse_string(
-    data: dict,
-    field: str,
-    path: str,
-    *,
-    non_empty: bool = False,
-) -> str:
-    value = _required(data, field, path)
-
-    if not isinstance(value, str):
-        raise EvidenceValidationError(f"El campo '{path}' debe ser un string")
-
-    if non_empty and not value.strip():
-        raise EvidenceValidationError(
-            f"El campo '{path}' debe ser un string no vacío"
-        )
-
-    return value
-
-
-def _parse_optional_string(data: dict, field: str, path: str) -> str | None:
-    value = _required(data, field, path)
-
-    if value is None:
-        return None
-
-    if not isinstance(value, str):
-        raise EvidenceValidationError(
-            f"El campo '{path}' debe ser un string o null"
-        )
-
-    return value
-
-
-def _parse_int(data: dict, field: str, path: str) -> int:
-    value = _required(data, field, path)
-
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise EvidenceValidationError(f"El campo '{path}' debe ser un entero")
-
-    return value
-
-
-def _parse_positive_int(data: dict, field: str, path: str) -> int:
-    value = _parse_int(data, field, path)
-
-    if value < 1:
-        raise EvidenceValidationError(
-            f"El campo '{path}' debe ser un entero mayor que cero"
-        )
-
-    return value
-
-
-def _parse_bool(data: dict, field: str, path: str) -> bool:
-    value = _required(data, field, path)
-
-    if not isinstance(value, bool):
-        raise EvidenceValidationError(
-            f"El campo '{path}' debe ser un booleano"
-        )
-
-    return value
-
-
-def _parse_string_list(data: dict, field: str, path: str) -> list[str]:
-    value = _required(data, field, path)
-
-    if not isinstance(value, list):
-        raise EvidenceValidationError(f"El campo '{path}' debe ser una lista")
-
-    for posicion, item in enumerate(value):
-        if not isinstance(item, str):
+        if valor not in ESTADOS_DOCUMENTO:
             raise EvidenceValidationError(
-                f"El campo '{path}[{posicion}]' debe ser un string"
+                f"El campo '{base}.estado_documento' debe ser uno de "
+                f"{', '.join(ESTADOS_DOCUMENTO)}"
             )
 
-    return list(value)
+        return valor
 
+    if not metadatos.obsoleto:
+        return "vigente"
 
-def _parse_rerank_score(data: dict, path: str) -> float:
-    value = data.get("rerank_score")
-    if value is None:
-        value = data.get("score_final")
-    if value is None:
-        value = _required(data, "rerank_score", path)
-
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise EvidenceValidationError(
-            f"El campo '{path}' debe ser un número finito entre 0 y 1"
-        )
-
-    try:
-        finito = math.isfinite(value)
-    except OverflowError:
-        finito = False
-
-    if not finito or not 0 <= value <= 1:
-        raise EvidenceValidationError(
-            f"El campo '{path}' debe ser un número finito entre 0 y 1"
-        )
-
-    return float(value)
-
-
-def _parse_date(data: dict, field: str, path: str) -> str | None:
-    value = _required(data, field, path)
-
-    if value is None:
-        return None
-
-    if not isinstance(value, str) or not value.strip():
-        raise EvidenceValidationError(f"El campo '{path}' debe ser un string no vacío o null")
-
-    if not _DATE_RE.fullmatch(value):
-        raise EvidenceValidationError(
-            f"El campo '{path}' debe tener formato YYYY-MM-DD"
-        )
-
-    try:
-        date.fromisoformat(value)
-    except ValueError as error:
-        raise EvidenceValidationError(
-            f"El campo '{path}' debe ser una fecha válida"
-        ) from error
-
-    return value
+    return "sustituido" if metadatos.sustituido_por else "obsoleto"
 
 
 __all__ = [
+    "CAMPOS_AMBIGUOS",
+    "CODIGOS_ERROR",
+    "ESTADOS",
+    "ESTADOS_DOCUMENTO",
     "EvidenceBuilderError",
     "EvidenceContractError",
     "EvidenceValidationError",
     "build_evidence_response",
+    "build_evidences",
 ]

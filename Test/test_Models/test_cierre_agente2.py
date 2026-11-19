@@ -97,7 +97,7 @@ def test_public_production_boot_downloads_before_search(monkeypatch):
     paths = [url.rsplit("/", 1)[1] for url, _ in session.calls]
     assert paths[:2] == ["codigos", "componentes"]
     assert "vectorial" in paths and "lexica" in paths
-    assert result["resultados"][0]["chunk_id"] == "parent"
+    assert result["evidencias"][0]["chunk_id"] == "parent"
     assert all(kwargs["timeout"] == config.REQUEST_TIMEOUT for _, kwargs in session.calls)
 
 
@@ -151,7 +151,7 @@ def test_neighbors_receive_own_reranking_and_reach_output(monkeypatch, score, in
     model = Reranker(score)
     result, _ = public(monkeypatch, Session(neighbors=[neighbor]), model)
     assert result["estado"] == "suficiente"
-    by_id = {e["chunk_id"]: e for e in result["resultados"]}
+    by_id = {e["chunk_id"]: e for e in result["evidencias"]}
     assert ("safety" in by_id) is included
     assert len(model.pairs) == 2
     if included:
@@ -165,7 +165,7 @@ def test_neighbors_preserve_hard_filters_and_applicability(monkeypatch, changes)
     neighbor = chunk("unsafe", **changes)
     result, _ = public(monkeypatch, Session(neighbors=[neighbor]))
     assert result["estado"] == "suficiente"
-    assert {e["chunk_id"] for e in result["resultados"]} == {"parent"}
+    assert {e["chunk_id"] for e in result["evidencias"]} == {"parent"}
 
 
 def test_incompatible_neighbors_cannot_make_the_answer_unambiguous(monkeypatch):
@@ -271,7 +271,7 @@ def test_neighbors_of_another_document_edition_are_excluded(monkeypatch):
     neighbor = chunk("another-edition", version_documento="2.0")
     result, _ = public(monkeypatch, Session(neighbors=[neighbor]))
     assert result["estado"] == "suficiente"
-    assert [e["chunk_id"] for e in result["resultados"]] == ["parent"]
+    assert [e["chunk_id"] for e in result["evidencias"]] == ["parent"]
 
 
 def test_evaluator_measures_rankings_without_sending_labels(monkeypatch):
@@ -279,7 +279,7 @@ def test_evaluator_measures_rankings_without_sending_labels(monkeypatch):
     seen = []
     def retrieve(query, **kwargs):
         seen.append(query)
-        return {"estado": "suficiente", "resultados": [{"chunk_id": "parent", "texto": "texto", "metadatos": chunk()}],
+        return {"estado": "suficiente", "evidencias": [{"chunk_id": "parent", "texto": "texto", "metadata": chunk()}],
                 "metricas": {"rankings": {"vectorial": ["parent"], "lexica": [], "fusion": ["parent"]}}}
     data = {"procedencia": "fixture unitario", "tipo": "sintetico",
             "consultas": [{"id": "q1", "query": {"texto_preprocesado": "consulta"}, "relevant_chunk_ids": ["parent"]}]}
@@ -294,7 +294,7 @@ def test_evaluator_does_not_count_errors_as_correct_abstention():
     from scripts.evaluar_agente2 import evaluate
     data = {"procedencia": "fixture unitario", "tipo": "sintetico", "consultas": [
         {"id": "q1", "query": {"texto_preprocesado": "consulta"}, "relevant_chunk_ids": []}]}
-    report = evaluate(data, retrieve=lambda *a, **k: {"estado": "error", "resultados": [], "codigo_error": "tiempo_agotado"})
+    report = evaluate(data, retrieve=lambda *a, **k: {"estado": "error", "evidencias": [], "codigo_error": "tiempo_agotado"})
     assert report["errores"] == 1 and report["abstencion"] == 0
 
 

@@ -137,7 +137,7 @@ def test_punto_publico_falla_controladamente_sin_catalogos_reales(monkeypatch):
     respuesta = pipeline.procesar_consulta({"texto_preprocesado": "avería HTM-0142"})
     assert respuesta["estado"] == "error"
     assert respuesta["codigo_error"] == "indice_no_disponible"
-    assert respuesta["resultados"] == []
+    assert respuesta["evidencias"] == []
 
 
 def test_reintento_amplia_solo_tipo_documento():
@@ -169,7 +169,7 @@ def test_reintento_amplia_solo_tipo_documento():
     })
     assert response["estado"] == "suficiente"
     assert response["metricas"]["tipo_documento_ampliado"] is True
-    assert response["resultados"][0]["metadatos"]["tipo_documento"] == "boletin"
+    assert response["evidencias"][0]["metadata"]["tipo_documento"] == "boletin"
     assert simulator.peticiones
     assert all(r["cuerpo"]["filtros"].get("version") == "V1.1"
                for r in simulator.peticiones if r["metodo"] == "POST")

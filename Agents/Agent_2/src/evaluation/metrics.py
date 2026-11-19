@@ -2,6 +2,8 @@
 
 Las funciones trabajan con identificadores de chunk y etiquetas de relevancia.
 No modifican las entradas y no dependen del modelo ni del pipeline.
+``calibration.py`` las usa para calcular Recall@k y MRR por umbral, solo sobre
+las consultas con relevantes.
 
 Criterios comunes:
 

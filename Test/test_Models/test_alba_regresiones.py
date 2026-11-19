@@ -113,10 +113,11 @@ class TestAlbaRegresiones(unittest.TestCase):
 
     def test_alb_8_lexical_rrf_compatibility(self):
         """LexicalCandidate.to_rrf_dict() produce diccionarios planos aptos para rrf()."""
-        from Agents.Agent_2.src.models.lexical import LexicalCandidate, LexicalMetadata
+        from Agents.Agent_2.src.models.ctr_002 import ChunkMetadata
+        from Agents.Agent_2.src.models.lexical import LexicalCandidate
         from Agents.Agent_2.src.services.fusion import rrf
 
-        meta = LexicalMetadata(
+        meta = ChunkMetadata(
             documento="DOC-1",
             seccion="1.0",
             pagina=2,

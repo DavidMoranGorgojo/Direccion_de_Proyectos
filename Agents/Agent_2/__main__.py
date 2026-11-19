@@ -26,7 +26,7 @@ def main(argv=None):
             query = json.loads(raw)
             result = recuperar_evidencias(query, timeout_s=args.timeout_s)
         except (ValueError, OSError):
-            result = {"estado": "error", "resultados": [], "evidencias": [],
+            result = {"estado": "error", "evidencias": [],
                       "codigo_error": "entrada_invalida", "mensaje_error": "Consulta JSON o presupuesto inválidos."}
         ok = result["estado"] != "error"
     print(json.dumps(result, ensure_ascii=True, allow_nan=False))

@@ -30,13 +30,13 @@ def evaluate(data, retrieve=recuperar_evidencias, k=10):
         if not isinstance(relevant, list) or any(not isinstance(cid, str) or not cid for cid in relevant):
             raise ValueError("Etiquetas de relevancia inválidas.")
         response = retrieve(case["query"], trace_retrieval=True)
-        evidences = response.get("resultados", [])
+        evidences = response.get("evidencias", [])
         ranking = list(dict.fromkeys(e["chunk_id"] for e in evidences))
         metrics = response.get("metricas", {})
         sources = metrics.get("rankings", {})
         recalled = {name: recall_at_k(sources.get(name, []), relevant, k) if relevant else None
                     for name in ("vectorial", "lexica", "fusion")}
-        flat = [{**e["metadatos"], "chunk_id": e["chunk_id"], "texto": e["texto"]} for e in evidences]
+        flat = [{**e["metadata"], "chunk_id": e["chunk_id"], "texto": e["texto"]} for e in evidences]
         hard = {key: val for key, val in case["query"].get("filtros", {}).items()
                 if key in {"version", "componente"}}
         error = response.get("estado") == "error"
