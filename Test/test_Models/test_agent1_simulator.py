@@ -254,9 +254,8 @@ def test_an_a2_error_is_propagated_with_its_code():
     assert final["codigo_error"] == "indice_no_disponible"
 
 
-def test_agent1_uses_the_current_obsolescence_rule():
-    # Deuda conocida: A2-06 puede marcar «vigente» un sustituido que sigue
-    # aplicando a una versión, pero el Agente 1 lo trata como obsoleto.
+def test_agent1_respects_vigente_para_like_a2_06():
+    # Un sustituido sigue vigente para las versiones de ``vigente_para``.
     evidencia = make_evidence(
         metadata={
             "version": "1.0",
@@ -271,6 +270,9 @@ def test_agent1_uses_the_current_obsolescence_rule():
         estado_documento="vigente",
     )
 
+    assert es_obsoleta(evidencia, "V1.0") is False
+    assert es_obsoleta(evidencia, "1.0") is False
+    assert es_obsoleta(evidencia, "V2.0") is True
     assert es_obsoleta(evidencia) is True
 
 

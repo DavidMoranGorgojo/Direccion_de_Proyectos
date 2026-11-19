@@ -10,12 +10,12 @@ A2-06 (``RetrievalResult``) a la forma CTR-004. El empaquetado definitivo de
 evidencias es A2-07: esta función fija el contrato que ese paquete debe cumplir,
 no lo sustituye.
 
-Deuda conocida
---------------
-El Agente 1 real considera obsoleta cualquier evidencia con ``sustituido_por``,
-aunque A2-06 la marque ``vigente`` para las versiones de ``vigente_para``. El
-simulador reproduce esa regla para no dar una falsa sensación de acuerdo; hay
-que revisarla con el Agente 1 antes de cerrar CJ-03.
+Obsolescencia
+-------------
+El criterio es el mismo que A2-06 (``services.vigencia``) y que el Agente 1
+real (``agente1.core.es_obsoleta``): una evidencia obsoleta o sustituida sigue
+vigente para las versiones de ``metadata.vigente_para`` cuando se pide una de
+ellas. Sin versión solicitada no hay excepción.
 """
 
 from __future__ import annotations
@@ -171,10 +171,23 @@ def validar_respuesta_agente2(respuesta):
     }
 
 
-def es_obsoleta(evidencia):
-    """Regla de obsolescencia del Agente 1 real (ver «Deuda conocida»)."""
+def _version_norm(version):
+    if not isinstance(version, str) or not version.strip():
+        return None
 
-    metadata = evidencia.get("metadata", {})
+    return version.strip().upper().lstrip("V")
+
+
+def es_obsoleta(evidencia, version=None):
+    """Regla de obsolescencia común con A2-06 y el Agente 1 real."""
+
+    metadata = evidencia.get("metadata") or {}
+    pedida = _version_norm(version)
+
+    if pedida is not None and pedida in {
+        _version_norm(v) for v in metadata.get("vigente_para") or []
+    }:
+        return False
 
     return (
         evidencia.get("estado_documento") in {"obsoleto", "sustituido"}
@@ -243,7 +256,9 @@ def resolver_evidencias(respuesta, version=None):
         evidencias = compatibles
 
     vigentes = [
-        evidencia for evidencia in evidencias if not es_obsoleta(evidencia)
+        evidencia
+        for evidencia in evidencias
+        if not es_obsoleta(evidencia, version)
     ]
 
     if estado == "solo_obsoleto" and vigentes:
@@ -265,7 +280,7 @@ def resolver_evidencias(respuesta, version=None):
                 "seccion": evidencia["metadata"].get("seccion", ""),
                 "pagina": evidencia["metadata"].get("pagina", 0),
                 "versiones": evidencia["metadata"].get("versiones", []),
-                "obsoleto": es_obsoleta(evidencia),
+                "obsoleto": es_obsoleta(evidencia, version),
             }
             for evidencia in seleccion
         ],
