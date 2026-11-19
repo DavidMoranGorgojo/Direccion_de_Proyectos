@@ -1,0 +1,25 @@
+Bootstrap: docker
+From: pgvector/pgvector@sha256:484e838076e04939d27d3e176e91c86eea96236126023be8d3059761122e579f
+
+%labels
+    Project ARSOFT
+    Service PostgreSQL-pgvector
+
+%files
+    Backend/db/init/01_conocimiento.sql /docker-entrypoint-initdb.d/01_conocimiento.sql
+    Backend/db/init/02_usuarios.sql /docker-entrypoint-initdb.d/02_usuarios.sql
+
+%environment
+    export PGDATA=/var/lib/postgresql/data/pgdata
+
+%runscript
+    exec /usr/local/bin/docker-entrypoint.sh postgres \
+        -c listen_addresses=127.0.0.1 \
+        -c unix_socket_directories=/var/run/postgresql \
+        -c port=5432
+
+%startscript
+    exec /usr/local/bin/docker-entrypoint.sh postgres \
+        -c listen_addresses=127.0.0.1 \
+        -c unix_socket_directories=/var/run/postgresql \
+        -c port=5432

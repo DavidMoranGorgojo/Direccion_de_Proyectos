@@ -1,0 +1,56 @@
+Bootstrap: docker
+From: pytorch/pytorch@sha256:c8268a92a69bd500f8be0e665b2630ee006dadaf7bfbc24249141b15ff622755
+
+%labels
+    Project ARSOFT
+    Service Agentes-GPU
+
+%files
+    Agents/__init__.py /opt/arsoft/Agents/__init__.py
+    Agents/requirements.txt /opt/arsoft/Agents/requirements.txt
+    Agents/service.py /opt/arsoft/Agents/service.py
+    Agents/Agent_2 /opt/arsoft/Agents/Agent_2
+    Agents/agente1/__init__.py /opt/arsoft/Agents/agente1/__init__.py
+    Agents/agente1/core.py /opt/arsoft/Agents/agente1/core.py
+    shared/arsoft_http.py /opt/arsoft/arsoft_http.py
+
+%post
+    if [ -f /opt/arsoft/Agents/requirements.txt ]; then
+        python -m pip install --no-cache-dir -r /opt/arsoft/Agents/requirements.txt
+    fi
+
+    python -m pip install --no-cache-dir -r /opt/arsoft/Agents/Agent_2/requirements.txt
+
+%environment
+    export PYTHONUNBUFFERED=1
+    export PYTHONPATH=/opt/arsoft
+    export HF_HOME=/models/huggingface
+    export ARSOFT_AUDIT_PATH=/models/state/agente1_registros.jsonl
+
+%runscript
+    cd /opt/arsoft
+    if [ ! -w /models/state ]; then
+        echo 'Falta un directorio de auditoría escribible en /models/state; monta /models.' >&2
+        exit 2
+    fi
+    if [ "${1:-}" = "--serve" ]; then
+        exec python -m uvicorn Agents.service:app --host 127.0.0.1 --port 8001
+    fi
+    if [ -n "${AGENTES_START_CMD:-}" ]; then
+        exec /bin/sh -c "$AGENTES_START_CMD"
+    fi
+    exec python -m Agents.agente1.core "$@"
+
+%startscript
+    cd /opt/arsoft
+    if [ ! -w /models/state ]; then
+        echo 'Falta un directorio de auditoría escribible en /models/state; monta /models.' >&2
+        exit 2
+    fi
+    if [ -n "${AGENTES_START_CMD:-}" ]; then
+        exec /bin/sh -c "$AGENTES_START_CMD"
+    fi
+    exec python -m uvicorn Agents.service:app --host 127.0.0.1 --port 8001
+
+%test
+    python -c 'import Agents.service'

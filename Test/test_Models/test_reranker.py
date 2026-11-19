@@ -425,3 +425,60 @@ def test_rerank_limite_no_modifica_originales(monkeypatch):
 
     assert resultados == copia_original
     assert all("rerank_score" not in resultado for resultado in resultados)
+
+
+
+def test_rerank_with_threshold_filtra_correctamente():
+    from Agents.Agent_2.src.services.reranker import rerank_with_threshold
+
+    class FakeModel:
+        def predict(self, pairs):
+            return [0.85, 0.25, 0.65]
+
+    resultados = [
+        {"chunk_id": "A", "texto": "Texto A", "rrf_score": 0.01},
+        {"chunk_id": "B", "texto": "Texto B", "rrf_score": 0.009},
+        {"chunk_id": "C", "texto": "Texto C", "rrf_score": 0.008},
+    ]
+
+    filtrados = rerank_with_threshold(
+        query="consulta motor",
+        results=resultados,
+        model=FakeModel(),
+        threshold=0.5,
+    )
+
+    assert len(filtrados) == 2
+    assert filtrados[0]["chunk_id"] == "A"
+    assert filtrados[0]["rerank_score"] == 0.85
+    assert filtrados[1]["chunk_id"] == "C"
+    assert filtrados[1]["rerank_score"] == 0.65
+
+
+def test_rerank_with_threshold_devuelve_metricas_estructuradas():
+    from Agents.Agent_2.src.services.reranker import rerank_with_threshold
+
+    class FakeModel:
+        def predict(self, pairs):
+            return [0.90, 0.10]
+
+    resultados = [
+        {"chunk_id": "A", "texto": "Texto A", "rrf_score": 0.01},
+        {"chunk_id": "B", "texto": "Texto B", "rrf_score": 0.009},
+    ]
+
+    filtrados, metricas = rerank_with_threshold(
+        query="consulta",
+        results=resultados,
+        model=FakeModel(),
+        threshold=0.5,
+        return_metrics=True,
+    )
+
+    assert len(filtrados) == 1
+    assert metricas["total_candidatos_entrada"] == 2
+    assert metricas["candidatos_evaluados"] == 2
+    assert metricas["superan_umbral"] == 1
+    assert metricas["descartados_umbral"] == 1
+    assert metricas["umbral_aplicado"] == 0.5
+    assert "latencia_ms" in metricas

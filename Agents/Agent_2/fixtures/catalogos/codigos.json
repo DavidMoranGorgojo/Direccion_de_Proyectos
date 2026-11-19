@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "descripcion": "Catálogo sintético de prueba para códigos de avería",
+  "codigos": [
+    {
+      "codigo": "HTM-0101",
+      "descripcion": "Sobretemperatura motor circuito CIR-01",
+      "componente": "motor"
+    },
+    {
+      "codigo": "HTM-0102",
+      "descripcion": "Sensor temperatura motor fuera de rango",
+      "componente": "motor"
+    },
+    {
+      "codigo": "HTM-0142",
+      "descripcion": "Avería circuito de refrigeración culata",
+      "componente": "refrigeracion"
+    },
+    {
+      "codigo": "HTM-0202",
+      "descripcion": "Fallo aislamiento batería alta tensión",
+      "componente": "bateria"
+    },
+    {
+      "codigo": "HTM240-DTC-001",
+      "descripcion": "DTC genérico de sistema",
+      "componente": "sistema"
+    }
+  ]
+}

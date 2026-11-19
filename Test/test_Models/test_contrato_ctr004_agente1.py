@@ -104,7 +104,11 @@ def test_suficiente(redaccion):
 
 
 def test_solo_obsoleto(redaccion):
-    mensaje = build_evidence_response("solo_obsoleto", [_sustituido()])
+    # c47 tiene vigente_para=["V2.0"]: para V2.0 seguiría vigente (A2-06).
+    # Aquí se prueba el caso realmente obsoleto, sin vigencia residual.
+    candidato = _sustituido()
+    candidato["vigente_para"] = []
+    mensaje = build_evidence_response("solo_obsoleto", [candidato])
 
     normalizada = _normalizar(mensaje)
     assert normalizada["estado"] == "solo_obsoleto"
@@ -180,19 +184,20 @@ def test_obsoleto_de_las_fuentes_coincide_con_a2_06(candidato, obsoleto_esperado
     assert core.es_obsoleta(evidencia) is obsoleto_esperado
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Deuda del Agente 1 (punto 3 de la revisión): es_obsoleta marca "
-        "obsoleto cualquier sustituido_por aunque A2-06 lo dé por vigente "
-        "según vigente_para."
-    ),
-)
-def test_sustituido_aun_vigente_para_la_version_no_cuenta_como_obsoleto():
+def test_sustituido_aun_vigente_para_la_version_no_cuenta_como_obsoleto(redaccion):
+    # Punto 3 de la revisión, ya resuelto: es_obsoleta sigue el criterio
+    # vigente_para de A2-06 cuando se pide una de esas versiones.
     candidato = _sustituido()
     candidato["estado_documento"] = "vigente"
 
     mensaje = build_evidence_response("suficiente", [candidato])
     evidencia = _normalizar(mensaje)["evidencias"][0]
 
-    assert core.es_obsoleta(evidencia) is False
+    assert core.es_obsoleta(evidencia, "V2.0") is False
+    # Sin versión solicitada no hay excepción.
+    assert core.es_obsoleta(evidencia) is True
+
+    final = core.resolver_evidencias(PREGUNTA, mensaje, None, version="V2.0")
+
+    assert final["estado"] == "respuesta"
+    assert redaccion[0]["aviso"] is None
