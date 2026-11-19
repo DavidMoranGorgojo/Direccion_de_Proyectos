@@ -1,67 +1,95 @@
 {
-  "resultados": [
+  "estado": "suficiente",
+  "evidencias": [
     {
       "chunk_id": "c45",
-      "score_final": 0.895,
       "texto": "Si el código de avería HTM-0142 aparece durante el arranque, compruebe el circuito de refrigeración.",
-      "metadatos": {
+      "score_final": 0.895,
+      "estado_documento": "vigente",
+      "metadata": {
         "documento": "HTM240-DTC-001",
         "seccion": "2.1",
         "pagina": 3,
-        "versiones": ["V1.1", "V2.0"],
+        "versiones": [
+          "V1.1",
+          "V2.0"
+        ],
         "componente": "refrigeracion",
         "tipo_documento": "codigo_averia",
         "obsoleto": false,
         "sustituido_por": null,
-        "vigente_para": ["V1.1", "V2.0"],
+        "vigente_para": [
+          "V1.1",
+          "V2.0"
+        ],
         "fecha_revision": "2026-10-20",
         "orden_en_seccion": 1,
         "version_documento": "1.0",
         "afectado_por": [],
-        "ids_referenciados": []
+        "ids_referenciados": [],
+        "version": "1.0"
       }
     },
     {
       "chunk_id": "c46",
-      "score_final": 0.612,
       "texto": "Para sustituir el filtro del motor, siga la secuencia indicada y respete el par de apriete.",
-      "metadatos": {
+      "score_final": 0.612,
+      "estado_documento": "vigente",
+      "metadata": {
         "documento": "HTM240-PRC-011",
         "seccion": "4.2",
         "pagina": 12,
-        "versiones": ["V1.0"],
+        "versiones": [
+          "V1.0"
+        ],
         "componente": "motor",
         "tipo_documento": "procedimiento",
         "obsoleto": false,
         "sustituido_por": null,
-        "vigente_para": ["V1.0"],
+        "vigente_para": [
+          "V1.0"
+        ],
         "fecha_revision": "2026-09-30",
         "orden_en_seccion": 2,
         "version_documento": "1.0",
         "afectado_por": [],
-        "ids_referenciados": ["CMP-21"]
+        "ids_referenciados": [
+          "CMP-21"
+        ],
+        "version": "1.0"
       }
     },
     {
       "chunk_id": "c47",
-      "score_final": 0.487,
       "texto": "El boletín BOL-007 actualiza los valores de revisión del sistema de batería.",
-      "metadatos": {
+      "score_final": 0.487,
+      "estado_documento": "sustituido",
+      "metadata": {
         "documento": "HTM240-BOL-007",
         "seccion": "1",
         "pagina": 1,
-        "versiones": ["V2.0"],
+        "versiones": [
+          "V2.0"
+        ],
         "componente": "bateria",
         "tipo_documento": "boletin",
         "obsoleto": true,
         "sustituido_por": "HTM240-BOL-009",
-        "vigente_para": ["V2.0"],
+        "vigente_para": [
+          "V2.0"
+        ],
         "fecha_revision": "2026-08-01",
         "orden_en_seccion": 1,
         "version_documento": "2.0",
-        "afectado_por": ["BOL-009"],
-        "ids_referenciados": []
+        "afectado_por": [
+          "BOL-009"
+        ],
+        "ids_referenciados": [],
+        "version": "2.0"
       }
     }
-  ]
+  ],
+  "campo_ambiguo": null,
+  "codigo_error": null,
+  "mensaje_error": null
 }
