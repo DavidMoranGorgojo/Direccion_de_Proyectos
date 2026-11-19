@@ -56,7 +56,7 @@ def test_integracion_bm25_real_con_rrf():
     """Comprueba la integración con el BM25 y el dataset de Alba."""
 
     dataset_path = Path(
-        "Agents/Agent_2/data/bbdd_sintetica_chunks.json"
+        "Agents/Agent_2/fixtures/bbdd_sintetica_chunks.json"
     )
 
     # El dataset todavía puede no estar integrado en nuestra rama.

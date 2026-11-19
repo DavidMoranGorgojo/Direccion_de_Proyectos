@@ -60,6 +60,19 @@ def _validar_chunk_id(result):
     return chunk_id
 
 
+_CAMPOS_DOCUMENTALES_ESTABLES = frozenset({
+    "texto", "documento", "seccion", "pagina", "versiones",
+    "componente", "tipo_documento", "obsoleto", "sustituido_por",
+    "vigente_para", "fecha_revision", "orden_en_seccion", "version_documento",
+})
+
+
+def _metadatos_equivalentes(campo, anterior, nuevo):
+    if campo in {"versiones", "vigente_para"} and isinstance(anterior, (list, tuple)) and isinstance(nuevo, (list, tuple)):
+        return set(anterior) == set(nuevo)
+    return anterior == nuevo
+
+
 def rrf(vector_results, bm25_results, k=None):
     """
     Fusiona dos rankings mediante Reciprocal Rank Fusion (RRF).
@@ -126,6 +139,15 @@ def rrf(vector_results, bm25_results, k=None):
             for campo, valor in result.items():
                 if campo == "score":
                     continue
+
+                if (campo in _CAMPOS_DOCUMENTALES_ESTABLES
+                        and campo in fusionado
+                        and not _valor_vacio(fusionado[campo])
+                        and not _valor_vacio(valor)
+                        and not _metadatos_equivalentes(campo, fusionado[campo], valor)):
+                    raise ValueError(
+                        f"Metadatos documentales contradictorios para chunk_id={chunk_id!r}: {campo}"
+                    )
 
                 if (
                     campo not in fusionado

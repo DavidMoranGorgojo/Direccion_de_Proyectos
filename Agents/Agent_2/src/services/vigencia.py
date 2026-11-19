@@ -1,0 +1,192 @@
+"""Cálculo de estados de recuperación y vigencia documental (A2-06).
+
+A2-06 no redacta respuestas: calcula el estado a partir de los metadatos y de
+los filtros confirmados, y solicita los vecinos de los fragmentos que superan
+el umbral. Los estados son:
+
+* ``suficiente``: hay al menos un fragmento vigente aplicable a la versión.
+* ``ambiguo``: falta contexto crítico (versión o componente) para resolver
+  la consulta de forma unívoca.
+* ``solo_obsoleto``: todos los fragmentos recuperados corresponden a ediciones
+  sustituidas del manual que no aplican a la versión consultada.
+* ``insuficiente``: ningún fragmento supera el umbral del reranker.
+* ``error``: el Backend falló o devolvió datos que no cumplen el contrato.
+"""
+
+from __future__ import annotations
+
+from ..core.errors import CODIGO_ERROR_POR_DEFECTO, BackendRequestError
+from ..models.retrieval import ESTADOS, RetrievalDecision, RetrievalResult
+from .filters import filter_chunks, normalize_component, normalize_version, version_applies
+from .neighbors import expand_with_neighbors
+
+DOCUMENT_STATES = ("vigente", "obsoleto", "sustituido")
+
+
+def _require_candidates(candidates):
+    if not isinstance(candidates, (list, tuple)):
+        raise TypeError("candidates debe ser una lista o tupla.")
+
+    for index, candidate in enumerate(candidates):
+        if not isinstance(candidate, dict):
+            raise TypeError(
+                f"cada candidato debe ser un diccionario; el elemento {index} "
+                f"es {type(candidate).__name__}."
+            )
+        cid = candidate.get("chunk_id")
+        if not isinstance(cid, str) or not cid.strip():
+            raise ValueError(
+                f"el candidato {index} debe tener un chunk_id de texto no vacío."
+            )
+
+    return list(candidates)
+
+
+def document_state(chunk, version=None):
+    """Calcula el estado del fragmento para la versión indicada."""
+    version = normalize_version(version)
+
+    sustituido = chunk.get("sustituido_por") is not None
+    obsoleto = chunk.get("obsoleto") is True
+
+    if version is not None:
+        # Un documento sustituido sigue vigente para versiones anteriores.
+        if version in (chunk.get("vigente_para") or []) and (
+            obsoleto or sustituido
+        ):
+            return "vigente"
+
+        # Un chunk de otra versión no es válido para la solicitada.
+        if not version_applies(chunk, version):
+            return "sustituido" if sustituido else "obsoleto"
+
+    if sustituido:
+        return "sustituido"
+
+    if obsoleto:
+        return "obsoleto"
+
+    return "vigente"
+
+
+def is_current(chunk, version=None):
+    """Indica si el chunk está vigente para la versión solicitada."""
+    return document_state(chunk, version) == "vigente"
+
+
+def common_version(candidates):
+    """Versión que aplica a todos los candidatos, o ``None`` si no existe.
+
+    Evita marcar como ambiguos dos fragmentos que comparten al menos una
+    versión, aunque sus rangos no sean idénticos.
+    """
+    common = None
+
+    for candidate in candidates:
+        versiones = {
+            version
+            for version in (candidate.get("versiones") or [])
+            if isinstance(version, str) and version.strip()
+        }
+        common = versiones if common is None else common & versiones
+
+        if not common:
+            return None
+
+    return common
+
+
+def classify_state(candidates, filters=None):
+    """Decide el estado a partir de los candidatos sobre el umbral."""
+    candidates = _require_candidates(candidates)
+    filters = filters or {}
+
+    if not isinstance(filters, dict):
+        raise TypeError("filters debe ser un diccionario.")
+
+    if not candidates:
+        return RetrievalDecision("insuficiente")
+
+    version = normalize_version(filters.get("version"))
+    component = normalize_component(filters.get("componente"))
+
+    current = [candidate for candidate in candidates if is_current(candidate, version)]
+
+    if not current:
+        return RetrievalDecision("solo_obsoleto")
+
+    # La versión es la ambigüedad prioritaria: condiciona la compatibilidad.
+    if version is None and common_version(current) is None:
+        return RetrievalDecision("ambiguo", campo_ambiguo="version")
+
+    # Ambigüedad de componente (ALB-5): solo si no hay códigos explícitos
+    # y hay al menos dos componentes específicos distintos (ignorando sistema y general).
+    codigos = filters.get("codigos")
+    if component is None and not codigos:
+        components = {
+            candidate.get("componente")
+            for candidate in current
+            if candidate.get("componente") and candidate.get("componente") not in {"sistema", "general"}
+        }
+        if len(components) > 1:
+            return RetrievalDecision("ambiguo", campo_ambiguo="componente")
+
+    return RetrievalDecision("suficiente")
+
+
+def resolve_retrieval(candidates, filters=None, fetch_neighbors=None):
+    """Calcula el estado y amplía los candidatos con sus vecinos.
+
+    Si el Backend falla al recuperar vecinos, el resultado es ``error`` con el
+    ``codigo_error`` estándar; nunca una lista vacía.
+    """
+    filters = filters or {}
+    # Filtro defensivo: nunca usar candidatos incompatibles de Backend para
+    # decidir un estado, aunque el proveedor haya relajado sus WHERE.
+    hard_filters = {k: filters[k] for k in ("version", "componente", "incluir_obsoletos") if k in filters}
+    candidates = filter_chunks(_require_candidates(candidates), hard_filters)
+    decision = classify_state(candidates, filters)
+
+    if decision.estado == "insuficiente":
+        return RetrievalResult(estado="insuficiente", candidatos=[])
+
+    version = normalize_version(filters.get("version"))
+
+    try:
+        expanded = expand_with_neighbors(candidates, fetch_neighbors)
+        # Los vecinos pueden compartir documento/sección y pertenecer a otra
+        # versión/componente: deben someterse a los mismos filtros duros.
+        expanded = filter_chunks(expanded, hard_filters)
+    except BackendRequestError as error:
+        return RetrievalResult(
+            estado="error",
+            candidatos=[],
+            codigo_error=error.codigo_error,
+            mensaje_error=error.mensaje,
+        )
+    except Exception:
+        return RetrievalResult(
+            estado="error",
+            candidatos=[],
+            codigo_error=CODIGO_ERROR_POR_DEFECTO,
+            mensaje_error="Fallo inesperado al recuperar los vecinos.",
+        )
+
+    for candidate in expanded:
+        candidate["estado_documento"] = document_state(candidate, version)
+
+    return RetrievalResult(
+        estado=decision.estado,
+        candidatos=expanded,
+        campo_ambiguo=decision.campo_ambiguo,
+    )
+
+
+__all__ = [
+    "DOCUMENT_STATES",
+    "classify_state",
+    "common_version",
+    "document_state",
+    "is_current",
+    "resolve_retrieval",
+]

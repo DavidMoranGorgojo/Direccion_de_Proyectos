@@ -1,5 +1,6 @@
 
 import math
+import time
 
 from Agents.Agent_2.src.core import config
 
@@ -171,3 +172,54 @@ def rerank_results(query, results, model):
         reranked_results.append(reranked_result)
 
     return sort_by_rerank_score(reranked_results)
+
+
+def rerank_with_threshold(
+    query,
+    results,
+    model,
+    threshold=None,
+    return_metrics=False,
+):
+    """
+    Ejecuta el reranking de candidatos y aplica el umbral mínimo de similitud,
+    devolviendo opcionalmente las métricas estructuradas de la operación.
+
+    Args:
+        query: consulta del usuario (str no vacío).
+        results: candidatos provenientes de RRF.
+        model: modelo de reranking con método predict().
+        threshold: puntuación mínima del reranker (None para usar config.RERANK_THRESHOLD).
+        return_metrics: si es True, devuelve una tupla (resultados_filtrados, metricas).
+
+    Returns:
+        Lista de candidatos que superan el umbral ordenados por rerank_score descendente,
+        o una tupla (candidatos_filtrados, metricas_dict) si return_metrics=True.
+    """
+    t_inicio = time.monotonic()
+    reranked = rerank_results(query, results, model)
+    duracion_ms = round((time.monotonic() - t_inicio) * 1000, 2)
+
+    filtrados = apply_threshold(reranked, threshold=threshold)
+
+    if return_metrics:
+        umbral_usado = threshold if threshold is not None else config.RERANK_THRESHOLD
+        metricas = {
+            "total_candidatos_entrada": len(results),
+            "candidatos_evaluados": len(reranked),
+            "superan_umbral": len(filtrados),
+            "descartados_umbral": len(reranked) - len(filtrados),
+            "umbral_aplicado": umbral_usado,
+            "latencia_ms": duracion_ms,
+        }
+        return filtrados, metricas
+
+    return filtrados
+
+
+__all__ = [
+    "apply_threshold",
+    "rerank_results",
+    "rerank_with_threshold",
+    "sort_by_rerank_score",
+]
