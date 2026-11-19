@@ -8,6 +8,8 @@ Los filtros no incluyen palabras libres del usuario: los valores de componente
 y tipo de documento se normalizan contra un conjunto cerrado de valores.
 """
 
+from __future__ import annotations
+
 import re
 import unicodedata
 
@@ -82,6 +84,8 @@ COMPONENT_ALIASES = {
     "control_tcu": "control_tcu",
     "tcu": "control_tcu",
     "unidad_de_control_termico": "control_tcu",
+    "sistema": "sistema",
+    "general": "general",
 }
 
 
@@ -90,7 +94,8 @@ _VERSION_RE = re.compile(r"[Vv]?(\d+)\.(\d+)")
 _CODE_TOKEN = re.compile(
     r"(?<![A-Za-z0-9])("
     r"HTM240-[A-Z]{3}-\d{3}"
-    r"|(?:HTM|CMP|CIR|TES|PRC|BOL|DIA|ADV|SEG|OPE|ESQ|DIC|HIS|CAT|MNT|MAN)"
+    r"|HTM-?\d{3,4}(?:-[A-Z])?"
+    r"|(?:CMP|CIR|TES|PRC|BOL|DIA|ADV|SEG|OPE|ESQ|DIC|HIS|CAT|MNT|MAN)"
     r"-?\d{2,4}(?:-[A-Z])?"
     r")(?![A-Za-z0-9])",
     re.IGNORECASE,
@@ -99,7 +104,6 @@ _CODE_TOKEN = re.compile(
 
 def normalize_key(value):
     """Minúsculas, sin acentos y con espacios/guiones convertidos en ``_``."""
-
     decomposed = unicodedata.normalize("NFD", value.casefold())
     without_accents = "".join(
         character
@@ -111,7 +115,6 @@ def normalize_key(value):
 
 def normalize_version(value):
     """Normaliza ``1.1``/``v1.1`` a ``V1.1``. No inventa versiones ambiguas."""
-
     if value is None:
         return None
 
@@ -131,7 +134,6 @@ def normalize_version(value):
 
 def normalize_component(value):
     """Normaliza un componente contra el conjunto cerrado de valores."""
-
     if value is None:
         return None
 
@@ -148,7 +150,6 @@ def normalize_component(value):
 
 def normalize_document_type(value):
     """Normaliza un tipo de documento y sus sinónimos a su valor canónico."""
-
     if not isinstance(value, str):
         raise TypeError("cada tipo_documento debe ser texto.")
 
@@ -162,7 +163,6 @@ def normalize_document_type(value):
 
 def normalize_document_types(value):
     """Acepta un tipo o una lista y devuelve la lista canónica sin duplicados."""
-
     if value is None:
         return None
 
@@ -189,7 +189,6 @@ def normalize_document_types(value):
 
 def normalize_codes(value):
     """Acepta un código o una lista y devuelve la lista sin duplicados."""
-
     if value is None:
         return None
 
@@ -217,7 +216,6 @@ def normalize_codes(value):
 
 def code_key(value):
     """Clave de comparación de códigos: sin separadores y sin mayúsculas."""
-
     return re.sub(r"[\s\-_]+", "", value.casefold())
 
 
@@ -227,7 +225,6 @@ def version_applies(chunk, version):
     Un documento sustituido sigue siendo aplicable a las versiones que figuran
     en ``vigente_para``.
     """
-
     if version in (chunk.get("versiones") or []):
         return True
 
@@ -239,11 +236,16 @@ def version_applies(chunk, version):
 
 def extract_code_tokens(text):
     """Extrae códigos exactos del texto, sin normalizar su contenido."""
-
     if not isinstance(text, str):
         return []
 
-    return [match.group(1) for match in _CODE_TOKEN.finditer(text)]
+    tokens = []
+    for match in _CODE_TOKEN.finditer(text):
+        token = match.group(1)
+        if re.match(r"^HTM-?240$", token, re.IGNORECASE):
+            continue
+        tokens.append(token)
+    return tokens
 
 
 def _chunk_code_keys(chunk):
@@ -314,3 +316,42 @@ def filter_chunks(chunks, filters=None):
         filtered_chunks.append(chunk)
 
     return filtered_chunks
+
+
+def apply_local_filters(results, filters=None):
+    """Aplica filtros locales (codigos, incluir_obsoletos) sobre una lista de resultados."""
+    if not filters or not isinstance(filters, dict):
+        return results
+
+    codes = normalize_codes(filters.get("codigos"))
+    include_obsolete = filters.get("incluir_obsoletos", True)
+
+    if not isinstance(include_obsolete, bool):
+        raise TypeError("incluir_obsoletos debe ser booleano.")
+
+    filtered = []
+    for chunk in results:
+        if include_obsolete is False and chunk.get("obsoleto") is True:
+            continue
+        if codes is not None and not _matches_codes(chunk, codes):
+            continue
+        filtered.append(chunk)
+
+    return filtered
+
+
+__all__ = [
+    "COMPONENT_ALIASES",
+    "DOCUMENT_TYPE_ALIASES",
+    "apply_local_filters",
+    "code_key",
+    "extract_code_tokens",
+    "filter_chunks",
+    "normalize_codes",
+    "normalize_component",
+    "normalize_document_type",
+    "normalize_document_types",
+    "normalize_key",
+    "normalize_version",
+    "version_applies",
+]

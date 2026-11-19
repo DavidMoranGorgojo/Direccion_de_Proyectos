@@ -1,11 +1,18 @@
+"""Cliente HTTP para las rutas de conocimiento del Backend (A2-01).
+
+Implementa el acceso por API a:
+  * ``POST /conocimiento/vectorial``
+  * ``POST /conocimiento/lexica``
+  * ``GET /conocimiento/chunks/{chunk_id}?vecinos=1``
+
+Aplica el principio de No Duplicidad: el cliente de producción delega el
+almacenamiento y las búsquedas en el Backend y no mantiene índices locales.
+"""
+
+from __future__ import annotations
+
 import json
-import warnings
 from datetime import date
-from pathlib import Path
-from collections import Counter
-import math
-import re
-import unicodedata
 from urllib.parse import quote
 
 import requests
@@ -16,8 +23,13 @@ from ..core.errors import (
     CODIGOS_ERROR,
     BackendRequestError,
 )
-from ..services.filters import filter_chunks
 from ..services.lexical_parser import parse_lexical_response
+from ..testing.local_index import (
+    get_chunk_with_neighbors,
+    load_chunks,
+    search_lexical,
+    search_vector,
+)
 
 CTR002_FILTER_FIELDS = ("version", "componente")
 
@@ -29,12 +41,7 @@ def ctr002_filters(filtros):
     un único valor por campo y sin campos extra (§5.1 prohíbe enviar códigos de
     avería como filtro). ``codigos`` e ``incluir_obsoletos`` son filtros locales
     del Agente 2 y no viajan al Backend.
-
-    ``tipo_documento`` con varios valores se rechaza: CTR-002 solo admite uno
-    por petición, así que hay que lanzar una petición por tipo. Rechazarlo evita
-    relajar un filtro duro en silencio.
     """
-
     if filtros is None:
         return {}
 
@@ -89,6 +96,28 @@ def ctr002_filters(filtros):
     return limpios
 
 
+def split_ctr002_requests(filtros: dict | None) -> list[dict]:
+    """Divide un diccionario de filtros en múltiples diccionarios compatibles con CTR-002 (ALB-7).
+
+    CTR-002 solo admite un tipo_documento por petición. Si filtros['tipo_documento']
+    contiene una lista con varios tipos, devuelve un diccionario por cada tipo,
+    manteniendo 'version' y 'componente' idénticos.
+    """
+    if not isinstance(filtros, dict) or not filtros:
+        return [{}]
+
+    tipos = filtros.get("tipo_documento")
+    if isinstance(tipos, (list, tuple)) and len(tipos) > 1:
+        reqs = []
+        for t in tipos:
+            f = dict(filtros)
+            f["tipo_documento"] = t
+            reqs.append(f)
+        return reqs
+
+    return [dict(filtros)]
+
+
 REQUIRED_CHUNK_FIELDS = {
     "chunk_id",
     "texto",
@@ -108,6 +137,7 @@ REQUIRED_CHUNK_FIELDS = {
     "ids_referenciados",
 }
 
+
 class BackendAPIClient:
     def __init__(
         self,
@@ -120,8 +150,6 @@ class BackendAPIClient:
         self.base_url = base_url.rstrip("/")
         self.model_embeddings = model_embeddings
         self.timeout = timeout
-        # Bearer de servicio interno (CTR-002). Sin token, las rutas de
-        # /conocimiento responden 401 o 503 según la configuración del Backend.
         self.token = (
             SERVICE_TOKEN if token is None else str(token)
         ).strip()
@@ -133,13 +161,34 @@ class BackendAPIClient:
 
     def _auth_kwargs(self):
         """Cabecera de servicio solo cuando hay token configurado."""
-
         if not self.token:
             return {}
 
         return {"headers": {"Authorization": f"Bearer {self.token}"}}
 
-    def search_vector(self, vector, filtros=None, k=30):
+    def _post_conocimiento(self, ruta, payload):
+        """Helper privado con mapeo exhaustivo de errores según CTR-002 (ALB-7)."""
+        response = self.session.post(
+            f"{self.base_url}{ruta}",
+            json=payload,
+            timeout=self.timeout,
+            **self._auth_kwargs(),
+        )
+
+        response.raise_for_status()
+
+        try:
+            return response.json()
+        except (TypeError, ValueError) as error:
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                f"El Backend devolvió una respuesta no JSON en {ruta}.",
+            ) from error
+
+    def search_vector(self, vector, filtros=None, k=None):
+        if k is None:
+            k = SEARCH_TOP_K
+
         if hasattr(vector, "tolist"):
             vector = vector.tolist()
 
@@ -159,16 +208,12 @@ class BackendAPIClient:
             "k": k,
         }
 
-        response = self.session.post(
-            f"{self.base_url}/conocimiento/vectorial",
-            json=payload,
-            timeout=self.timeout,
-            **self._auth_kwargs(),
-        )
-        response.raise_for_status()
-        return response.json()
+        return self._post_conocimiento("/conocimiento/vectorial", payload)
 
-    def search_lexical(self, text, filtros=None, k=30):
+    def search_lexical(self, text, filtros=None, k=None):
+        if k is None:
+            k = SEARCH_TOP_K
+
         if not isinstance(text, str) or not text.strip():
             raise ValueError("text debe ser texto no vacío.")
 
@@ -178,32 +223,29 @@ class BackendAPIClient:
             "k": k,
         }
 
-        response = self.session.post(
-            f"{self.base_url}/conocimiento/lexica",
-            json=payload,
-            timeout=self.timeout,
-            **self._auth_kwargs(),
-        )
-        response.raise_for_status()
-        return response.json()
+        return self._post_conocimiento("/conocimiento/lexica", payload)
 
     def search_lexical_candidates(self, text, filtros=None, k=None):
         """Solicita la búsqueda léxica y valida la respuesta de CTR-002."""
-
         if k is None:
             k = SEARCH_TOP_K
 
         payload = self.search_lexical(text=text, filtros=filtros, k=k)
+
+        # Validación del modelo de embeddings (ALB-7.6)
+        indice_info = payload.get("indice", {})
+        modelo_resp = indice_info.get("modelo_embeddings")
+        if modelo_resp and modelo_resp != self.model_embeddings:
+            raise BackendRequestError(
+                "modelo_incompatible",
+                f"Modelo de embeddings incompatible: esperado {self.model_embeddings}, "
+                f"obtenido {modelo_resp}.",
+            )
+
         return parse_lexical_response(payload)
 
     def get_chunk(self, chunk_id, vecinos=1):
-        """Recupera un fragmento y, opcionalmente, sus vecinos de sección.
-
-        ``vecinos=1`` devuelve los chunks contiguos (±1) de la misma sección y
-        documento. Un fallo del Backend se traduce a ``BackendRequestError``
-        con un código estándar.
-        """
-
+        """Recupera un fragmento y, opcionalmente, sus vecinos de sección."""
         if not isinstance(chunk_id, str) or not chunk_id.strip():
             raise ValueError("chunk_id debe ser texto no vacío.")
 
@@ -248,10 +290,10 @@ class BackendAPIClient:
 
         return _parse_chunk_response(payload, chunk_id)
 
-    def get_neighbors(self, chunk_id, vecinos=1):
-        """Devuelve solo los fragmentos vecinos de la misma sección."""
-
-        return self.get_chunk(chunk_id, vecinos=vecinos)["vecinos"]
+    def get_neighbors(self, chunk_id):
+        """Recupera solo los vecinos de sección de un fragmento dado."""
+        result = self.get_chunk(chunk_id, vecinos=1)
+        return result["vecinos"]
 
 
 def _invalid_chunk_fields(chunk, require_fecha_revision=True):
@@ -272,10 +314,13 @@ def _invalid_chunk_fields(chunk, require_fecha_revision=True):
         if not isinstance(value, str) or not value.strip():
             problems.append(f"{field} debe ser texto no vacío")
 
-    for field in ("pagina", "orden_en_seccion"):
-        value = chunk.get(field)
-        if type(value) is not int or value <= 0:
-            problems.append(f"{field} debe ser un entero mayor que cero")
+    pagina = chunk.get("pagina")
+    if type(pagina) is not int or pagina <= 0:
+        problems.append("pagina debe ser un entero mayor que cero")
+
+    orden = chunk.get("orden_en_seccion")
+    if type(orden) is not int or orden <= 0:
+        problems.append("orden_en_seccion debe ser un entero mayor que cero")
 
     versiones = chunk.get("versiones")
     if (
@@ -317,93 +362,105 @@ def _invalid_chunk_fields(chunk, require_fecha_revision=True):
 
 
 def _backend_error_code(response):
-    codigo = None
-
+    raw_code = None
     try:
-        payload = response.json()
+        cuerpo = response.json()
+        if isinstance(cuerpo, dict):
+            # Check top-level keys first
+            for candidate in (cuerpo.get("codigo_error"), cuerpo.get("codigo")):
+                if isinstance(candidate, str) and candidate.strip():
+                    raw_code = candidate.strip()
+                    break
+            # Also check nested detail.codigo
+            if raw_code is None:
+                detail = cuerpo.get("detail")
+                if isinstance(detail, dict):
+                    candidate = detail.get("codigo")
+                    if isinstance(candidate, str) and candidate.strip():
+                        raw_code = candidate.strip()
     except (TypeError, ValueError):
-        payload = None
+        pass
 
-    if isinstance(payload, dict):
-        detalle = payload.get("detail")
-        if isinstance(detalle, dict):
-            codigo = detalle.get("codigo")
-        if codigo is None:
-            codigo = payload.get("codigo_error") or payload.get("codigo")
-
-    if codigo in CODIGOS_ERROR:
-        return codigo
-
-    # CTR-002 §4 usa nombres propios para la petición mal formada; el Agente 1
-    # solo conoce el código estándar equivalente.
-    if codigo in {"peticion_invalida", "filtro_invalido"}:
+    # Map input-validation backend codes to canonical entrada_invalida
+    if raw_code in ("peticion_invalida", "filtro_invalido"):
         return "entrada_invalida"
 
-    status = getattr(response, "status_code", None)
-
-    if status == 404:
-        # El índice activo no contiene un fragmento que se acaba de recuperar.
+    # Map recurso_no_encontrado (404) to indice_no_disponible
+    if raw_code == "recurso_no_encontrado":
         return "indice_no_disponible"
-    if status in (408, 504):
-        return "tiempo_agotado"
-    if status == 422:
-        return "entrada_invalida"
 
-    return CODIGO_ERROR_POR_DEFECTO
+    if raw_code in CODIGOS_ERROR:
+        return raw_code
+
+    if response.status_code == 409:
+        return "modelo_incompatible"
+    elif response.status_code == 504:
+        return "tiempo_agotado"
+    elif response.status_code == 400 or response.status_code == 422:
+        return "entrada_invalida"
+    elif response.status_code == 404:
+        return "indice_no_disponible"
+    elif response.status_code == 503 and raw_code is None:
+        return "indice_no_disponible"
+    else:
+        return CODIGO_ERROR_POR_DEFECTO
 
 
 def _chunk_request_error(response, chunk_id):
-    return BackendRequestError(
-        _backend_error_code(response),
-        f"El Backend devolvió HTTP {response.status_code} al recuperar el "
-        f"fragmento {chunk_id}.",
+    codigo = _backend_error_code(response)
+    mensaje = (
+        f"El Backend devolvió error {response.status_code} al recuperar el "
+        f"fragmento {chunk_id}."
     )
+    return BackendRequestError(codigo, mensaje)
 
 
 def _parse_chunk_response(payload, chunk_id):
     if not isinstance(payload, dict):
         raise BackendRequestError(
             "servicio_no_disponible",
-            "La respuesta del fragmento debe ser un objeto.",
+            f"La respuesta de {chunk_id} no es un objeto JSON.",
         )
 
     indice = payload.get("indice")
-    version = indice.get("version") if isinstance(indice, dict) else None
+    if not isinstance(indice, dict):
+        raise BackendRequestError(
+            "servicio_no_disponible",
+            f"Falta el bloque 'indice' en la respuesta de {chunk_id}.",
+        )
 
+    version = indice.get("version")
     if not isinstance(version, str) or not version.strip():
         raise BackendRequestError(
             "servicio_no_disponible",
-            "La respuesta del fragmento no incluye 'indice.version'.",
+            f"La versión del índice no es válida en la respuesta de {chunk_id}.",
         )
 
     chunk = payload.get("chunk")
-    vecinos = payload.get("vecinos")
-
     if not isinstance(chunk, dict):
         raise BackendRequestError(
             "servicio_no_disponible",
-            "La respuesta no incluye el objeto 'chunk'.",
+            f"Falta el bloque 'chunk' en la respuesta de {chunk_id}.",
         )
 
+    vecinos = payload.get("vecinos")
     if not isinstance(vecinos, list):
         raise BackendRequestError(
             "servicio_no_disponible",
-            "La respuesta no incluye la lista 'vecinos'.",
+            f"El bloque 'vecinos' debe ser una lista en la respuesta de {chunk_id}.",
         )
 
     problems = _invalid_chunk_fields(chunk, require_fecha_revision=False)
     if problems:
         raise BackendRequestError(
             "servicio_no_disponible",
-            f"El fragmento {chunk_id} no cumple CTR-002: "
-            f"{'; '.join(problems)}.",
+            f"El fragmento {chunk_id} no cumple CTR-002: {'; '.join(problems)}.",
         )
 
     if chunk.get("chunk_id") != chunk_id:
         raise BackendRequestError(
             "servicio_no_disponible",
-            f"El Backend devolvió el fragmento "
-            f"{chunk.get('chunk_id')!r} en lugar de {chunk_id!r}.",
+            f"El Backend devolvió el fragmento {chunk.get('chunk_id')!r} en lugar de {chunk_id!r}.",
         )
 
     valid_neighbors = []
@@ -416,15 +473,11 @@ def _parse_chunk_response(payload, chunk_id):
                 f"El vecino en la posición {position} no es un objeto.",
             )
 
-        problems = _invalid_chunk_fields(
-            neighbor,
-            require_fecha_revision=False,
-        )
+        problems = _invalid_chunk_fields(neighbor, require_fecha_revision=False)
         if problems:
             raise BackendRequestError(
                 "servicio_no_disponible",
-                f"El vecino en la posición {position} no cumple CTR-002: "
-                f"{'; '.join(problems)}.",
+                f"El vecino en la posición {position} no cumple CTR-002: {'; '.join(problems)}.",
             )
 
         neighbor_id = neighbor["chunk_id"]
@@ -440,8 +493,7 @@ def _parse_chunk_response(payload, chunk_id):
         ):
             raise BackendRequestError(
                 "servicio_no_disponible",
-                f"El vecino {neighbor_id} no pertenece a la misma sección "
-                f"que {chunk_id}.",
+                f"El vecino {neighbor_id} no pertenece a la misma sección que {chunk_id}.",
             )
 
         seen.add(neighbor_id)
@@ -454,246 +506,14 @@ def _parse_chunk_response(payload, chunk_id):
     }
 
 
-def load_chunks(path):
-    dataset_path = Path(path)
-
-    with dataset_path.open(encoding="utf-8-sig") as file:
-        dataset = json.load(file)
-
-    if not isinstance(dataset, dict):
-        raise ValueError("La raíz del dataset debe ser un objeto JSON.")
-
-    chunks = dataset.get("chunks")
-    if not isinstance(chunks, list):
-        raise ValueError("El dataset debe contener una lista 'chunks'.")
-
-    total_chunks = dataset.get("total_chunks")
-    if type(total_chunks) is not int or total_chunks != len(chunks):
-        raise ValueError(
-            "total_chunks no coincide con la cantidad de elementos de 'chunks'."
-        )
-
-    valid_chunks = []
-
-    for index, chunk in enumerate(chunks):
-        if not isinstance(chunk, dict):
-            warnings.warn(
-                f"Fragmento en índice {index} incompleto; se omite.",
-                UserWarning,
-                stacklevel=2,
-            )
-            continue
-
-        missing_fields = sorted(REQUIRED_CHUNK_FIELDS - chunk.keys())
-        if missing_fields:
-            chunk_id = chunk.get("chunk_id") or f"índice {index}"
-            warnings.warn(
-                f"Fragmento {chunk_id} incompleto; se omite. "
-                f"Faltan: {', '.join(missing_fields)}",
-                UserWarning,
-                stacklevel=2,
-            )
-            continue
-
-        invalid_fields = _invalid_chunk_fields(chunk)
-        if invalid_fields:
-            chunk_id = chunk.get("chunk_id") or f"índice {index}"
-            warnings.warn(
-                f"Fragmento {chunk_id} inválido; se omite. "
-                f"{'; '.join(invalid_fields)}",
-                UserWarning,
-                stacklevel=2,
-            )
-            continue
-
-        valid_chunks.append(chunk)
-
-    return valid_chunks
-
-_TOKEN_PATTERN = re.compile(r"[a-z0-9]+(?:[-.][a-z0-9]+)*")
-
-
-def _tokenize(text):
-    normalized = unicodedata.normalize("NFD", text.casefold())
-    normalized = "".join(
-        character
-        for character in normalized
-        if unicodedata.category(character) != "Mn"
-    )
-    return _TOKEN_PATTERN.findall(normalized)
-
-
-def search_lexical(chunks, text, filters=None, k=30):
-    if not isinstance(text, str):
-        raise TypeError("text debe ser texto.")
-
-    if type(k) is not int or k <= 0:
-        raise ValueError("k debe ser un entero mayor que cero.")
-
-    query_terms = set(_tokenize(text))
-    if not query_terms:
-        return []
-
-    candidates = filter_chunks(chunks, filters)
-    if not candidates:
-        return []
-
-    tokenized_chunks = [
-        _tokenize(chunk.get("texto", ""))
-        for chunk in candidates
-    ]
-
-    document_count = len(tokenized_chunks)
-    document_lengths = [len(tokens) for tokens in tokenized_chunks]
-    average_length = sum(document_lengths) / document_count
-
-    if average_length == 0:
-        return []
-
-    document_frequency = Counter(
-        term
-        for tokens in tokenized_chunks
-        for term in set(tokens)
-    )
-
-    k1 = 1.5
-    b = 0.75
-    scored_chunks = []
-
-    for chunk, tokens, document_length in zip(
-        candidates,
-        tokenized_chunks,
-        document_lengths,
-    ):
-        term_frequency = Counter(tokens)
-        score = 0.0
-
-        for term in query_terms:
-            frequency = term_frequency[term]
-            if frequency == 0:
-                continue
-
-            frequency_in_corpus = document_frequency[term]
-            inverse_frequency = math.log(
-                1
-                + (document_count - frequency_in_corpus + 0.5)
-                / (frequency_in_corpus + 0.5)
-            )
-
-            length_normalizer = k1 * (
-                1 - b + b * document_length / average_length
-            )
-            score += inverse_frequency * (
-                frequency * (k1 + 1) / (frequency + length_normalizer)
-            )
-
-        if score > 0:
-            result = dict(chunk)
-            result["score"] = score
-            scored_chunks.append(result)
-
-    scored_chunks.sort(key=lambda chunk: chunk["score"], reverse=True)
-    return scored_chunks[:k]
-def get_chunk_with_neighbors(chunks, chunk_id, radius=1):
-    if type(radius) is not int or radius < 0:
-        raise ValueError("radius debe ser un entero mayor o igual que cero.")
-
-    chunks = list(chunks)
-    matches = [
-        chunk for chunk in chunks
-        if chunk.get("chunk_id") == chunk_id
-    ]
-
-    if not matches:
-        return []
-
-    if len(matches) > 1:
-        raise ValueError(f"chunk_id duplicado: {chunk_id}")
-
-    center = matches[0]
-    same_section = [
-        chunk for chunk in chunks
-        if chunk.get("documento") == center.get("documento")
-        and chunk.get("seccion") == center.get("seccion")
-    ]
-    same_section.sort(key=lambda chunk: chunk["orden_en_seccion"])
-
-    center_index = same_section.index(center)
-    start = max(0, center_index - radius)
-    end = min(len(same_section), center_index + radius + 1)
-
-    return same_section[start:end]
-
-def search_vector(
-    chunks,
-    query_vector,
-    vectors_by_chunk_id,
-    filters=None,
-    k=30,
-):
-    if type(k) is not int or k <= 0:
-        raise ValueError("k debe ser un entero mayor que cero.")
-
-    if not isinstance(query_vector, (list, tuple)) or not query_vector:
-        raise ValueError("query_vector debe ser una lista no vacía.")
-
-    if not isinstance(vectors_by_chunk_id, dict):
-        raise TypeError("vectors_by_chunk_id debe ser un diccionario.")
-
-    def validate_vector(vector, label):
-        if not isinstance(vector, (list, tuple)) or not vector:
-            raise ValueError(f"{label} debe ser una lista no vacía.")
-
-        for value in vector:
-            if (
-                isinstance(value, bool)
-                or not isinstance(value, (int, float))
-                or not math.isfinite(value)
-            ):
-                raise ValueError(f"{label} debe contener solo números finitos.")
-
-        return [float(value) for value in vector]
-
-    query = validate_vector(query_vector, "query_vector")
-    query_norm = math.sqrt(sum(value * value for value in query))
-
-    if query_norm == 0:
-        raise ValueError("query_vector no puede ser un vector cero.")
-
-    candidates = filter_chunks(chunks, filters)
-    scored_chunks = []
-
-    for chunk in candidates:
-        chunk_id = chunk.get("chunk_id")
-
-        if chunk_id not in vectors_by_chunk_id:
-            raise ValueError(f"Falta el vector del fragmento {chunk_id}.")
-
-        vector = validate_vector(
-            vectors_by_chunk_id[chunk_id],
-            f"vector de {chunk_id}",
-        )
-
-        if len(vector) != len(query):
-            raise ValueError(
-                f"El vector de {chunk_id} tiene dimensión {len(vector)}; "
-                f"se esperaba {len(query)}."
-            )
-
-        vector_norm = math.sqrt(sum(value * value for value in vector))
-        if vector_norm == 0:
-            raise ValueError(f"El vector de {chunk_id} no puede ser cero.")
-
-        dot_product = sum(
-            query_value * vector_value
-            for query_value, vector_value in zip(query, vector)
-        )
-        score = dot_product / (query_norm * vector_norm)
-
-        result = dict(chunk)
-        result["score"] = score
-        scored_chunks.append(result)
-
-    scored_chunks.sort(key=lambda chunk: chunk["score"], reverse=True)
-    return scored_chunks[:k]
-
+__all__ = [
+    "CTR002_FILTER_FIELDS",
+    "REQUIRED_CHUNK_FIELDS",
+    "BackendAPIClient",
+    "ctr002_filters",
+    "get_chunk_with_neighbors",
+    "load_chunks",
+    "search_lexical",
+    "search_vector",
+    "split_ctr002_requests",
+]
