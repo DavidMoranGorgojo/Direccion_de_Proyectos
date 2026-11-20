@@ -1,0 +1,286 @@
+{
+  "modo": "real",
+  "procedencia": "Modelo: qwen2.5:3b en Ollama local (Apple Silicon), Corpus: ThermoDrive HTM-240, Fecha: 2026-11-10T09:39:55.058852+00:00",
+  "respuestas": {
+    "CJ02-001": {
+      "trace_id": "t-ba1c94",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Las evidencias no corresponden a la versión solicitada."
+    },
+    "CJ02-002": {
+      "trace_id": "t-0a36fd",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada."
+    },
+    "CJ02-003": {
+      "trace_id": "t-87a10c",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada."
+    },
+    "CJ02-004": {
+      "trace_id": "t-6c7ed6",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales."
+    },
+    "CJ02-005": {
+      "trace_id": "t-4275a8",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada."
+    },
+    "CJ02-006": {
+      "trace_id": "t-86e8a9",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada."
+    },
+    "CJ02-007": {
+      "trace_id": "t-a62283",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada."
+    },
+    "CJ02-008": {
+      "trace_id": "t-e6e993",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada."
+    },
+    "CJ02-009": {
+      "trace_id": "t-0b5b98",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada."
+    },
+    "CJ02-010": {
+      "trace_id": "t-472889",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada."
+    },
+    "CJ02-011": {
+      "trace_id": "t-6b0e25",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Las evidencias no corresponden a la versión solicitada."
+    },
+    "CJ02-012": {
+      "trace_id": "t-c9e76d",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Las evidencias no corresponden a la versión solicitada."
+    },
+    "CJ02-013": {
+      "trace_id": "t-d0bb3b",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales."
+    },
+    "CJ02-014": {
+      "trace_id": "t-0cb972",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Las evidencias no corresponden a la versión solicitada."
+    },
+    "CJ02-015": {
+      "trace_id": "t-95493a",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales."
+    },
+    "CJ02-016": {
+      "trace_id": "t-23ca8a",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Las evidencias no corresponden a la versión solicitada."
+    },
+    "CJ02-017": {
+      "trace_id": "t-2b4225",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada."
+    },
+    "CJ02-018": {
+      "trace_id": "t-b68a83",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada."
+    },
+    "CJ02-019": {
+      "trace_id": "t-9edc2d",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales."
+    },
+    "CJ02-020": {
+      "trace_id": "t-ca84d2",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Las evidencias no corresponden a la versión solicitada."
+    },
+    "CJ02-021": {
+      "trace_id": "t-519594",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales."
+    },
+    "CJ02-022": {
+      "trace_id": "t-581651",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "¿Qué versión necesitas consultar?"
+    },
+    "CJ02-023": {
+      "trace_id": "t-cdc0d9",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada."
+    },
+    "CJ02-024": {
+      "trace_id": "t-370e0c",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Las evidencias no corresponden a la versión solicitada."
+    },
+    "CJ02-025": {
+      "trace_id": "t-cdb2d3",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Las evidencias no corresponden a la versión solicitada."
+    },
+    "CJ02-026": {
+      "trace_id": "t-d2e6e2",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada."
+    },
+    "CJ02-027": {
+      "trace_id": "t-1a4309",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada."
+    },
+    "CJ02-028": {
+      "trace_id": "t-9519d3",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [],
+      "respuesta_generada": "¿Qué version necesitas consultar (V1.0)?"
+    },
+    "CJ02-029": {
+      "trace_id": "t-f14e7f",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [],
+      "respuesta_generada": "¿Qué version necesitas consultar (V1.0)?"
+    },
+    "CJ02-030": {
+      "trace_id": "t-f7a0a0",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "sintoma",
+      "chunks_recuperados": [],
+      "respuesta_generada": "¿Qué sintoma necesitas consultar (V1.0)?"
+    },
+    "CJ02-031": {
+      "trace_id": "t-01e54b",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "componente",
+      "chunks_recuperados": [],
+      "respuesta_generada": "¿Qué componente necesitas consultar (V1.0)?"
+    },
+    "CJ02-032": {
+      "trace_id": "t-63e6cb",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "subsistema",
+      "chunks_recuperados": [],
+      "respuesta_generada": "¿Qué subsistema necesitas consultar (V1.0)?"
+    },
+    "CJ02-033": {
+      "trace_id": "t-d7092b",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales."
+    },
+    "CJ02-034": {
+      "trace_id": "t-816ef9",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "¿De qué vehículo y motorización necesitas el par de apriete de la culata?"
+    },
+    "CJ02-035": {
+      "trace_id": "t-65b3e9",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales."
+    },
+    "CJ02-036": {
+      "trace_id": "t-1aa418",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "No se ha encontrado información en la documentación disponible."
+    },
+    "CJ02-037": {
+      "trace_id": "t-8e68cd",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales."
+    },
+    "CJ02-038": {
+      "trace_id": "t-c4c76e",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "No se ha encontrado información en la documentación disponible."
+    },
+    "CJ02-039": {
+      "trace_id": "t-dc1bb6",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales."
+    },
+    "CJ02-040": {
+      "trace_id": "t-360c87",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales."
+    }
+  }
+}

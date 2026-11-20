@@ -25,3 +25,18 @@ pruebas_procesamiento_datos/manuales_entrada/
 *.sqlite3
 salida_ingesta/
 .pytest_cache/
+.vscode
+__pycache__/
+*.py[cod]
+agente1_registros.jsonl
+
+# Artefactos locales de ejecución y revisión; no son datos de evaluación.
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+/Test/test_Models/metricas_cj02_*.json
+/INFORME_INTEGRACION_PR8_PR9.md
+/pruebas_regresion_origen.json
+/revision_integracion_pr8_pr9.zip
