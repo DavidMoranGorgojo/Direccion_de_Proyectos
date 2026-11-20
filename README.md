@@ -6,7 +6,7 @@ Repositorio para organizar todo el codigo del proyecto.
 Lista de aspectos técnicos a confirmar con las **personas 1 (Agentes)** y **2 (Backend)** para la integración definitiva entre Frontend, Backend y Agentes:
 
 1. **Rutas (Endpoints HTTP)**:
-   - **Consulta al asistente (CTR-001)**: Confirmar la ruta final expuesta por el Backend hacia el Frontend para procesar las consultas técnicas (definida provisionalmente como `CONSULTA_PATH = "/agentes/consulta"`).
+   - **Consulta al asistente (CTR-001)**: Confirmar la ruta final expuesta por el Backend hacia el Frontend para procesar las consultas técnicas (confirmada: `CONSULTA_PATH = "/consulta"`; `/agentes/consulta` es la ruta interna Backend → Agentes).
    - **Historial de conversaciones (CTR-006)**: Confirmar la ruta definitiva de consulta del historial (definida provisionalmente como `HISTORIAL_PATH = "/chats"`), así como la disponibilidad de operaciones adicionales (borrado de conversaciones, edición de títulos).
    - **Autenticación (CTR-005)**: Confirmar la ruta final del servicio de login (actualmente `POST /auth/login`), y si se implementarán rutas adicionales (cierre de sesión, comprobación de estado de autenticación o refresco de token).
 
