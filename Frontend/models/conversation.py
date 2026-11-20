@@ -26,7 +26,9 @@ class Conversation:
     @classmethod
     def from_dict(cls, d: dict) -> "Conversation":
         """Lee un chat de CTR-006 (conversacion_id/titulo/mensajes)."""
-        return cls(id=d["conversacion_id"],
+        # Un chat que ya existe en el Backend se continúa con su propio conversacion_id;
+        # solo los chats nuevos (sin pasar por aquí) envían el ID vacío en el primer mensaje.
+        return cls(id=d["conversacion_id"], server_id=d["conversacion_id"],
                    title=d.get("titulo") or DEFAULT_TITLE,
                    created_at=d.get("created_at", ""), updated_at=d.get("updated_at", ""),
                    messages=[Message.from_dict(m) for m in d.get("mensajes", [])])
