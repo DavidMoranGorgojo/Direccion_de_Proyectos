@@ -316,6 +316,9 @@ class MainWindow(QMainWindow):
         self._refresh_list()
         self._set_busy(False)
         self.prompt.setFocus()
+        if resp.codigo_error == "sesion_caducada":   # como con el historial: no se deja seguir sin sesión
+            QMessageBox.information(self, "Sesión caducada", resp.texto)
+            self.logged_out.emit()
 
     def _set_busy(self, busy: bool) -> None:
         self.btn_send.setEnabled(not busy)

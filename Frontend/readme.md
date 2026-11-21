@@ -43,7 +43,7 @@ Las pruebas unitarias y de integración del Frontend se ubican en `Test/test_Fro
 - **`Test/test_Frontend/test_conexion_simulada.py`**:
   - Lectura y validación de respuestas CTR-001 (estados `respuesta`, `aclaracion`, `fuera_de_ambito`, `sin_evidencia` y fuentes).
   - Lectura del historial CTR-006 y soporte de historial vacío.
-  - Gestión de códigos de error HTTP: 401 (no autenticado / sesión caducada), 403 (prohibido), 429 (rate limit) y 500 (error interno del servidor).
+  - Gestión de códigos de error HTTP en la consulta (CTR-001): 401/403 (sesión caducada), 404 (conversación no encontrada), 422 (entrada inválida), 429 (demasiadas consultas) y 500 (error interno, mensaje genérico). Cada uno devuelve un `Response` de error con su `codigo_error`.
   - Resiliencia ante JSON no válido, respuestas malformadas y estados desconocidos.
   - Envío de consultas y preservación de la pregunta exacta según CTR-001.
   - Bloqueo del envío durante la respuesta y representación de errores del simulador como mensajes del asistente.
@@ -69,20 +69,22 @@ python -m unittest discover -s Test/test_Frontend -p "test_*.py"
 Lista de aspectos pendientes a confirmar con las **personas 1 (Agentes)** y **2 (Backend)** para la integración final:
 
 1. **Rutas (Endpoints HTTP)**:
-   - **CTR-001 (Consulta)**: El cliente usa provisionalmente `POST /agentes/consulta` (`CONSULTA_PATH`). El módulo HTTP del Backend todavía no implementa esta ruta, por lo que queda pendiente de confirmación con Backend.
+   - **CTR-001 (Consulta)**: Confirmada. El cliente usa `POST /consulta` (`CONSULTA_PATH`), con Bearer de sesión. `/agentes/consulta` es la ruta interna Backend → Agentes y el Frontend no la usa.
    - **CTR-006 (Historial)**: Confirmar la ruta de recuperación del historial (actualmente `HISTORIAL_PATH = "/chats"`) y soporte para operaciones de borrado.
    - **CTR-005 (Login)**: Confirmar la ruta final de autenticación (`/auth/login`) y endpoints complementarios (logout, validación de sesión).
 
 2. **Identificador de la conversación (`conversacion_id`)**:
-   - **Formato actual**: El Frontend genera un UUID opaco para un chat nuevo y lo envía en cada consulta como `conversacion_id`.
+   - **Formato confirmado**: la primera pregunta de un chat nuevo lleva `conversacion_id` vacío; el Backend genera el ID y lo devuelve en la respuesta, y el Frontend lo reutiliza (`Conversation.server_id`). Un chat cargado del historial se continúa con su propio `conversacion_id`. El UUID local de `Conversation.id` solo identifica el chat en la interfaz.
    - **Agentes**: `Agente1` conserva ese identificador y su memoria para los turnos sucesivos; la función CTR-001 devuelve `trace_id`, `estado`, `texto`, `fuentes` y `codigo_error`.
-   - **Pendiente con Backend**: Confirmar si Backend acepta el UUID generado por Frontend o lo sustituye por uno propio, y cómo persiste la conversación.
+   - **Persistencia**: Backend guarda el chat y sus mensajes con ese ID (CTR-006) y cada usuario solo accede a los suyos; un ID ajeno responde 404 `conversacion_no_encontrada` y el Frontend muestra «Esta conversación ya no está disponible».
 
 3. **Mecanismo de sesión**:
    - **Tipo de token**: Confirmar el uso de Bearer token (`Authorization: Bearer <token>`) o cookie de sesión.
    - **Caducidad**: Formato de error y flujo de renovación ante expiración (HTTP 401 / 403).
 
    **Estado comprobado en el Frontend:** el `token` devuelto por login se conserva en memoria y,
-   si existe, se envía en la cabecera `Authorization`. El esquema definitivo del token o cookie,
-   su caducidad y la renovación siguen pendientes de confirmación con Backend; ante 401/403 se
-   cierra la sesión.
+   si existe, se envía en la cabecera `Authorization`. Comprobado contra el Backend real
+   (`Test/test_Frontend/test_conexion_real.py`): sin sesión o con token manipulado la consulta y el
+   historial responden 401 `sesion_caducada`. La caducidad y la renovación del token siguen
+   pendientes de confirmación con Backend. Ante 401/403, tanto al cargar el historial como en una
+   consulta, se avisa con «Tu sesión ha caducado…» y se cierra la sesión (vuelve a la pantalla de login).

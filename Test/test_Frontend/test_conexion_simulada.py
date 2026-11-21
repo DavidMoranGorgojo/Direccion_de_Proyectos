@@ -197,6 +197,7 @@ class TestCTR001LecturaRespuestas(BaseFrontendTestCase):
 
         self.assertEqual(status, 200)
         self.assertIsInstance(data, dict)
+        # El Backend añade conversacion_id a los campos de CTR-001
         campos_esperados = {"trace_id", "conversacion_id", "estado", "texto", "fuentes", "codigo_error"}
         self.assertEqual(set(data.keys()), campos_esperados)
         self.assertIsInstance(data["fuentes"], list)
@@ -305,6 +306,23 @@ class TestCTR006LecturaHistorial(BaseFrontendTestCase):
         self.assertEqual(len(conv_recuperada.messages), 1)
         self.assertEqual(conv_recuperada.messages[0].text, "¿Nivel de aceite?")
 
+    def test_ctr006_conversation_from_dict(self):
+        """Un chat del historial se continúa con su propio conversacion_id (no con ID vacío)."""
+        d = {"conversacion_id": "abc123", "titulo": "Prueba de motor",
+             "created_at": "2026-01-15T10:00:00Z", "updated_at": "2026-01-15T10:03:00Z",
+             "mensajes": [{"message_id": "m1", "trace_id": "t1", "role": "user",
+                           "contenido": "¿Nivel de aceite?", "estado": "respuesta",
+                           "timestamp": "2026-01-15T10:00:00Z", "fuentes": []}]}
+        conv = Conversation.from_dict(d)
+        self.assertEqual(conv.id, "abc123")
+        self.assertEqual(conv.server_id, "abc123")
+        self.assertEqual(conv.title, "Prueba de motor")
+        self.assertEqual(len(conv.messages), 1)
+
+    def test_chat_nuevo_envia_conversacion_id_vacio(self):
+        """CTR-001: la primera pregunta de un chat nuevo lleva conversacion_id vacío."""
+        self.assertEqual(Conversation().server_id, "")
+
 
 # ==============================================================================
 # 3. ENVÍO DE CONSULTAS AL ASISTENTE
@@ -318,6 +336,17 @@ class TestEnvioConsulta(BaseFrontendTestCase):
         self.assertIsInstance(resp, Response)
         self.assertEqual(resp.estado, STATUS_OK)
         self.assertIn("refrigerante", resp.texto.lower())
+
+    def test_ruta_de_consulta_es_post_consulta(self):
+        """El Frontend habla con el Backend en POST /consulta, no con la ruta interna de Agentes."""
+        self.assertEqual(api.CONSULTA_PATH, "/consulta")
+        with patch("services.api.call") as mock_call:
+            mock_call.return_value = (200, {"trace_id": "t", "estado": STATUS_OK, "texto": "Ok",
+                                            "fuentes": [], "codigo_error": "", "conversacion_id": "nuevo-1"})
+            resp = api.send_message("", "primera pregunta")
+        mock_call.assert_called_once_with("POST", "/consulta",
+                                          {"conversacion_id": "", "pregunta": "primera pregunta"})
+        self.assertEqual(resp.conversacion_id, "nuevo-1")
 
     def test_envio_consulta_preserva_texto_exacto(self):
         """CTR-001 exige que la pregunta se envíe EXACTAMENTE como se escribió (sin strip)."""
@@ -412,11 +441,30 @@ class TestErroresHTTP(BaseFrontendTestCase):
         self.assertIn("Demasiados intentos", res.error)
 
     def test_error_429_en_consulta(self):
-        """HTTP 429 en CTR-001 produce una respuesta genérica de error."""
+        """HTTP 429 en CTR-001 pide esperar, sin llamarlo «asistente no disponible»."""
         with patch("services.api.call", return_value=(429, {"mensaje": "Rate limit"})):
             resp = api.send_message("c-429", "pregunta")
             self.assertEqual(resp.estado, STATUS_ERROR)
-            self.assertEqual(resp.texto, GENERIC_ERROR)
+            self.assertEqual(resp.codigo_error, "demasiadas_consultas")
+            self.assertEqual(resp.texto, api.TOO_MANY_REQUESTS)
+            self.assertNotEqual(resp.texto, GENERIC_ERROR)
+
+    def test_error_404_en_consulta_conversacion_no_encontrada(self):
+        """HTTP 404 en CTR-001: el chat no existe o no es del usuario."""
+        body = {"codigo_error": "conversacion_no_encontrada", "mensaje": "La conversación no existe."}
+        with patch("services.api.call", return_value=(404, body)):
+            resp = api.send_message("c-404", "pregunta")
+            self.assertEqual(resp.estado, STATUS_ERROR)
+            self.assertEqual(resp.codigo_error, "conversacion_no_encontrada")
+            self.assertEqual(resp.texto, api.CONVERSATION_NOT_FOUND)
+
+    def test_error_422_en_consulta_entrada_invalida(self):
+        """HTTP 422 en CTR-001: formato de entrada incorrecto."""
+        with patch("services.api.call", return_value=(422, {"codigo_error": "entrada_invalida"})):
+            resp = api.send_message("c-422", "pregunta")
+            self.assertEqual(resp.estado, STATUS_ERROR)
+            self.assertEqual(resp.codigo_error, "entrada_invalida")
+            self.assertEqual(resp.texto, api.INVALID_INPUT)
 
     def test_error_429_en_historial(self):
         """HTTP 429 en CTR-006 devuelve HistoryResult no exitoso."""

@@ -5,10 +5,12 @@ Contratos que implementa este módulo:
   CTR-001  Consulta al asistente. Cuerpo EXACTO (sin historial: la memoria de la conversación
            la lleva Agentes por conversacion_id):
                {"conversacion_id": "...", "pregunta": "texto tal y como se escribió"}
-           Respuesta (siempre los mismos campos; los errores controlados también son HTTP 200):
+           Respuesta (siempre los mismos campos; los errores controlados de Agentes también son HTTP 200):
                {"trace_id", "estado", "texto", "fuentes": [{"chunk_id", "documento", "seccion",
                 "pagina", "versiones", "obsoleto"}], "codigo_error"}
-           El Backend expone POST /consulta y devuelve conversacion_id.
+           El Backend expone POST /consulta y devuelve conversacion_id. Errores HTTP del propio Backend:
+           401/403 sesión caducada, 404 conversación no encontrada, 422 entrada inválida, 429 demasiadas
+           consultas; el resto (5xx, JSON no válido) se muestra como error genérico.
   CTR-006  Historial:  GET /chats  ->  {"chats": [...], "total": n}
   CTR-005  Login: ver services/auth.py
 
@@ -37,10 +39,13 @@ from services import session
 
 API_URL = os.environ.get("ARSOFT_API_URL", "").rstrip("/")
 TIMEOUT_S = 60
-CONSULTA_PATH = "/agentes/consulta"          # ruta Frontend -> Backend: pendiente de contrato
+CONSULTA_PATH = "/consulta"                  # CTR-001: Frontend -> Backend (el Backend reenvía a /agentes/consulta)
 LOGIN_PATH = "/auth/login"                   # CTR-005
 HISTORIAL_PATH = "/chats"                    # CTR-006
 SESSION_EXPIRED = "Tu sesión ha caducado. Cierra sesión y vuelve a entrar."
+TOO_MANY_REQUESTS = "Demasiadas consultas seguidas. Espera un momento antes de volver a intentarlo."
+CONVERSATION_NOT_FOUND = "Esta conversación ya no está disponible. Empieza un chat nuevo."
+INVALID_INPUT = "La consulta no se ha podido enviar: faltan datos o el formato es incorrecto."
 
 
 def is_mock() -> bool:
@@ -103,9 +108,15 @@ def send_message(conversation_id: str, pregunta: str) -> Response:
         return Response.error()
     if status in (401, 403):
         return Response.error(SESSION_EXPIRED, "sesion_caducada")
+    if status == 429:
+        return Response.error(TOO_MANY_REQUESTS, "demasiadas_consultas")
+    if status == 404:                          # chat ajeno o borrado: el Backend no reenvía a Agentes
+        return Response.error(CONVERSATION_NOT_FOUND, "conversacion_no_encontrada")
+    if status == 422:
+        return Response.error(INVALID_INPUT, "entrada_invalida")
     if status == 200 and data is not None:
         return Response.from_dict(data)
-    return Response.error()                    # 5xx, 422, JSON no válido…: mensaje genérico
+    return Response.error()                    # 5xx, JSON no válido…: mensaje genérico
 
 
 class ChatWorker(QThread):
