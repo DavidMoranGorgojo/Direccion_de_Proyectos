@@ -21,6 +21,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from .conocimiento import router as knowledge
 from .historial import ConversacionAjena, guardar_turno, reservar_chat
 from .historial import router as historial
+from . import limite_consultas
 from .links import connect, service_access, service_headers
 from .registro import registrar
 from .registro import router as registro
@@ -97,6 +98,14 @@ async def http_error(request: Request, error: StarletteHTTPException):
     return JSONResponse(body, status_code=error.status_code, headers=error.headers)
 
 
+@app.exception_handler(Exception)
+async def internal_error(request: Request, error: Exception):
+    """500 con el formato de error de la API, sin detalles internos (CTR-001: error 500)."""
+    log.exception("Error no controlado en %s", request.url.path)
+    return JSONResponse({"codigo_error": "error_interno", "mensaje": "Error interno del servidor."},
+                        status_code=500)
+
+
 @app.exception_handler(psycopg.Error)
 async def postgres_error(request: Request, error: psycopg.Error):
     return JSONResponse({"codigo": "indice_no_disponible"}, status_code=503)
@@ -150,6 +159,11 @@ async def consulta(data: Pregunta, request: Request,
     cid = data.conversacion_id or uuid4().hex
     if invalid_question(data.pregunta):
         return failed(cid, "entrada_invalida", "La pregunta debe contener entre 1 y 2000 caracteres.")
+    espera = limite_consultas.admitir(usuario["id"])
+    if espera:  # CTR-001: 429 si el usuario encadena demasiadas consultas
+        raise HTTPException(429, headers={"Retry-After": str(espera)},
+                            detail={"codigo_error": "demasiadas_consultas",
+                                    "mensaje": "Demasiadas consultas seguidas. Espera un momento."})
     # psycopg es síncrono: el acceso a la base va a un hilo aparte para no bloquear el event loop
     try:
         await run_in_threadpool(reservar, usuario["id"], cid, data.pregunta)
