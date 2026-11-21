@@ -43,13 +43,28 @@ apptainer exec instance://arsoft-api python -m app.usuarios_prueba --desarrollo
   - 200 `{"estado": "autenticado", "mensaje", "usuario": {"id", "nombre_usuario", "nombre", "rol"}, "token", "token_type", "expires_in"}`
   - 401 `credenciales_invalidas` · 422 `datos_incompletos` · 429 `demasiados_intentos` (5 fallos en 5 min por usuario e IP) · 503 `servicio_no_disponible`. Llevan además `"estado": "no_autenticado"`, como espera Frontend.
   - `GET /auth/me`: usuario de la sesión.
-- **CTR-001** `POST /consulta` exige sesión (401 `sesion_caducada`). Si `conversacion_id` llega vacío, Backend lo genera. Antes de llamar a Agentes reserva el chat de forma atómica (`INSERT … ON CONFLICT … WHERE usuario_id`): si el ID es de otro usuario, aunque lo use a la vez, devuelve 404 `conversacion_no_encontrada` y no se reenvía a Agentes. Cada turno se guarda en el historial y en el registro; si la base falla al guardar, la respuesta se entrega igual. El acceso a PostgreSQL va en un hilo aparte (`run_in_threadpool`) para no bloquear el event loop.
+- **CTR-001** `POST /consulta` reenvía la pregunta a `POST {AGENTES_URL}/agentes/consulta` con el token de servicio y devuelve la respuesta de Agentes con el `conversacion_id`. Errores HTTP del propio Backend:
+  - 401 `sesion_caducada`: sin token, token manipulado o caducado.
+  - 403 `acceso_denegado`: la sesión es válida pero el usuario está desactivado.
+  - 404 `conversacion_no_encontrada`: el chat es de otro usuario.
+  - 429 `demasiadas_consultas`: más de `ARSOFT_CONSULTAS_POR_MINUTO` (20 por defecto) consultas en 60 s por usuario; lleva `Retry-After`.
+  - 500 `error_interno`: fallo no controlado, sin detalles internos en la respuesta (va al log).
+  - Los fallos de Agentes (caído, token rechazado, respuesta no válida o tiempo agotado) llegan como HTTP 200 con `estado: "error"` y `codigo_error` (`servicio_no_disponible`, `tiempo_agotado`), como fija CTR-001.
+
+  Si `conversacion_id` llega vacío, Backend lo genera. Antes de llamar a Agentes reserva el chat de forma atómica (`INSERT … ON CONFLICT … WHERE usuario_id`): si el ID es de otro usuario, aunque lo use a la vez, devuelve 404 `conversacion_no_encontrada` y no se reenvía a Agentes. Cada turno se guarda en el historial y en el registro; si la base falla al guardar, la respuesta se entrega igual. El acceso a PostgreSQL va en un hilo aparte (`run_in_threadpool`) para no bloquear el event loop.
 - **CTR-002** `POST /conocimiento/vectorial` queda montado en la app (`crear_router(connect, service_access)`), con el token de servicio como el resto de `/conocimiento`.
 - **CTR-006** `GET /chats?limit&offset` → `{"chats": [{"conversacion_id", "titulo", "created_at", "updated_at", "mensajes": [{"message_id", "trace_id", "role", "contenido", "estado", "codigo_error", "timestamp", "fuentes"}]}], "total"}`, con la forma que lee Frontend. También `GET`, `PATCH {"titulo"}` y `DELETE /chats/{conversacion_id}` (al borrar se pide a Agentes que olvide la conversación). Cada usuario solo ve los suyos.
+- **CTR-007** Historial con Agentes: Agentes lee una conversación con el token de servicio en `GET /chats/{conversacion_id}?limit=N` (los N últimos mensajes, en orden). Es lo que usa `Agents/agente1/cliente_backend.py` (`obtener_historial`) para recuperar la memoria de un chat cuando su sesión en Agentes ha caducado o se ha reiniciado. Con el token de servicio solo se lee un chat: no se listan, no se modifican ni se borran, y no sirve como sesión en `/consulta`. El historial lo escribe Backend en cada `/consulta`.
 - **CTR-003** `GET /consultas/mias` y `GET /consultas` (solo admin; filtros `usuario_id`, `tipo`, `estado`, `desde`, `hasta`). Guarda el `trace_id`, la pregunta, el estado, el código de error, los `chunk_id` citados y la latencia. Las búsquedas pueden registrar con `registro.registrar(conn, tipo="vectorial" | "lexica", ...)`.
 
-**Pruebas.** `Test/test_Backend/test_usuarios_historial_registro.py`. Las de base de datos necesitan un PostgreSQL de pruebas vacío:
+**Pruebas.**
+
+- `Test/test_Backend/test_usuarios_historial_registro.py`: login, historial, CTR-007, registro y errores.
+- `Test/test_Backend/test_integracion_agentes.py`: de principio a fin. Levanta con uvicorn el Backend y el servicio real de Agentes (`Agents/service.py`, Agente 1 real) y usa el cliente real de Frontend (login, consulta e historial). Solo se sustituyen el LLM del Agente 1 y los modelos BGE-M3 y reranker por versiones deterministas. Si el Agente 2 real está en el repo (`Agents/Agent_2`), Agentes recupera con su pipeline real contra `/conocimiento` del Backend, y se comprueba la pregunta trampa (no se cita el documento sustituido). Si no está, usa el simulador y esa prueba se omite. Necesita PySide6.
+
+Las de base de datos necesitan un PostgreSQL de pruebas vacío **con pgvector**. Las de `Backend/api/tests` se lanzan desde su carpeta, por el `pytest.ini` de la raíz:
 
 ```bash
 ARSOFT_TEST_DATABASE_URL=postgresql://... PYTHONPATH=.:shared python -m pytest Test/test_Backend
+cd Backend/api && PYTHONPATH=.:../../shared python -m pytest -c pyproject.toml
 ```
