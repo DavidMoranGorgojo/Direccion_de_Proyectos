@@ -9,6 +9,7 @@ From: pytorch/pytorch@sha256:c8268a92a69bd500f8be0e665b2630ee006dadaf7bfbc242491
     Agents/__init__.py /opt/arsoft/Agents/__init__.py
     Agents/requirements.txt /opt/arsoft/Agents/requirements.txt
     Agents/service.py /opt/arsoft/Agents/service.py
+    Agents/Agent_2 /opt/arsoft/Agents/Agent_2
     Agents/agente1/__init__.py /opt/arsoft/Agents/agente1/__init__.py
     Agents/agente1/core.py /opt/arsoft/Agents/agente1/core.py
     shared/arsoft_http.py /opt/arsoft/arsoft_http.py
@@ -17,6 +18,8 @@ From: pytorch/pytorch@sha256:c8268a92a69bd500f8be0e665b2630ee006dadaf7bfbc242491
     if [ -f /opt/arsoft/Agents/requirements.txt ]; then
         python -m pip install --no-cache-dir -r /opt/arsoft/Agents/requirements.txt
     fi
+
+    python -m pip install --no-cache-dir -r /opt/arsoft/Agents/Agent_2/requirements.txt
 
 %environment
     export PYTHONUNBUFFERED=1
