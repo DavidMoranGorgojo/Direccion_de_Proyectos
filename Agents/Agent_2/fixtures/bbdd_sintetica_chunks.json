@@ -1,0 +1,2824 @@
+﻿{
+  "version_bbdd": "1.0-sintetica-completa",
+  "total_chunks": 98,
+  "distribucion": {
+    "sustituidos_00": 2,
+    "companero_01_06": 49,
+    "usuario_07_12": 47
+  },
+  "chunks": [
+    {
+      "chunk_id": "HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k",
+      "score": 0,
+      "texto": "DOCUMENTO SUSTITUIDO — HTM240-MNT-001 — Plan de mantenimiento preventivo (versión 1.0, obsoleta).\nEstado: SUSTITUIDO. Este documento ha sido reemplazado por HTM240-MNT-001 versión 1.1. Se conserva únicamente como referencia histórica y para evaluar la capacidad del sistema de priorizar información vigente. No debe utilizarse como fuente de respuesta.\nDocumento: HTM240-MNT-001 | Versión: 1.0 (obsoleta) | Fecha: 2025-06-01 | Sustituido por: HTM240-MNT-001 v1.1 (ver HTM240-BOL-006).\nContenido obsoleto:\nLa sustitución completa del refrigerante de los tres circuitos térmicos (CIR-01, CIR-02, CIR-03) debe realizarse cada 80.000 km o 60 meses, lo que ocurra primero.\nEsta cifra es incorrecta y ha sido corregida en la versión vigente del plan de mantenimiento (60.000 km o 48 meses), según se documenta en HTM240-BOL-006. Cualquier respuesta que utilice el valor de 80.000 km debe considerarse basada en información obsoleta.",
+      "documento": "HTM240-MNT-001",
+      "seccion": "Contenido obsoleto",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "mantenimiento",
+      "obsoleto": true,
+      "sustituido_por": "HTM240-MNT-001",
+      "vigente_para": [],
+      "fecha_revision": "2025-06-01",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [
+        "BOL-006"
+      ],
+      "ids_referenciados": [
+        "CIR-01",
+        "CIR-02",
+        "CIR-03",
+        "HTM240-BOL-006",
+        "HTM240-MNT-001"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A",
+      "score": 0,
+      "texto": "DOCUMENTO SUSTITUIDO — HTM240-PRC-003 — Verificación de la bomba eléctrica auxiliar A (versión 1.0, obsoleta).\nEstado: SUSTITUIDO. Reemplazado por HTM240-PRC-003 versión 2.0 (ver HTM240-BOL-002). Aplicable únicamente, con carácter histórico, a vehículos V1.0 no actualizados. No debe utilizarse para vehículos V1.1 o V2.0.\nDocumento: HTM240-PRC-003 | Versión: 1.0 (obsoleta) | Fecha: 2025-06-01 | Aplicabilidad histórica: V1.0 exclusivamente.\nValores nominales de esta versión obsoleta:\nCaudal esperado: 8-14 l/min. Corriente esperada: 3-5 A a 12V (rango vigente únicamente para V1.0; la versión 2.0 del procedimiento, aplicable a V1.1 y V2.0, amplía este rango a 3-6 A según HTM240-BOL-002).\nEl resto de pasos de esta versión obsoleta coincide sustancialmente con la versión vigente; la única diferencia relevante es el rango de corriente nominal citado arriba.",
+      "documento": "HTM240-PRC-003",
+      "seccion": "Valores nominales de esta versión obsoleta",
+      "pagina": 1,
+      "versiones": [
+        "V1.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "procedimiento",
+      "obsoleto": true,
+      "sustituido_por": "HTM240-PRC-003",
+      "vigente_para": ["V1.0"],
+      "fecha_revision": "2025-06-01",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [
+        "BOL-002"
+      ],
+      "ids_referenciados": [
+        "CMP-02",
+        "HTM240-BOL-002",
+        "HTM240-PRC-003"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-MAN-001@1.1_p1_man_001_01",
+      "score": 0,
+      "texto": "Sistema ThermoDrive HTM-240 — Descripción general.\nEl sistema ThermoDrive HTM-240 gestiona la térmica de un vehículo híbrido enchufable mediante\ntres circuitos independientes pero interconectados: CIR-01 (motor de combustión), CIR-02\n(batería de alta tensión) y CIR-03 (electrónica de potencia / inversor).\nLa Unidad de Control Térmico (TCU, CMP-13) centraliza todas las decisiones, actúa sobre\nbombas, termostato, válvula de cuatro vías y electroventilador, y se comunica con el\nresto del vehículo por red CAN a 500 kbps.",
+      "documento": "HTM240-MAN-001",
+      "seccion": "1",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "manual",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-13",
+        "CIR-01",
+        "CIR-02",
+        "CIR-03"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-MAN-001@1.1_p1_man_001_02",
+      "score": 0,
+      "texto": "Circuito CIR-01 — Circuito térmico del motor de combustión.\nComponentes principales: bomba mecánica de agua (CMP-01), termostato electrónico (CMP-08),\nradiador principal (CMP-05), vaso de expansión (CMP-07), intercambiador aceite-refrigerante\n(CMP-11), calentador eléctrico PTC (CMP-12, 3 kW en V1.0, 5 kW en V2.0).\nRango normal: temperatura de salida de culata 85-98 °C, presión 1.0-1.6 bar.",
+      "documento": "HTM240-MAN-001",
+      "seccion": "2",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "motor",
+      "tipo_documento": "manual",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-01",
+        "CMP-05",
+        "CMP-07",
+        "CMP-08",
+        "CMP-11",
+        "CMP-12",
+        "CIR-01"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-MAN-001@1.1_p1_man_001_03",
+      "score": 0,
+      "texto": "Circuito CIR-02 — Circuito térmico de la batería de alta tensión.\nComponentes: bomba eléctrica auxiliar A (CMP-02), radiador auxiliar (CMP-06), intercambiador\nbatería-refrigerante (CMP-10), filtro de batería (CMP-24), sensor de caudal (CMP-18),\nsensor de temperatura multipunto (CMP-15, ref. ST-B100 en V1.0/V1.1, ST-B200 en V2.0).\nRango normal: temperatura media de módulos 15-35 °C, caudal 8-14 l/min.",
+      "documento": "HTM240-MAN-001",
+      "seccion": "2",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "manual",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [
+        "BOL-002"
+      ],
+      "ids_referenciados": [
+        "CMP-02",
+        "CMP-06",
+        "CMP-10",
+        "CMP-15",
+        "CMP-18",
+        "CMP-24",
+        "CIR-02"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-MAN-001@1.1_p1_man_001_03b",
+      "score": 0,
+      "texto": "Circuito CIR-02 — Versión V2.0 (diferencias relevantes).\nSensor de temperatura de batería actualizado a referencia ST-B200 (mayor precisión).\nEl sensor de presión dedicado del circuito de batería se elimina; su función se fusiona en\nel sensor de caudal CMP-18. Software TCU actualizado a v2.0, lo que cambia el significado\ndel código HTM-0142 respecto a versiones anteriores (ver HTM240-DTC-001 y HTM240-BOL-003).\nCalentador PTC actualizado a 5 kW.",
+      "documento": "HTM240-MAN-001",
+      "seccion": "2",
+      "pagina": 1,
+      "versiones": [
+        "V2.0"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "manual",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [
+        "BOL-003"
+      ],
+      "ids_referenciados": [
+        "CMP-15",
+        "CMP-18",
+        "HTM-0142"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-MAN-001@1.1_p2_man_001_04",
+      "score": 0,
+      "texto": "Circuito CIR-03 — Circuito de refrigeración de la electrónica de potencia (inversor).\nComponentes: bomba eléctrica auxiliar B (CMP-03), comparte radiador auxiliar CMP-06 con\nCIR-02, sensor de temperatura inversor (CMP-16).\nRango normal: temperatura de inversor 20-55 °C, caudal 6-10 l/min.\nAVISO: el radiador CMP-06 es compartido con CIR-02; una obstrucción puede provocar\nsobretemperatura simultánea de batería e inversor.",
+      "documento": "HTM240-MAN-001",
+      "seccion": "2",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "electronica_potencia",
+      "tipo_documento": "manual",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-03",
+        "CMP-06",
+        "CMP-16",
+        "CIR-03"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-MAN-001@1.1_p2_man_001_05",
+      "score": 0,
+      "texto": "Interconexión entre circuitos y válvula de cuatro vías (CMP-04).\nLa válvula CMP-04 permite desviar calor residual del motor (CIR-01) hacia la batería (CIR-02)\nen modo arranque en frío, acelerando el calentamiento del pack sin activar el PTC.\nEl radiador auxiliar CMP-06 es compartido entre CIR-02 y CIR-03.\nLa TCU usa la temperatura del motor como variable para priorizar el electroventilador\n(CMP-09) entre el radiador principal y el auxiliar cuando ambos lo requieren.",
+      "documento": "HTM240-MAN-001",
+      "seccion": "4",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "manual",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-04",
+        "CMP-06",
+        "CMP-09",
+        "CIR-01",
+        "CIR-02",
+        "CIR-03"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-MAN-001@1.1_p3_man_001_06",
+      "score": 0,
+      "texto": "Estados funcionales del sistema ThermoDrive HTM-240.\n1. Arranque en frío: termostato cerrado, válvula CMP-04 puede desviar calor motor→batería,\n   PTC activo si hay demanda de calefacción o temperatura de batería baja.\n2. Calentamiento: temperaturas acercándose al rango de trabajo; electroventilador apagado\n   o a baja velocidad salvo necesidad puntual.\n3. Funcionamiento normal: tres temperaturas en rango, control proporcional de bombas,\n   válvula y electroventilador.\n4. Enfriamiento post-parada: TCU mantiene bombas (CMP-02, CMP-03) y electroventilador\n   activos brevemente si temperaturas al apagar superan el umbral, para evitar puntos calientes.",
+      "documento": "HTM240-MAN-001",
+      "seccion": "6",
+      "pagina": 3,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "manual",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-02",
+        "CMP-03",
+        "CMP-04",
+        "CMP-09"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-MAN-001@1.1_p4_man_001_07",
+      "score": 0,
+      "texto": "Estrategias de protección del sistema.\n- Protección por componente: fuera del rango de validez del sensor, TCU usa valor estimado o de seguridad conservador.\n- Protección por circuito: si un circuito supera su umbral crítico, TCU prioriza sus actuadores.\n- Protección global (modo Protección): limita potencia del vehículo para reducir generación de calor; informa al conductor con testigo TES-06. DTC asociado: HTM-0406.\n- Aislamiento de alta tensión: ante degradación del aislamiento del PTC (CMP-12), TCU corta funciones de alta tensión y activa testigo TES-05. Ver HTM240-SEG-001.",
+      "documento": "HTM240-MAN-001",
+      "seccion": "8",
+      "pagina": 4,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "manual",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-12",
+        "TES-05",
+        "TES-06",
+        "HTM-0406"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-MAN-001@1.1_p4_man_001_08",
+      "score": 0,
+      "texto": "Diferencias entre versiones del sistema ThermoDrive HTM-240.\n- V1.0: versión inicial. Sensor CMP-15 referencia ST-B100. Calentador PTC 3 kW.\n- V1.1: boletín HTM240-BOL-002 actualiza corriente nominal de CMP-02 y sustituye la versión\n  inicial de HTM240-PRC-003.\n- V2.0: CMP-15 pasa a ST-B200 (mayor precisión). PTC 5 kW. Sensor de presión de batería\n  eliminado (fusionado en CMP-18). Software TCU v2.0; cambia significado de HTM-0142.\nVerificar siempre la versión instalada antes de aplicar un procedimiento o interpretar un DTC.",
+      "documento": "HTM240-MAN-001",
+      "seccion": "9",
+      "pagina": 4,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "manual",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [
+        "BOL-002",
+        "BOL-003"
+      ],
+      "ids_referenciados": [
+        "CMP-02",
+        "CMP-15",
+        "CMP-18",
+        "HTM-0142",
+        "HTM240-PRC-003"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-CAT-001@1.0_p1_cat_001_01",
+      "score": 0,
+      "texto": "CMP-01 — Bomba mecánica de agua (motor de combustión / CIR-01).\nFunción: circulación de refrigerante en el circuito del motor de combustión.\nAccionamiento mecánico por correa del motor; no controlada eléctricamente por la TCU.\nValores nominales: caudal 20-40 l/min dependiendo del régimen.\nPosibles modos de fallo: rodamiento desgastado, impulsor fracturado, fuga por retén.\nSíntomas asociados: sobrecalentamiento del motor, ruido de rodamiento, fuga de refrigerante.",
+      "documento": "HTM240-CAT-001",
+      "seccion": "CMP-01",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "motor",
+      "tipo_documento": "catalogo",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-01",
+        "CIR-01"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-CAT-001@1.0_p1_cat_001_02",
+      "score": 0,
+      "texto": "CMP-02 — Bomba eléctrica auxiliar A (circuito de batería / CIR-02).\nFunción: circulación de refrigerante en el circuito de batería de alta tensión.\nControlada por la TCU mediante señal PWM. V1.1: corriente nominal actualizada por BOL-002.\nValores nominales: caudal 8-14 l/min, consumo máx. 8 A (V1.0), actualizado en V1.1 (BOL-002).\nPosibles modos de fallo: rodamiento desgastado, obstrucción, fallo de mando TCU.\nSíntomas asociados: temperatura batería elevada, DTC HTM-0202.\nProcedimiento de verificación: HTM240-PRC-003 (V1.1/V2.0), HTM240-PRC-004 (tras sustitución).",
+      "documento": "HTM240-CAT-001",
+      "seccion": "CMP-02",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "catalogo",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [
+        "BOL-002"
+      ],
+      "ids_referenciados": [
+        "CMP-02",
+        "CIR-02",
+        "HTM-0202",
+        "HTM240-PRC-003",
+        "HTM240-PRC-004"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-CAT-001@1.0_p1_cat_001_03",
+      "score": 0,
+      "texto": "CMP-03 — Bomba eléctrica auxiliar B (electrónica de potencia / CIR-03).\nFunción: circulación de refrigerante en el circuito de la electrónica de potencia.\nControlada por la TCU. Valores nominales: caudal 6-10 l/min.\nPosibles modos de fallo: rodamiento, obstrucción, fallo de mando.\nSíntomas asociados: temperatura inversor elevada, DTC HTM-0302.",
+      "documento": "HTM240-CAT-001",
+      "seccion": "CMP-02",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "electronica_potencia",
+      "tipo_documento": "catalogo",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-03",
+        "CIR-03",
+        "HTM-0302"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-CAT-001@1.0_p1_cat_001_04",
+      "score": 0,
+      "texto": "CMP-04 — Válvula distribuidora de cuatro vías.\nFunción: gestionar el intercambio térmico entre circuito motor (CIR-01) y batería (CIR-02)\nen arranque en frío. Controlada eléctricamente por la TCU.\nSensor de posición asociado: CMP-21.\nValores nominales: 0-100 % de apertura según consigna TCU.\nPosibles modos de fallo: actuador agarrotado, desajuste mecánico, potenciómetro desgastado.\nSíntomas asociados: calefacción insuficiente, lecturas incoherentes de temperatura, DTC HTM-0403.\nProcedimiento de verificación: HTM240-PRC-006.",
+      "documento": "HTM240-CAT-001",
+      "seccion": "CMP-04",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "catalogo",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-04",
+        "CMP-21",
+        "HTM-0403",
+        "HTM240-PRC-006"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-CAT-001@1.0_p2_cat_001_05",
+      "score": 0,
+      "texto": "CMP-05 — Radiador principal de alta temperatura (motor / CIR-01).\nFunción: disipar calor del circuito del motor de combustión.\nValores nominales: salto térmico 8-15 °C a velocidad crucero.\nPosibles modos de fallo: obstrucción externa, fuga en panal, aletas dañadas.\nSíntomas asociados: sobrecalentamiento en autovía, fuga frontal, electroventilador permanente.",
+      "documento": "HTM240-CAT-001",
+      "seccion": "CMP-05",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "motor",
+      "tipo_documento": "catalogo",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-05",
+        "CIR-01"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-CAT-001@1.0_p2_cat_001_06",
+      "score": 0,
+      "texto": "CMP-06 — Radiador auxiliar de baja temperatura (batería y electrónica de potencia).\nFunción: disipar calor de CIR-02 y CIR-03 (compartido).\nAVISO: una obstrucción puede causar sobretemperatura simultánea de batería e inversor.\nValores nominales: salto térmico 5-10 °C.\nPosibles modos de fallo: obstrucción, fuga, aletas dañadas.\nSíntomas asociados: temperatura batería elevada en carga rápida, temperatura inversor elevada.",
+      "documento": "HTM240-CAT-001",
+      "seccion": "CMP-06",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "catalogo",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-06",
+        "CIR-02",
+        "CIR-03"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-CAT-001@1.0_p2_cat_001_07",
+      "score": 0,
+      "texto": "CMP-08 — Termostato electrónico.\nFunción: regular apertura de paso hacia el radiador CMP-05 según temperatura y consigna TCU.\nValores nominales: apertura inicial 92 °C ±2.\nPosibles modos de fallo: bloqueado cerrado (→sobrecalentamiento), bloqueado abierto\n(→temperatura baja persistente), fallo eléctrico de mando.\nDTC asociados: HTM-0103 (sin respuesta), HTM-0104 (bloqueado abierto).",
+      "documento": "HTM240-CAT-001",
+      "seccion": "CMP-08",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "motor",
+      "tipo_documento": "catalogo",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-05",
+        "CMP-08",
+        "HTM-0103",
+        "HTM-0104"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-CAT-001@1.0_p3_cat_001_08",
+      "score": 0,
+      "texto": "CMP-09 — Electroventilador de velocidad variable.\nFunción: forzar flujo de aire a través de los radiadores CMP-05 y CMP-06.\nControlado por módulo CMP-22 mediante señal PWM.\nValores nominales: 0-100 % PWM, consumo máx. 18 A.\nPosibles modos de fallo: motor dañado, etapa de control PWM defectuosa, rodamiento gripado.\nSíntomas asociados: sobrecalentamiento a baja velocidad o parado, ruido excesivo,\nfuncionamiento continuo al 100 % (DTC HTM-0404).\nProcedimiento: HTM240-PRC-005.",
+      "documento": "HTM240-CAT-001",
+      "seccion": "CMP-09",
+      "pagina": 3,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "catalogo",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-05",
+        "CMP-06",
+        "CMP-09",
+        "CMP-22",
+        "HTM-0404",
+        "HTM240-PRC-005"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-CAT-001@1.0_p3_cat_001_09",
+      "score": 0,
+      "texto": "CMP-13 — Unidad de Control Térmico (TCU).\nFunción: gestionar estrategia térmica global, actuadores y comunicación CAN.\nAlimentación: 12 V. Comunicación: CAN 500 kbps.\nPosibles modos de fallo: fallo de software, fallo de alimentación, pérdida de comunicación CAN.\nSíntomas asociados: pérdida de comunicación con TCU, comportamiento errático de actuadores,\nmodo de emergencia térmica. DTC: HTM-0401 (sin comunicación), HTM-0402 (software).\nProcedimiento: HTM240-PRC-010, HTM240-PRC-012.",
+      "documento": "HTM240-CAT-001",
+      "seccion": "CMP-13",
+      "pagina": 3,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "catalogo",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-13",
+        "HTM-0401",
+        "HTM-0402",
+        "HTM240-PRC-010"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-CAT-001@1.0_p3_cat_001_10",
+      "score": 0,
+      "texto": "CMP-14 — Sensor de temperatura motor (CIR-01, salida culata).\nTipo: NTC. Rango: 0-130 °C, ±2 °C.\nPosibles modos de fallo: deriva de señal, circuito abierto, cortocircuito a masa.\nSíntomas asociados: lectura incoherente, DTC HTM-0102.\nProcedimiento: HTM240-PRC-007.\n\nCMP-15 — Sensor de temperatura batería (multipunto, x4 módulos).\nV1.0/V1.1: referencia ST-B100. V2.0: referencia ST-B200 (mayor precisión).\nTipo: NTC. Rango: -20 a 80 °C, ±1.5 °C.\nDTC asociados: HTM-0204 (fuera de rango batería).\n\nCMP-16 — Sensor de temperatura electrónica de potencia (inversor).\nTipo: NTC. Rango: 0-150 °C, ±2 °C.\nDTC asociados: HTM-0303 (fuera de rango inversor).",
+      "documento": "HTM240-CAT-001",
+      "seccion": "CMP-14",
+      "pagina": 3,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "catalogo",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-14",
+        "CMP-15",
+        "CMP-16",
+        "HTM-0102",
+        "HTM-0204",
+        "HTM-0303",
+        "HTM240-PRC-007"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-CAT-001@1.0_p4_cat_001_11",
+      "score": 0,
+      "texto": "CMP-17 — Sensor de presión circuito motor. Rango: 0-2.5 bar, ±0.05 bar.\nCMP-18 — Sensor de caudal circuito batería. Rango nominal: 8-14 l/min.\n         En V2.0 absorbe también la función del sensor de presión de batería.\nCMP-19 — Sensor de nivel de refrigerante (vaso de expansión). Estados: MIN / OK / MAX.\nCMP-20 — Sensor de temperatura ambiente. Rango: -45 a 90 °C.\nCMP-21 — Sensor de posición de la válvula CMP-04.\nCMP-22 — Módulo de mando del electroventilador CMP-09.\nCMP-24 — Filtro del circuito de batería (consumible). Sustituir según HTM240-PRC-011.\nCMP-25 — Relé de alimentación de bombas auxiliares CMP-02 y CMP-03.\nCMP-26 — Conector CAN de la TCU. DTC HTM-0504 si contacto degradado.",
+      "documento": "HTM240-CAT-001",
+      "seccion": "CMP-17",
+      "pagina": 4,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "catalogo",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-17",
+        "CMP-18",
+        "CMP-19",
+        "CMP-20",
+        "CMP-21",
+        "CMP-22",
+        "CMP-24",
+        "CMP-25",
+        "CMP-26",
+        "HTM-0504",
+        "HTM240-PRC-011"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-OPE-001@1.0_p1_ope_001_01",
+      "score": 0,
+      "texto": "HTM240-OPE-001 — Manual de operación del sistema ThermoDrive HTM-240.\nVersión: 1.0 | Aplicable a: V1.0, V1.1, V2.0.\nDescribe los testigos del sistema, sus significados y las acciones inmediatas que debe\ntomar el conductor ante su activación.\n\nTestigos principales:\n- TES-01: temperatura motor (amarillo fijo → precaución, rojo parpadeante → detener).\n- TES-02: temperatura batería elevada.\n- TES-03: nivel de refrigerante bajo.\n- TES-04: avería general del sistema térmico.\n- TES-05: aislamiento de alta tensión comprometido → parar y no tocar componentes HV.\n- TES-06: rendimiento reducido (modo Protección activo).\n- TES-07: mantenimiento requerido.\n- TES-08: pérdida de comunicación CAN con la TCU.",
+      "documento": "HTM240-OPE-001",
+      "seccion": "1",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "operacion",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "TES-01",
+        "TES-02",
+        "TES-03",
+        "TES-04",
+        "TES-05",
+        "TES-06",
+        "TES-07",
+        "TES-08"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-OPE-001@1.0_p2_ope_001_02",
+      "score": 0,
+      "texto": "Modo Protección — operación y conducta esperada del conductor.\nActivado por la TCU (DTC HTM-0406) cuando persiste sobretemperatura no resuelta.\nEfecto: limitación de potencia disponible para reducir generación interna de calor.\nTestigo: TES-06 (rendimiento reducido).\nConducta conductor: reducir demanda de potencia, evitar trayectos largos y carga rápida,\nacudir a taller en cuanto sea posible.\nEl modo Protección se desactiva automáticamente al normalizarse las temperaturas;\nsi es recurrente sin causa clara, requiere diagnóstico especializado.",
+      "documento": "HTM240-OPE-001",
+      "seccion": "3",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "operacion",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "TES-06",
+        "HTM-0406"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-OPE-001@1.0_p2_ope_001_03",
+      "score": 0,
+      "texto": "Acciones del conductor ante testigo TES-01 en rojo parpadeante (sobretemperatura crítica motor).\n1. Reducir velocidad inmediatamente.\n2. Detener el vehículo en el lugar seguro más próximo.\n3. Apagar el motor. No abrir el capó hasta que el motor se enfríe.\n4. No retirar el tapón del vaso de expansión con el motor caliente.\n5. Llamar a asistencia técnica.\nReferencia: HTM240-ADV-001 (manual de testigos y mensajes de advertencia).",
+      "documento": "HTM240-OPE-001",
+      "seccion": "4",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "motor",
+      "tipo_documento": "operacion",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "TES-01",
+        "CMP-07"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-OPE-001@1.0_p3_ope_001_04",
+      "score": 0,
+      "texto": "Gestión térmica post-parada.\nAl detener el vehículo, la TCU puede mantener activas las bombas eléctricas CMP-02 y CMP-03\ny el electroventilador CMP-09 durante un periodo breve si las temperaturas registradas al\napagar el contacto superan un umbral definido por software, para evitar puntos calientes.\nEl conductor puede percibir el funcionamiento del ventilador hasta 3 minutos después de apagar\nel contacto; esto es normal y no indica avería.",
+      "documento": "HTM240-OPE-001",
+      "seccion": "5",
+      "pagina": 3,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "operacion",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-02",
+        "CMP-03",
+        "CMP-09"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-MNT-001@1.0_p1_mnt_001_01",
+      "score": 0,
+      "texto": "HTM240-MNT-001 — Plan de mantenimiento preventivo ThermoDrive HTM-240.\nVersión: 1.0. Aplicable a: V1.0, V1.1, V2.0.\n\nIntervalos de mantenimiento principales:\n- Inspección del nivel de refrigerante: cada 10.000 km o 6 meses. Procedimiento: HTM240-PRC-001.\n- Inspección de fugas en circuitos: cada 20.000 km o 12 meses. Procedimiento: HTM240-PRC-008.\n- Verificación de sensores de temperatura: cada 20.000 km o 12 meses. Procedimiento: HTM240-PRC-007.\n- Verificación bomba auxiliar A (circuito batería): cada 30.000 km o 24 meses. Procedimiento: HTM240-PRC-003.\n- Sustitución filtro circuito batería CMP-24: cada 30.000 km o 24 meses. Procedimiento: HTM240-PRC-011.\n- Prueba funcional electroventilador: cada 30.000 km o 24 meses. Procedimiento: HTM240-PRC-005.\n- Comprobación válvula distribuidora cuatro vías: cada 40.000 km o 36 meses. Procedimiento: HTM240-PRC-006.\n- Comprobación de presión circuito motor: cada 40.000 km o 36 meses. Procedimiento: HTM240-PRC-009.\n- Purgado circuito (sustitución parcial de fluido): cada 40.000 km o 36 meses (circuitos). Procedimiento: HTM240-PRC-002.\n- Sustitución completa de fluido (todos los circuitos): cada 60.000 km o 48 meses. Procedimiento: HTM240-PRC-002.\n- Verificación comunicación CAN de la TCU: cada 20.000 km o 12 meses. Procedimiento: HTM240-PRC-010.",
+      "documento": "HTM240-MNT-001",
+      "seccion": "1",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "mantenimiento",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-24",
+        "HTM240-PRC-001",
+        "HTM240-PRC-002",
+        "HTM240-PRC-003",
+        "HTM240-PRC-005",
+        "HTM240-PRC-006",
+        "HTM240-PRC-007",
+        "HTM240-PRC-008",
+        "HTM240-PRC-009",
+        "HTM240-PRC-010",
+        "HTM240-PRC-011"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-MNT-001@1.0_p1_mnt_001_02",
+      "score": 0,
+      "texto": "Elementos consumibles del sistema ThermoDrive HTM-240.\n- Refrigerante: ThermoGlyc HX-40. Aplica a circuitos CIR-01, CIR-02, CIR-03.\n- Filtro del circuito de batería: CMP-24. Sustituir cada 30.000 km o 24 meses (HTM240-PRC-011).\n- Juntas y abrazaderas de manguitos del circuito motor: sustituir si presentan grietas,\n  envejecimiento o holgura.\n\nComprobaciones visuales en cada revisión:\n- Estado de manguitos y abrazaderas (grietas, envejecimiento, holgura).\n- Estado de aletas de los radiadores CMP-05 y CMP-06 (obstrucciones, daños).\n- Ausencia de cristalización o manchas de refrigerante en el compartimento motor.",
+      "documento": "HTM240-MNT-001",
+      "seccion": "2",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "mantenimiento",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-05",
+        "CMP-06",
+        "CMP-24",
+        "CIR-01",
+        "CIR-02",
+        "CIR-03",
+        "HTM240-PRC-011"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-MNT-001@1.0_p2_mnt_001_03",
+      "score": 0,
+      "texto": "Criterios generales de aceptación y rechazo tras mantenimiento.\n- Aceptado: valores dentro de rangos nominales de HTM240-CAT-001, ausencia de DTC activos\n  relacionados con el sistema térmico.\n- Rechazado: cualquier valor fuera de rango, DTC activo no borrado tras corrección o\n  nivel bajo persistente que reaparece tras reposición (investigar con HTM240-PRC-008).\nPrueba funcional completa HTM240-PRC-012: recomendada tras intervención mayor en más de\nun circuito o cuando se hayan activado tres o más testigos simultáneamente (DTC HTM-0405).",
+      "documento": "HTM240-MNT-001",
+      "seccion": "7",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "mantenimiento",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "HTM-0405",
+        "HTM240-PRC-008",
+        "HTM240-PRC-012"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DIA-001@1.1_p1_dia_001_01",
+      "score": 0,
+      "texto": "4.1 Árbol de diagnóstico: Sobrecalentamiento del motor.\nSíntoma inicial: testigo TES-01 encendido o temperatura de motor > 100 °C.\nPreguntas: ¿Testigo parpadea en rojo o fijo en amarillo? ¿Bajó el nivel de refrigerante? ¿Se oye el electroventilador?\nComprobaciones: nivel refrigerante (PRC-001); electroventilador (PRC-005); apertura termostato; presión circuito (PRC-009).\nResultados posibles:\n  - Nivel bajo con fuga → HTM240-PRC-008.\n  - Nivel correcto, ventilador no responde → PRC-005 (sospecha HTM-0105).\n  - Nivel y ventilador correctos, termostato no abre → sospecha HTM-0103.\n  - Todo correcto pero persiste en autovía → sospecha obstrucción CMP-05 o HTM-0108.\nCondición de parada: TES-01 parpadeando en rojo → detener vehículo de inmediato.\nEscalado: si no se identifica causa, escalar a técnico nivel 3.\nReferencias: PRC-001, 005, 008, 009; DTC HTM-0101 a HTM-0110.",
+      "documento": "HTM240-DIA-001",
+      "seccion": "4.1",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "motor",
+      "tipo_documento": "diagnostico",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-20",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "TES-01",
+        "CMP-05",
+        "HTM-0101",
+        "HTM-0103",
+        "HTM-0105",
+        "HTM-0108",
+        "HTM240-PRC-001",
+        "HTM240-PRC-005",
+        "HTM240-PRC-008",
+        "HTM240-PRC-009"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DIA-001@1.1_p1_dia_001_02",
+      "score": 0,
+      "texto": "4.2 Árbol de diagnóstico: Temperatura elevada de la batería.\nSíntoma inicial: testigo TES-02 encendido o mensaje \"temperatura de batería elevada\".\nPreguntas: ¿Ocurre en carga rápida, conducción intensa o en reposo? ¿Es constante?\nComprobaciones: caudal circuito batería (PRC-003); estado filtro CMP-24; limpieza CMP-06; desequilibrio entre módulos.\nResultados posibles:\n  - Caudal bajo con filtro colmatado → HTM-0203, aplicar PRC-011.\n  - Caudal nulo → HTM-0202, aplicar PRC-003.\n  - Caudal correcto, temperatura elevada sostenida en carga rápida → sospecha CMP-06 obstruido o intercambiador CMP-10 degradado.\nReferencias: PRC-003, 011; DTC HTM-0201 a HTM-0210.",
+      "documento": "HTM240-DIA-001",
+      "seccion": "4.2",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "diagnostico",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-20",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "TES-02",
+        "CMP-06",
+        "CMP-10",
+        "CMP-24",
+        "HTM-0202",
+        "HTM-0203",
+        "HTM240-PRC-003",
+        "HTM240-PRC-011"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DIA-001@1.1_p2_dia_001_03",
+      "score": 0,
+      "texto": "4.3 Árbol de diagnóstico: Temperatura elevada del inversor / electrónica de potencia.\nSíntoma inicial: testigo TES-04 o reducción de potencia sin aviso de batería ni motor.\nComprobaciones: caudal bomba B (análogo PRC-003); limpieza CMP-06 (compartido con CIR-02).\nResultados posibles:\n  - Caudal bajo → HTM-0302, revisar bomba CMP-03 y filtración.\n  - CMP-06 obstruido → síntoma simultáneo con batería.\n  - Caudal correcto → sospecha HTM-0301 (sobretemperatura inversor sin fallo aparente).\nReferencias: DTC HTM-0301 a HTM-0304.",
+      "documento": "HTM240-DIA-001",
+      "seccion": "4.3",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "electronica_potencia",
+      "tipo_documento": "diagnostico",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-20",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "TES-04",
+        "CMP-03",
+        "CMP-06",
+        "HTM-0301",
+        "HTM-0302",
+        "HTM240-PRC-003"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DIA-001@1.1_p3_dia_001_04",
+      "score": 0,
+      "texto": "4.9 Árbol de diagnóstico: Fallo intermitente.\nSíntoma inicial: testigo o mensaje aparece y desaparece sin patrón claro.\nPreguntas: ¿Coincide con vibración, baches o temperatura ambiente concreta? ¿Qué testigo?\nComprobaciones: inspección conectores bajo vibración (PRC-007, PRC-010); revisión relé CMP-25.\nResultados:\n  - Falso contacto en conector → reparar/limpiar y repetir prueba.\n  - Relé con contactos oxidados → HTM-0501, sustituir CMP-25.\nEscalado: si no se logra reproducir ni localizar en 2 intentos, escalar a nivel 3 con\nregistro de datos extendido.\nReferencias: PRC-007, 010; DTC HTM-0110, HTM-0501.",
+      "documento": "HTM240-DIA-001",
+      "seccion": "4.9",
+      "pagina": 3,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "diagnostico",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-20",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-25",
+        "HTM-0110",
+        "HTM-0501",
+        "HTM240-PRC-007",
+        "HTM240-PRC-010"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DIA-001@1.1_p4_dia_001_05",
+      "score": 0,
+      "texto": "4.10 Árbol de diagnóstico: Pérdida de comunicación con la TCU.\nSíntoma inicial: testigo TES-08 y/o TES-04 encendidos, posible pérdida de control de actuadores.\nComprobaciones: HTM240-PRC-010 (red CAN); alimentación y masa de la TCU.\nResultados:\n  - Tasa de error alta con conector oxidado → HTM-0504, limpiar/sustituir conector CMP-26.\n  - Sin respuesta total de la TCU → HTM-0401, verificar alimentación antes de sustituir la unidad.\nCondición de parada: si se impide verificar cualquier temperatura, evitar trayectos largos.\nEscalado: si la pérdida es total y no se recupera al reiniciar contacto.\nReferencias: PRC-010; DTC HTM-0401, HTM-0504.",
+      "documento": "HTM240-DIA-001",
+      "seccion": "4.10",
+      "pagina": 4,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "diagnostico",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-20",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "TES-04",
+        "TES-08",
+        "CMP-26",
+        "HTM-0401",
+        "HTM-0504",
+        "HTM240-PRC-010"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DIA-001@1.1_p4_dia_001_06",
+      "score": 0,
+      "texto": "4.11 Árbol de diagnóstico: Activación simultánea de varios testigos.\nSíntoma inicial: tres o más testigos del sistema térmico encendidos a la vez.\nPreguntas: ¿Qué testigos concretos están activos? ¿Ocurrió de forma súbita o progresiva?\nComprobaciones: ver combinaciones en HTM240-ADV-001 §3; ejecutar HTM240-PRC-012\n(prueba funcional completa) para descartar fallo de alimentación común.\nResultados: ver HTM240-ADV-001 §3 y §4 para la acción según combinación exacta.\nCondición de parada: tres o más testigos simultáneos exigen máxima precaución.\nEscalado: escalar salvo causa única identificada y resoluble en el momento.\nDTC asociado: HTM-0405.",
+      "documento": "HTM240-DIA-001",
+      "seccion": "4.11",
+      "pagina": 4,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "diagnostico",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-20",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "HTM-0405",
+        "HTM240-ADV-001",
+        "HTM240-PRC-012"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p1_htm0101",
+      "score": 0,
+      "texto": "HTM-0101 — Sobretemperatura motor circuito CIR-01.\nDescripción: Temperatura de refrigerante en salida de culata supera el umbral crítico de forma sostenida.\nSeveridad: Alta.\nCondición de activación: Temp > 118 °C durante > 30 s con vehículo en marcha.\nPosibles causas: nivel bajo de refrigerante; termostato bloqueado cerrado; electroventilador inoperativo; obstrucción del radiador principal CMP-05.\nSíntomas: testigo TES-01 encendido; pérdida de potencia; olor a refrigerante caliente.\nTestigos: TES-01, TES-06.\nDatos a comprobar: nivel de refrigerante; estado electroventilador; apertura termostato.\nProcedimiento: HTM240-DIA-001 > 4.1.\nCondición de borrado: temperatura desciende de 100 °C durante 5 min con motor en ralentí estable.\nRiesgo de continuar: ALTO — detener el vehículo en cuanto sea seguro.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0101",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "motor",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-05",
+        "TES-01",
+        "TES-06",
+        "HTM240-DIA-001"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p1_htm0102",
+      "score": 0,
+      "texto": "HTM-0102 — Sensor temperatura motor fuera de rango.\nDescripción: la señal del sensor CMP-14 se sale del rango válido (-40 a 150 °C eléctricos).\nSeveridad: Media.\nCondición de activación: lectura < -40 °C o > 150 °C durante > 5 s.\nPosibles causas: circuito abierto del sensor; cortocircuito a masa; conector oxidado.\nSíntomas: testigo avería general TES-04; lectura de temperatura errante en cuadro.\nProcedimiento: HTM240-PRC-007.\nRiesgo: Medio — continuar con precaución a baja exigencia.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0102",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "motor",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-14",
+        "TES-04",
+        "HTM240-PRC-007"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p1_htm0103",
+      "score": 0,
+      "texto": "HTM-0103 — Termostato electrónico sin respuesta.\nDescripción: la TCU no detecta cambio de posición del termostato CMP-08 tras orden de apertura.\nSeveridad: Alta.\nCondición de activación: sin variación de temperatura tras orden de apertura durante > 60 s.\nPosibles causas: termostato bloqueado cerrado; fallo del actuador eléctrico; fallo de mando TCU.\nSíntomas: sobrecalentamiento progresivo; testigo TES-01.\nTestigos: TES-01.\nProcedimiento: HTM240-DIA-001 > 4.1.\nRiesgo: Alto.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0103",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "motor",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-08",
+        "TES-01",
+        "HTM240-DIA-001"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p1_htm0105",
+      "score": 0,
+      "texto": "HTM-0105 — Electroventilador sin respuesta a consigna.\nDescripción: el electroventilador CMP-09 no varía su velocidad de forma proporcional a la señal PWM enviada por CMP-22.\nSeveridad: Media-Alta.\nCondición de activación: diferencia entre consigna y velocidad real > 20 % durante > 10 s.\nPosibles causas: etapa de control PWM CMP-22 defectuosa; motor CMP-09 dañado.\nSíntomas: sobrecalentamiento a baja velocidad; motor constantemente a máxima potencia.\nTestigos: TES-01, TES-06.\nProcedimiento: HTM240-PRC-005.\nRiesgo: Alto.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0105",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "motor",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-09",
+        "CMP-22",
+        "TES-01",
+        "TES-06",
+        "HTM240-PRC-005"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p1_htm0142",
+      "score": 0,
+      "texto": "HTM-0142 — Código con significado dependiente de versión. LEER CON ATENCIÓN.\nEn V1.0 y V1.1: fallo de sensor de presión del circuito de batería CMP-17-B.\nEn V2.0: fallo de calibración del sensor de caudal CMP-18 (que asume la función del sensor\nde presión eliminado). El procedimiento diagnóstico difiere entre versiones.\nBoletín HTM240-BOL-003 explica la transición y los criterios de borrado en V2.0.\nSeveridad: Media.\nRiesgo: Medio — verificar versión del sistema antes de actuar.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0142",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [
+        "BOL-003"
+      ],
+      "ids_referenciados": [
+        "CMP-17",
+        "CMP-18",
+        "HTM-0142"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p1_htm0142_v20",
+      "score": 0,
+      "texto": "HTM-0142 — Significado en versión V2.0.\nEn V2.0 el sensor de presión del circuito batería fue eliminado y su función fue absorbida\npor el sensor de caudal CMP-18. HTM-0142 en V2.0 indica fallo de calibración de CMP-18.\nEl procedimiento correcto es verificar CMP-18 según HTM240-BOL-003, NO aplicar el\nprocedimiento de V1.x.\nCondición de borrado: calibración de CMP-18 confirmada en ciclo completo.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0142",
+      "pagina": 1,
+      "versiones": [
+        "V2.0"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [
+        "BOL-003"
+      ],
+      "ids_referenciados": [
+        "CMP-18",
+        "HTM-0142"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p2_htm0202",
+      "score": 0,
+      "texto": "HTM-0202 — Caudal nulo en circuito de batería.\nDescripción: el sensor CMP-18 detecta caudal cero cuando la bomba CMP-02 debería estar activa.\nSeveridad: Alta.\nCondición de activación: caudal < 0.5 l/min durante > 10 s con bomba activa.\nPosibles causas: bomba CMP-02 inoperativa; obstrucción total del circuito; fallo relé CMP-25.\nSíntomas: temperatura batería elevada con rapidez; testigo TES-02.\nProcedimiento: HTM240-PRC-003.\nRiesgo: Alto.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0202",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-02",
+        "CMP-18",
+        "CMP-25",
+        "TES-02",
+        "HTM240-PRC-003"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p2_htm0203",
+      "score": 0,
+      "texto": "HTM-0203 — Caudal reducido en circuito de batería.\nDescripción: caudal del circuito CIR-02 inferior al mínimo nominal (< 8 l/min).\nSeveridad: Media.\nCondición de activación: caudal < 6 l/min durante > 20 s.\nPosibles causas: filtro CMP-24 colmatado; parcialmente obstruido; bomba CMP-02 degradada.\nSíntomas: temperatura batería elevada sostenida; reducción de autonomía.\nProcedimiento: HTM240-PRC-011 (filtro) y/o HTM240-PRC-003 (bomba).\nRiesgo: Medio.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0203",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-02",
+        "CMP-24",
+        "CIR-02",
+        "HTM240-PRC-003",
+        "HTM240-PRC-011"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p3_htm0301",
+      "score": 0,
+      "texto": "HTM-0301 — Sobretemperatura electrónica de potencia (inversor).\nDescripción: temperatura del inversor medida por CMP-16 supera umbral crítico de forma sostenida.\nSeveridad: Alta.\nCondición de activación: Temp > 75 °C durante > 20 s.\nPosibles causas: bomba B (CMP-03) inoperativa; radiador CMP-06 obstruido; CMP-16 defectuoso.\nSíntomas: reducción de potencia; testigo TES-06.\nProcedimiento: HTM240-DIA-001 > 4.12.\nRiesgo: Alto.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0301",
+      "pagina": 3,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "electronica_potencia",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-03",
+        "CMP-06",
+        "CMP-16",
+        "TES-06",
+        "HTM240-DIA-001"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p4_htm0401",
+      "score": 0,
+      "texto": "HTM-0401 — Pérdida total de comunicación con la TCU.\nDescripción: ningún módulo del vehículo recibe tramas de la TCU en el bus CAN.\nSeveridad: Alta.\nCondición de activación: ausencia de trama de la TCU durante > 2 s.\nPosibles causas: fallo de alimentación de la TCU; cortocircuito en bus CAN; fallo interno TCU.\nSíntomas: testigos TES-04, TES-08; actuadores térmicos sin control.\nProcedimiento: HTM240-PRC-010.\nRiesgo: Alto — evitar circulación hasta resolver.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0401",
+      "pagina": 4,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-13",
+        "CMP-26",
+        "TES-04",
+        "TES-08",
+        "HTM240-PRC-010"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p4_htm0402",
+      "score": 0,
+      "texto": "HTM-0402 — Fallo de software de la TCU (versión incorrecta o checksum inválido).\nDescripción: la TCU detecta inconsistencia en la versión de software instalada.\nSeveridad: Media.\nCondición de activación: checksum de software inválido al arrancar.\nPosibles causas: versión de software incorrecta; corrupción de flash.\nSíntomas: comportamiento errático de actuadores; testigo TES-04.\nProcedimiento: HTM240-DIA-001 > 4.11.\nCondición de borrado: versión de software validada y checksum correcto.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0402",
+      "pagina": 4,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-13",
+        "TES-04",
+        "HTM240-DIA-001"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p4_htm0403",
+      "score": 0,
+      "texto": "HTM-0403 — Válvula de 4 vías fuera de posición esperada.\nDescripción: sensor de posición CMP-21 reporta posición distinta a la ordenada por la TCU.\nSeveridad: Media.\nCondición de activación: desviación > 15 % entre posición ordenada y medida durante > 30 s.\nPosibles causas: actuador agarrotado; desajuste mecánico; potenciómetro desgastado.\nSíntomas: calefacción insuficiente; lecturas incoherentes de temperatura; mezcla anómala.\nTestigos: TES-04.\nProcedimiento: HTM240-PRC-006.\nCondición de borrado: posición coincide con consigna en todo el recorrido.\nRiesgo: Medio.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0403",
+      "pagina": 4,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-04",
+        "CMP-21",
+        "TES-04",
+        "HTM240-PRC-006"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p4_htm0405",
+      "score": 0,
+      "texto": "HTM-0405 — Activación simultánea de múltiples testigos térmicos.\nDescripción: la TCU detecta activación concurrente de tres o más testigos del sistema térmico.\nSeveridad: Alta.\nCondición de activación: 3 o más testigos activos simultáneamente.\nPosibles causas: fallo de comunicación generalizado; fallo de alimentación común; fallo real múltiple.\nSíntomas: ver combinaciones en HTM240-ADV-001.\nTestigos: TES-01, TES-02, TES-04.\nProcedimiento: HTM240-PRC-012.\nCondición de borrado: solo tras diagnóstico completo satisfactorio.\nRiesgo: ALTO — seguir criterios de HTM240-ADV-001.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0405",
+      "pagina": 4,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "TES-01",
+        "TES-02",
+        "TES-04",
+        "HTM240-ADV-001",
+        "HTM240-PRC-012"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p4_htm0406",
+      "score": 0,
+      "texto": "HTM-0406 — Rendimiento reducido del vehículo por protección térmica.\nDescripción: la TCU ha activado el modo de protección global limitando la potencia disponible.\nSeveridad: Alta.\nCondición de activación: activación del modo Protección por la estrategia térmica.\nPosibles causas: cualquier condición de sobretemperatura sostenida no resuelta.\nSíntomas: testigo TES-06 (rendimiento reducido); respuesta lenta del vehículo.\nProcedimiento: HTM240-OPE-001 (modo Protección) + identificar subsistema origen.\nCondición de borrado: modo Protección se desactiva automáticamente al normalizarse las temperaturas.\nRiesgo: Alto.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0406",
+      "pagina": 4,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "TES-06",
+        "HTM240-OPE-001"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p5_htm0501",
+      "score": 0,
+      "texto": "HTM-0501 — Relé de alimentación de bombas auxiliares con fallo intermitente.\nDescripción: se detectan cortes breves de alimentación hacia las bombas CMP-02 o CMP-03.\nSeveridad: Media.\nCondición de activación: interrupción de alimentación detectada > 3 veces en 10 min.\nPosibles causas: contactos oxidados del relé CMP-25; bobina dañada.\nSíntomas: fallo intermitente de bombas; testigos intermitentes TES-02, TES-06.\nProcedimiento: HTM240-DIA-001 > 4.9.\nCondición de borrado: sin cortes durante prueba de vibración de 15 min.\nRiesgo: Medio.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0501",
+      "pagina": 5,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-02",
+        "CMP-03",
+        "CMP-25",
+        "TES-02",
+        "TES-06",
+        "HTM240-DIA-001"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DTC-001@1.0_p5_htm0504",
+      "score": 0,
+      "texto": "HTM-0504 — Conector CAN de la TCU con resistencia de contacto elevada.\nDescripción: se detecta degradación progresiva de la calidad de señal en el conector CMP-26.\nSeveridad: Media.\nCondición de activación: tasa de error de trama CAN > 1 % sostenida.\nPosibles causas: terminal oxidado; rotura parcial de pin.\nSíntomas: pérdida de comunicación intermitente con la TCU.\nTestigos: TES-08.\nProcedimiento: HTM240-PRC-010.\nCondición de borrado: tasa de error de trama normalizada.\nRiesgo: Medio.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "HTM-0504",
+      "pagina": 5,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "sistema",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-18",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-26",
+        "TES-08",
+        "HTM240-PRC-010"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-ADV-001@1.1_p1_testigos",
+      "score": 0,
+      "texto": "HTM240-ADV-001 — Manual de testigos y mensajes al conductor.\nApartado 1: Testigos del sistema ThermoDrive.\nCatálogo de testigos del cuadro de instrumentos:\n- TES-01: Temperatura de motor | Color: Amarillo (fijo) / Rojo (parpadeante) | Significado: Temperatura del circuito motor fuera de rango o en riesgo | Urgencia: Media (amarillo) / Alta (rojo).\n- TES-02: Temperatura de batería de alta tensión | Color: Amarillo (fijo) / Rojo (parpadeante) | Significado: Temperatura del pack de batería fuera de rango | Urgencia: Media (amarillo) / Alta (rojo).\n- TES-03: Nivel de refrigerante bajo | Color: Amarillo | Significado: Nivel detectado por debajo de MIN en vaso de expansión | Urgencia: Media.\n- TES-04: Avería general del sistema térmico | Color: Amarillo | Significado: Fallo detectado por la TCU no crítico de forma aislada | Urgencia: Media.\n- TES-05: Alta tensión / aislamiento | Color: Rojo | Significado: Degradación de aislamiento eléctrico en componentes de alta tensión | Urgencia: Muy alta. Detención inmediata.\n- TES-06: Rendimiento reducido (modo Protección) | Color: Amarillo | Significado: La TCU ha limitado la potencia del vehículo por protección térmica | Urgencia: Alta.\n- TES-07: Presión de circuito | Color: Amarillo | Significado: Presión del circuito motor fuera de rango | Urgencia: Media.\n- TES-08: Comunicación CAN perdida | Color: Amarillo | Significado: La TCU no responde en el bus CAN | Urgencia: Alta.",
+      "documento": "HTM240-ADV-001",
+      "seccion": "1. Testigos del sistema ThermoDrive",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "seguridad",
+      "tipo_documento": "advertencia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-10-02",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "TES-01",
+        "TES-02",
+        "TES-03",
+        "TES-04",
+        "TES-05",
+        "TES-06",
+        "TES-07",
+        "TES-08"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-ADV-001@1.1_p2_mensajes",
+      "score": 0,
+      "texto": "HTM240-ADV-001 — Apartado 2: Mensajes para el conductor.\nMensajes de información y alerta emitidos por la pantalla del cuadro de instrumentos:\n1. 'Revise el nivel de refrigerante' — asociado a testigo TES-03.\n2. 'Temperatura de motor elevada. Reduzca la exigencia' — asociado a TES-01 en amarillo.\n3. 'Detenga el vehículo de forma segura. Motor sobrecalentado' — asociado a TES-01 en rojo parpadeante.\n4. 'Temperatura de batería elevada. Evite carga rápida' — asociado a TES-02 en amarillo.\n5. 'Sistema de alta tensión: contacte con un técnico especializado' — asociado a TES-05.\n6. 'Rendimiento del vehículo reducido temporalmente' — asociado a TES-06.\n7. 'Servicio térmico requerido próximamente' — mensaje preventivo, sin testigo dedicado (basado en HTM-0503).\n8. 'Calefacción limitada mientras el sistema se calienta' — informativo, sin testigo dedicado.\n9. 'Fallo de comunicación del sistema térmico' — asociado a TES-08.\n10. 'Verifique el sistema de refrigeración en el próximo mantenimiento' — mensaje preventivo genérico.\n11. 'Modo de conducción limitado activo' — asociado a TES-06 en combinación con otros testigos.\n12. 'No se ha podido verificar la temperatura de la batería' — asociado a fallo de sensor (código HTM-0204).\n13. 'Revise el sistema de refrigeración antes de continuar' — mensaje combinado.\n14. 'El vehículo puede continuar circulando con precaución' — mensaje informativo tras evaluación de severidad media.\n15. 'Detenga el vehículo en un lugar seguro y apague el contacto' — mensaje de máxima urgencia, asociado a combinaciones críticas.",
+      "documento": "HTM240-ADV-001",
+      "seccion": "2. Mensajes para el conductor",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "seguridad",
+      "tipo_documento": "advertencia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-10-02",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "HTM-0204",
+        "HTM-0503",
+        "TES-01",
+        "TES-02",
+        "TES-03",
+        "TES-05",
+        "TES-06",
+        "TES-08"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-ADV-001@1.1_p2_combinaciones",
+      "score": 0,
+      "texto": "HTM240-ADV-001 — Apartado 3: Posibles combinaciones de testigos.\nUn testigo aislado no siempre representa la misma urgencia que la misma señal combinada con otra. Reglas operativas:\n• TES-01 (amarillo) solo: temperatura de motor en el límite superior del rango normal. Se puede continuar circulando con precaución, reduciendo exigencia (evitar autovía a alta velocidad o remolque).\n• TES-01 (amarillo) + TES-07: sugiere presión anómala como causa del calentamiento — posible purga de aire pendiente o pérdida de estanqueidad. Precaución reforzada; programar revisión a la mayor brevedad.\n• TES-01 (rojo parpadeante) en solitario o combinado con cualquier otro testigo: debe detenerse el vehículo de inmediato en cuanto las condiciones de tráfico lo permitan.\n• TES-02 (amarillo) + TES-06: la TCU ya ha limitado potencia por la temperatura de batería. Se puede continuar circulando a baja exigencia hasta un punto seguro, pero no se recomienda viaje largo hasta revisión.\n• TES-04 + TES-08 (avería general + pérdida de CAN): indica muy probablemente un fallo de alimentación o comunicación de la propia TCU, no necesariamente un fallo térmico real. Debe escalarse a un técnico especializado antes de continuar un trayecto largo, aunque no siempre exige detención inmediata (ver HTM240-DIA-001 > 4.10).\n• Tres o más testigos activos simultáneamente (cualquier combinación): se corresponde con el DTC HTM-0405 y exige un diagnóstico completo según HTM240-PRC-012 antes de continuar con normalidad; no debe asumirse un fallo único.\n• TES-05 en cualquier combinación: siempre exige detención segura y contacto con personal habilitado en alta tensión, sin excepción, independientemente de qué otros testigos acompañen.",
+      "documento": "HTM240-ADV-001",
+      "seccion": "3. Posibles combinaciones de testigos",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "seguridad",
+      "tipo_documento": "advertencia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-10-02",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "HTM-0405",
+        "HTM240-DIA-001",
+        "HTM240-PRC-012",
+        "TES-01",
+        "TES-02",
+        "TES-04",
+        "TES-05",
+        "TES-06",
+        "TES-07",
+        "TES-08"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-ADV-001@1.1_p3_acciones_urgencia",
+      "score": 0,
+      "texto": "HTM240-ADV-001 — Apartado 4: Acciones inmediatas recomendadas por nivel de urgencia.\n• Urgencia baja/media (un solo testigo amarillo, sin TES-01 rojo ni TES-05): se puede continuar circulando con precaución, reduciendo exigencia del vehículo y programando revisión en un plazo razonable.\n• Urgencia alta (TES-06, TES-08 o combinaciones dobles no incluidas en la lista de detención inmediata): continuar únicamente hasta un punto seguro accesible, evitando trayectos largos, y contactar con un técnico especializado.\n• Urgencia muy alta (TES-01 rojo parpadeante, TES-05, o tres o más testigos simultáneos): detener el vehículo de forma segura cuanto antes, apagar el contacto si es posible hacerlo con seguridad, y no continuar circulando hasta la intervención de personal cualificado.\n\nApartado 5: Referencias\n• Códigos DTC relacionados: ver HTM240-DTC-001, columna 'testigos_asociados'.\n• Procedimiento de diagnóstico completo ante activación múltiple: HTM240-PRC-012.\n• Árbol de decisión de activación simultánea de testigos: HTM240-DIA-001 > 4.11.",
+      "documento": "HTM240-ADV-001",
+      "seccion": "4. Acciones inmediatas recomendadas por nivel de urgencia y Referencias",
+      "pagina": 3,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "seguridad",
+      "tipo_documento": "advertencia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-10-02",
+      "orden_en_seccion": 1,
+      "version_documento": "1.1",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "HTM240-DIA-001",
+        "HTM240-DTC-001",
+        "HTM240-PRC-012",
+        "TES-01",
+        "TES-05",
+        "TES-06",
+        "TES-08"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-SEG-001@1.0_p1_riesgos_generales",
+      "score": 0,
+      "texto": "HTM240-SEG-001 — Manual de seguridad.\nRiesgos generales asociados al mantenimiento del sistema ThermoDrive HTM-240:\n1. Riesgos térmicos: El refrigerante ThermoGlyc HX-40 puede alcanzar temperaturas superiores a 100 °C en los circuitos CIR-01 y, en menor medida, CIR-02 y CIR-03. La apertura de cualquier racor o del vaso de expansión con el sistema caliente puede provocar proyección de fluido caliente. Debe esperarse siempre a que la temperatura de motor sea inferior a 40 °C antes de abrir el circuito, salvo indicación expresa en el procedimiento.\n2. Riesgos eléctricos: Los circuitos CIR-02 (batería) y CIR-03 (electrónica de potencia) discurren en proximidad a componentes de alta tensión. El calentador PTC (CMP-12) opera a tensión de 300-400V ficticios. Cualquier intervención en estos circuitos requiere formación específica en alta tensión y el uso del modo de mantenimiento seguro del vehículo, que deshabilita la alta tensión de tracción.\n3. Riesgo por presión: El circuito CIR-01 opera presurizado (tapón calibrado a 1.4 bar). La presión residual debe liberarse de forma controlada antes de desconectar cualquier racor, incluso con el sistema frío.\n4. Riesgo químico: El refrigerante ThermoGlyc HX-40 exige manejo cuidadoso: evitar contacto prolongado con la piel y usar guantes de protección. Cualquier vertido debe recogerse y gestionarse según normativa.\n5. Alta tensión: Cualquier indicio de degradación de aislamiento eléctrico (testigo TES-05, código HTM-0207) exige la intervención exclusiva de personal habilitado en alta tensión. Ningún técnico sin esta habilitación debe manipular componentes de CIR-02 más allá de las comprobaciones descritas explícitamente como de nivel 1 o nivel 2 en los procedimientos correspondientes.",
+      "documento": "HTM240-SEG-001",
+      "seccion": "1. Riesgos generales del sistema ThermoDrive (Secciones 1 a 5)",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "seguridad",
+      "tipo_documento": "seguridad",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-06-01",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CIR-01",
+        "CIR-02",
+        "CIR-03",
+        "CMP-12",
+        "HTM-0207",
+        "TES-05"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-SEG-001@1.0_p2_epis_perfiles_bloqueo",
+      "score": 0,
+      "texto": "HTM240-SEG-001 — Manual de seguridad.\n6. Equipos de protección individual (EPI):\n• Guantes resistentes al calor (riesgo térmico).\n• Guantes dieléctricos ficticios clase 0 (proximidad a alta tensión).\n• Gafas de protección (proyección de fluido o partículas).\n• Ropa de manga larga en intervenciones sobre el circuito motor caliente.\n7. Perfiles autorizados:\n• Nivel 1: Inspecciones visuales y comprobaciones básicas sin apertura de circuitos de alta tensión (p. ej. HTM240-PRC-001, PRC-005).\n• Nivel 2: Intervenciones que requieren apertura de circuitos térmicos o proximidad a componentes de CIR-02/CIR-03 con formación básica en alta tensión (p. ej. PRC-003, PRC-011).\n• Nivel 3 / Personal habilitado en alta tensión: Cualquier intervención directa sobre componentes de alta tensión o ante indicios de fallo de aislamiento (TES-05).\n8. Bloqueo y consignación (modo mantenimiento seguro):\nAntes de cualquier intervención en CIR-02 o CIR-03, debe activarse el modo de mantenimiento seguro desde HTM-SCAN, que deshabilita la alta tensión de tracción y bloquea el arranque del vehículo hasta su desactivación explícita por el técnico.",
+      "documento": "HTM240-SEG-001",
+      "seccion": "2. EPIs, perfiles autorizados y modo seguro (Secciones 6 a 8)",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "seguridad",
+      "tipo_documento": "seguridad",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-06-01",
+      "orden_en_seccion": 2,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CIR-02",
+        "CIR-03",
+        "HTM240-PRC-001",
+        "HTM240-PRC-003",
+        "HTM240-PRC-005",
+        "HTM240-PRC-011",
+        "TES-05"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-SEG-001@1.0_p2_parada_inmediata_escalado",
+      "score": 0,
+      "texto": "HTM240-SEG-001 — Manual de seguridad.\n9. Condiciones de parada inmediata de una intervención:\n• Detección de olor a quemado o humo durante cualquier prueba funcional.\n• Aparición del testigo TES-05 durante una intervención en curso.\n• Fuga de refrigerante a presión no controlada.\n• Cualquier indicio de contacto eléctrico accidental con componentes de alta tensión.\n10. Actividades terminantemente no autorizadas:\n• Puentear o anular testigos de seguridad para continuar una prueba.\n• Intervenir en CIR-02 o CIR-03 sin activar el modo de mantenimiento seguro.\n• Reponer refrigerante con el sistema caliente.\n• Realizar pruebas funcionales del electroventilador con el capó abierto sin asegurar la zona de barrido de las palas.\n11. Protocolo de escalado:\nAnte cualquier duda sobre si una condición requiere personal de nivel 3 o habilitación en alta tensión, debe escalarse por defecto al nivel superior. El coste de una consulta innecesaria es siempre menor que el riesgo de una intervención no autorizada sobre alta tensión.",
+      "documento": "HTM240-SEG-001",
+      "seccion": "3. Parada inmediata, prohibiciones y escalado (Secciones 9 a 11)",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "seguridad",
+      "tipo_documento": "seguridad",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-06-01",
+      "orden_en_seccion": 3,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CIR-02",
+        "CIR-03",
+        "TES-05"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10",
+      "score": 0,
+      "texto": "HTM240-BOL-001 — Actualización de intervalo de inspección de la bomba auxiliar A en V1.0.\nFecha de entrada en vigor: 2025-07-01 | Versiones afectadas: V1.0 exclusivamente (no aplica a V1.1 ni V2.0) | Prioridad: Media.\nDocumento sustituido/afectado: Tabla de intervalos de HTM240-MNT-001, fila de bomba auxiliar A, exclusivamente para V1.0.\nContenido: Se ha detectado en el modelo V1.0 un desgaste ligeramente más rápido del rodamiento de la bomba auxiliar A (CMP-02) que en versiones posteriores, debido a una revisión de material del rodete introducida a partir de V1.1. Para vehículos V1.0, el intervalo de verificación de caudal (HTM240-PRC-003) se reduce de 30.000 km / 24 meses a 20.000 km / 18 meses. Este boletín no modifica el propio procedimiento PRC-003, solo su periodicidad para V1.0.",
+      "documento": "HTM240-BOL-001",
+      "seccion": "Contenido del Boletín HTM240-BOL-001",
+      "pagina": 1,
+      "versiones": [
+        "V1.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "boletin",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-07-01",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-02",
+        "HTM240-MNT-001",
+        "HTM240-PRC-003"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11",
+      "score": 0,
+      "texto": "HTM240-BOL-002 — Actualización del valor nominal de corriente de la bomba auxiliar A (V1.1).\nFecha de entrada en vigor: 2025-08-15 | Versiones afectadas: V1.1 y posteriores (V2.0 incluido) | Prioridad: Alta.\nDocumento sustituido/afectado: HTM240-PRC-003 versión 1.0 (sustituida por versión 2.0 del mismo procedimiento).\nContenido: A partir de la revisión de componente introducida en V1.1, el rango de corriente nominal de la bomba auxiliar A (CMP-02) en prueba funcional pasa de 3-5 A a 3-6 A a 12V. El procedimiento HTM240-PRC-003 se ha actualizado a su versión 2.0 para reflejar este cambio. Los vehículos V1.0 mantienen el rango anterior (3-5 A); no debe aplicarse el nuevo rango a vehículos V1.0 no actualizados. Este boletín debe consultarse conjuntamente con HTM240-PRC-003 antes de interpretar como anómala una lectura de 5-6 A en un vehículo V1.0 sin verificar antes su versión exacta.",
+      "documento": "HTM240-BOL-002",
+      "seccion": "Contenido del Boletín HTM240-BOL-002",
+      "pagina": 1,
+      "versiones": [
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "boletin",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-08-15",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-02",
+        "HTM240-PRC-003"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-BOL-003@1.0_p1_significado_HTM0142_v20",
+      "score": 0,
+      "texto": "HTM240-BOL-003 — Cambio de significado del código HTM-0142 entre V1.x y V2.0.\nFecha de entrada en vigor: 2025-10-01 | Versiones afectadas: Aplica a la interpretación en todas las versiones; el comportamiento del vehículo cambia a partir de V2.0 | Prioridad: Alta.\nDocumento sustituido/afectado: Complementa HTM240-DTC-001 y HTM240-DIA-001 > 4.3.\nContenido: Con la actualización de software de la TCU a v2.0 y la eliminación del sensor de presión dedicado del circuito de batería (fusionado en el sensor de caudal-presión combinado CMP-18), el código HTM-0142 cambia de significado:\n- En V1.0/V1.1 indica que la estrategia de precalentamiento de batería no completó su objetivo en el tiempo asignado.\n- En V2.0 indica un fallo del sensor combinado CMP-18.\nAntes de diagnosticar un vehículo con este código, es obligatorio verificar la versión de software de la TCU instalada.",
+      "documento": "HTM240-BOL-003",
+      "seccion": "Contenido del Boletín HTM240-BOL-003",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "boletin",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-10-01",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-18",
+        "HTM-0142",
+        "HTM240-DIA-001",
+        "HTM240-DTC-001"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25",
+      "score": 0,
+      "texto": "HTM240-BOL-004 — Fallo intermitente conocido en el relé de bombas auxiliares (lotes de producción anteriores a 2025-05).\nFecha de entrada en vigor: 2025-08-01 | Versiones afectadas: V1.0 y V1.1 con relé CMP-25 de lote anterior a 2025-05 | Prioridad: Media.\nDocumento sustituido/afectado: Ninguna sección concreta.\nContenido: Se han recibido reportes de fallo intermitente del relé de alimentación de bombas auxiliares (CMP-25, código HTM-0501) en unidades de un lote de producción anterior a mayo de 2025. El síntoma característico es la reaparición del fallo únicamente bajo vibración sostenida (superficies irregulares). Se recomienda, ante un DTC HTM-0501 recurrente, verificar el lote del componente antes de descartar el relé como causa tras una única prueba estática sin vibración.",
+      "documento": "HTM240-BOL-004",
+      "seccion": "Contenido del Boletín HTM240-BOL-004",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "boletin",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-08-01",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-25",
+        "HTM-0501"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-BOL-005@1.0_p1_sensor_temp_bateria_stb200",
+      "score": 0,
+      "texto": "HTM240-BOL-005 — Nueva revisión del sensor de temperatura de batería (V2.0).\nFecha de entrada en vigor: 2025-11-01 | Versiones afectadas: V2.0 (referencia ST-B200); no retrocompatible con V1.x | Prioridad: Baja.\nDocumento sustituido/afectado: Actualiza HTM240-CAT-001.\nContenido: A partir de V2.0, el sensor de temperatura de batería (CMP-15) se suministra con referencia ST-B200, con mayor precisión (±1.5 °C frente a los ±2 °C de la referencia ST-B100 usada en V1.x). La referencia ST-B200 no es instalable en vehículos V1.x sin la actualización de software de la TCU a v2.0, ya que el algoritmo de calibración difiere entre ambas referencias.",
+      "documento": "HTM240-BOL-005",
+      "seccion": "Contenido del Boletín HTM240-BOL-005",
+      "pagina": 1,
+      "versiones": [
+        "V2.0"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "boletin",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-11-01",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-15",
+        "HTM240-CAT-001"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k",
+      "score": 0,
+      "texto": "HTM240-BOL-006 — Corrección de información obsoleta sobre el intervalo de sustitución de refrigerante.\nFecha de entrada en vigor: 2025-09-10 | Versiones afectadas: Todas las versiones (V1.0, V1.1, V2.0) | Prioridad: Media.\nDocumento sustituido/afectado: Versión anterior (obsoleta) del plan de mantenimiento que indicaba 80.000 km.\nContenido: Se corrige una errata presente en una versión anterior, ya sustituida, del plan de mantenimiento preventivo, que indicaba un intervalo de sustitución completa del refrigerante de 80.000 km. El intervalo correcto, vigente en HTM240-MNT-001 versión 1.1, es de 60.000 km o 48 meses. Cualquier documento que indique 80.000 km debe considerarse obsoleto y sustituido.",
+      "documento": "HTM240-BOL-006",
+      "seccion": "Contenido del Boletín HTM240-BOL-006",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "boletin",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-10",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "HTM240-MNT-001"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-BOL-007@1.0_p1_calentador_ptc_5kw_v20",
+      "score": 0,
+      "texto": "HTM240-BOL-007 — Limitación de un diagnóstico a vehículos con calentador PTC de 5 kW (V2.0).\nFecha de entrada en vigor: 2025-11-15 | Versiones afectadas: Únicamente V2.0 (PTC de 5 kW); no aplica a V1.0/V1.1 (PTC de 3 kW) | Prioridad: Media.\nDocumento sustituido/afectado: Matiza HTM240-DIA-001 > 4.6.\nContenido: El árbol de diagnóstico de calefacción insuficiente (HTM240-DIA-001 > 4.6) incluye una comprobación de tiempo de respuesta del calentador PTC que asume una potencia de 5 kW. En vehículos V1.0/V1.1, equipados con PTC de 3 kW, el tiempo de respuesta esperado es superior en aproximadamente un 40%, por lo que el criterio de tiempo del árbol 4.6 no debe aplicarse literalmente a estas versiones sin ajustar el margen esperado.",
+      "documento": "HTM240-BOL-007",
+      "seccion": "Contenido del Boletín HTM240-BOL-007",
+      "pagina": 1,
+      "versiones": [
+        "V2.0"
+      ],
+      "componente": "calefaccion",
+      "tipo_documento": "boletin",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-11-15",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-12",
+        "HTM240-DIA-001"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p1_caso_001",
+      "score": 0,
+      "texto": "HTM-CASO-001 — 2025-06-12 (V1.0, 18500 km)\r\n• Condiciones ambientales: 22 C, seco\r\n• Descripción del usuario: El coche pierde potencia en la autovia y se enciende una luz\r\namarilla.\r\n• Síntomas: Rendimiento reducido; testigo temperatura motor amarillo\r\n• Testigos: TES-01;TES-06\r\n• Códigos DTC: HTM-0101\r\n• Mediciones relevantes: Temp motor 121 C en registro; electroventilador al 20%\r\n• Diagnóstico: Electroventilador con rendimiento insuficiente a alta demanda\r\n• Causa raíz: Modulo de mando CMP-22 con etapa PWM degradada\r\n• Acción correctiva: Sustitucion de modulo CMP-22 (HTM240-PRC-005)\r\n• Resultado: Resuelto, prueba de carretera sin incidencias\r\n• Documentos consultados: HTM240-PRC-005;HTM240-DIA-001>4.1",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-001",
+      "pagina": 1,
+      "versiones": [
+        "V1.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-06-12",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-22",
+        "DIA-001",
+        "HTM-0101",
+        "PRC-005",
+        "TES-01",
+        "TES-06",
+        "V1.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p1_caso_002",
+      "score": 0,
+      "texto": "HTM-CASO-002 — 2025-06-20 (V1.1, 42000 km)\r\n• Condiciones ambientales: 35 C, soleado\r\n• Descripción del usuario: En carga rapida el coche avisa de que reduzca la velocidad\r\nde carga.\r\n• Síntomas: Temperatura de bateria elevada durante carga rapida\r\n• Testigos: TES-02;TES-06\r\n• Códigos DTC: HTM-0201\r\n• Mediciones relevantes: Temp bateria 55 C; caudal circuito bateria 4 l/min\r\n• Diagnóstico: Filtro de circuito de bateria colmatado\r\n• Causa raíz: Filtro CMP-24 con particulas acumuladas por uso prolongado\r\n• Acción correctiva: Sustitucion de filtro (HTM240-PRC-011)\r\n• Resultado: Resuelto, caudal normalizado a 11 l/min\r\n• Documentos consultados: HTM240-PRC-011;HTM240-DTC-001(HTM-0203)",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-002",
+      "pagina": 1,
+      "versiones": [
+        "V1.1"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-06-20",
+      "orden_en_seccion": 2,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-24",
+        "HTM-0201",
+        "HTM-0203",
+        "PRC-011",
+        "TES-02",
+        "TES-06",
+        "V1.1"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p1_caso_003",
+      "score": 0,
+      "texto": "HTM-CASO-003 — 2025-07-02 (V1.0, 9800 km)\r\n• Condiciones ambientales: 15 C, lluvia\r\n• Descripción del usuario: No calienta bien el interior del coche en trayectos cortos.\r\n• Síntomas: Calefaccion insuficiente\r\n• Testigos: Ninguno\r\n• Códigos DTC: Ninguno\r\n• Mediciones relevantes: Tiempo de calentamiento habitaculo 22 min (esperado ~14\r\nmin para PTC 3kW)\r\n• Diagnóstico: Comportamiento dentro de tolerancia ajustada para PTC de 3kW segun\r\nHTM240-BOL-007\r\n• Causa raíz: Ninguna, comportamiento normal para la version del vehiculo\r\n• Acción correctiva: Ninguna, se informa al usuario\r\n• Resultado: Sin intervencion necesaria\r\n• Documentos consultados: HTM240-BOL-007;HTM240-DIA-001>4.6",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-003",
+      "pagina": 1,
+      "versiones": [
+        "V1.0"
+      ],
+      "componente": "calefaccion",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-07-02",
+      "orden_en_seccion": 3,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "BOL-007",
+        "DIA-001",
+        "V1.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p2_caso_004",
+      "score": 0,
+      "texto": "HTM-CASO-004 — 2025-07-15 (V2.0, 3200 km)\r\n• Condiciones ambientales: 10 C, nublado\r\n• Descripción del usuario: No calienta bien el interior del coche en trayectos cortos.\r\n• Síntomas: Calefaccion insuficiente\r\n• Testigos: TES-04\r\n• Códigos DTC: HTM-0505\r\n• Mediciones relevantes: PTC no incrementa temperatura tras orden de activacion\r\n• Diagnóstico: Fallo del calentador PTC de 5kW\r\n• Causa raíz: Rele de potencia del PTC soldado en posicion abierta\r\n• Acción correctiva: Sustitucion del calentador PTC CMP-12\r\n• Resultado: Resuelto\r\n• Documentos consultados: HTM240-DIA-001>4.6;HTM240-DTC-001(HTM-0505)",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-004",
+      "pagina": 2,
+      "versiones": [
+        "V2.0"
+      ],
+      "componente": "calefaccion",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-07-15",
+      "orden_en_seccion": 4,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-12",
+        "DIA-001",
+        "HTM-0505",
+        "TES-04",
+        "V2.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p2_caso_005",
+      "score": 0,
+      "texto": "HTM-CASO-005 — 2025-07-22 (V1.1, 55000 km)\r\n• Condiciones ambientales: 28 C, seco\r\n• Descripción del usuario: Ruido agudo intermitente cerca del motor que aparece y\r\ndesaparece.\r\n• Síntomas: Bomba electrica ruidosa de forma intermitente\r\n• Testigos: Ninguno\r\n• Códigos DTC: HTM-0501\r\n• Mediciones relevantes: Corte de alimentacion detectado 4 veces en 10 min durante\r\nprueba de vibracion\r\n• Diagnóstico: Rele de bombas auxiliares con contactos oxidados (lote anterior a 2025-\r\n05)\r\n• Causa raíz: Oxidacion de contactos del rele CMP-25, ver HTM240-BOL-004\r\n• Acción correctiva: Sustitucion del rele CMP-25\r\n• Resultado: Resuelto, sin recurrencia en prueba de vibracion\r\n• Documentos consultados: HTM240-BOL-004;HTM240-DIA-001>4.9",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-005",
+      "pagina": 2,
+      "versiones": [
+        "V1.1"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-07-22",
+      "orden_en_seccion": 5,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "BOL-004",
+        "CMP-25",
+        "DIA-001",
+        "HTM-0501",
+        "V1.1"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p2_caso_006",
+      "score": 0,
+      "texto": "HTM-CASO-006 — 2025-08-01 (V2.0, 1200 km)\r\n• Condiciones ambientales: 25 C, seco\r\n• Descripción del usuario: Aviso de fallo general del sistema termico que aparecio una\r\nvez y no ha vuelto.\r\n• Síntomas: Testigo de averia general aislado, sin recurrencia\r\n• Testigos: TES-04\r\n• Códigos DTC: HTM-0402\r\n• Mediciones relevantes: Error de checksum de software registrado una unica vez\r\n• Diagnóstico: Fallo transitorio de software de la TCU\r\n• Causa raíz: Posible interferencia puntual, no reproducible\r\n• Acción correctiva: Reprogramacion preventiva de la TCU\r\n• Resultado: Sin recurrencia tras 3 meses de seguimiento\r\n• Documentos consultados: HTM240-DIA-001>4.11",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-006",
+      "pagina": 2,
+      "versiones": [
+        "V2.0"
+      ],
+      "componente": "control_tcu",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-08-01",
+      "orden_en_seccion": 6,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "DIA-001",
+        "HTM-0402",
+        "TES-04",
+        "V2.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p2_caso_007",
+      "score": 0,
+      "texto": "HTM-CASO-007 — 2025-08-10 (V1.0, 31000 km)\r\n• Condiciones ambientales: 33 C, soleado\r\n• Descripción del usuario: El coche pierde potencia en la autovia y se enciende una luz\r\namarilla.\r\n• Síntomas: Rendimiento reducido; testigo temperatura motor amarillo\r\n• Testigos: TES-01;TES-06\r\n• Códigos DTC: HTM-0108\r\n• Mediciones relevantes: Caudal estimado bomba mecanica 65% del nominal\r\n• Diagnóstico: Bomba mecanica con rendimiento reducido por desgaste de rodete\r\n• Causa raíz: Desgaste normal del rodete tras uso prolongado\r\n• Acción correctiva: Sustitucion de bomba mecanica CMP-01\r\n• Resultado: Resuelto\r\n• Documentos consultados: HTM240-DIA-001>4.1;HTM240-CAT-001(CMP-01)",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-007",
+      "pagina": 2,
+      "versiones": [
+        "V1.0"
+      ],
+      "componente": "control_tcu",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-08-10",
+      "orden_en_seccion": 7,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CAT-001",
+        "CMP-01",
+        "DIA-001",
+        "HTM-0108",
+        "TES-01",
+        "TES-06",
+        "V1.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p3_caso_008",
+      "score": 0,
+      "texto": "HTM-CASO-008 — 2025-08-18 (V1.1, 47500 km)\r\n• Condiciones ambientales: 20 C, seco\r\n• Descripción del usuario: Bajada progresiva del nivel de refrigerante, hay que rellenar\r\ncada pocas semanas.\r\n• Síntomas: Perdida de refrigerante\r\n• Testigos: TES-03\r\n• Códigos DTC: HTM-0104\r\n• Mediciones relevantes: Manguito con grieta visible en zona frontal derecha\r\n• Diagnóstico: Fuga externa en manguito CMP-23\r\n• Causa raíz: Envejecimiento del manguito\r\n• Acción correctiva: Sustitucion de manguito y purgado (HTM240-PRC-002)\r\n• Resultado: Resuelto, nivel estable tras 3 ciclos\r\n• Documentos consultados: HTM240-PRC-008;HTM240-PRC-002",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-008",
+      "pagina": 3,
+      "versiones": [
+        "V1.1"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-08-18",
+      "orden_en_seccion": 8,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-23",
+        "HTM-0104",
+        "PRC-002",
+        "PRC-008",
+        "TES-03",
+        "V1.1"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p3_caso_009",
+      "score": 0,
+      "texto": "HTM-CASO-009 — 2025-08-25 (V2.0, 6700 km)\r\n• Condiciones ambientales: 19 C, seco\r\n• Descripción del usuario: Bajada progresiva del nivel de refrigerante, hay que rellenar\r\ncada pocas semanas.\r\n• Síntomas: Perdida de refrigerante sin fuga externa visible\r\n• Testigos: TES-03;TES-04\r\n• Códigos DTC: HTM-0109\r\n• Mediciones relevantes: Aspecto lechoso del refrigerante detectado en inspeccion\r\n• Diagnóstico: Fuga interna en intercambiador aceite-refrigerante CMP-11\r\n• Causa raíz: Fisura interna del intercambiador CMP-11\r\n• Acción correctiva: Sustitucion de intercambiador CMP-11 y cambio completo de fluidos\r\n• Resultado: Resuelto, se recomienda seguimiento adicional\r\n• Documentos consultados: HTM240-DIA-001>4.6;HTM240-SEG-001",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-009",
+      "pagina": 3,
+      "versiones": [
+        "V2.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-08-25",
+      "orden_en_seccion": 9,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-11",
+        "DIA-001",
+        "HTM-0109",
+        "SEG-001",
+        "TES-03",
+        "TES-04",
+        "V2.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p3_caso_010",
+      "score": 0,
+      "texto": "HTM-CASO-010 — 2025-09-02 (V1.0, 12300 km)\r\n• Condiciones ambientales: 5 C, frio\r\n• Descripción del usuario: En dias muy frios la calefaccion tarda mucho y la autonomia\r\nbaja bastante.\r\n• Síntomas: Temperatura de bateria baja persistente en frio\r\n• Testigos: Ninguno\r\n• Códigos DTC: HTM-0208\r\n• Mediciones relevantes: Temp bateria 3 C tras 25 min de estrategia de calentamiento\r\n• Diagnóstico: Valvula de 4 vias con desviacion leve de posicion\r\n• Causa raíz: Desgaste inicial del potenciometro CMP-21\r\n• Acción correctiva: Ajuste/sustitucion de sensor CMP-21\r\n• Resultado: Resuelto, tiempo de calentamiento normalizado\r\n• Documentos consultados: HTM240-PRC-006;HTM240-DIA-001>4.3\r\nThermoDrive HTM-240 — Documentacion sintetica para uso educativo",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-010",
+      "pagina": 3,
+      "versiones": [
+        "V1.0"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-02",
+      "orden_en_seccion": 10,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-21",
+        "DIA-001",
+        "HTM-0208",
+        "PRC-006",
+        "V1.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p3_caso_011",
+      "score": 0,
+      "texto": "HTM-CASO-011 — 2025-09-08 (V1.1, 38900 km)\r\n• Condiciones ambientales: 30 C, soleado\r\n• Descripción del usuario: El ventilador se queda encendido a maxima velocidad mucho\r\nrato despues de aparcar.\r\n• Síntomas: Electroventilador funcionando de forma continua tras parada\r\n• Testigos: Ninguno\r\n• Códigos DTC: Ninguno\r\n• Mediciones relevantes: Temp motor al parar: 108 C; ventilador activo 6 minutos tras\r\nparada\r\n• Diagnóstico: Comportamiento normal de gestion termica post-parada\r\n• Causa raíz: No aplica, funcionamiento segun diseño\r\n• Acción correctiva: Ninguna, se informa al usuario\r\n• Resultado: Sin intervencion necesaria\r\n• Documentos consultados: HTM240-OPE-001>5",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-011",
+      "pagina": 3,
+      "versiones": [
+        "V1.1"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-08",
+      "orden_en_seccion": 11,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "V1.1"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p4_caso_012",
+      "score": 0,
+      "texto": "HTM-CASO-012 — 2025-09-14 (V2.0, 900 km)\r\n• Condiciones ambientales: 31 C, soleado\r\n• Descripción del usuario: El ventilador se queda encendido a maxima velocidad mucho\r\nrato despues de aparcar, incluso al dia siguiente en frio.\r\n• Síntomas: Electroventilador funcionando de forma continua persistente\r\n• Testigos: TES-04\r\n• Códigos DTC: HTM-0404\r\n• Mediciones relevantes: Ventilador al 95% con todas las temperaturas en rango normal\r\n• Diagnóstico: Fallo de etapa de control PWM del modulo CMP-22\r\n• Causa raíz: Modulo de mando defectuoso de fabrica\r\n• Acción correctiva: Sustitucion de modulo CMP-22\r\nResuelto • Resultado:\r\n• Documentos consultados: HTM240-PRC-005;HTM240-DIA-001>4.5",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-012",
+      "pagina": 4,
+      "versiones": [
+        "V2.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-14",
+      "orden_en_seccion": 12,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-22",
+        "DIA-001",
+        "HTM-0404",
+        "PRC-005",
+        "TES-04",
+        "V2.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p4_caso_013",
+      "score": 0,
+      "texto": "HTM-CASO-013 — 2025-09-20 (V1.0, 26400 km)\r\n• Condiciones ambientales: 24 C, seco\r\n• Descripción del usuario: El coche ha mostrado un mensaje raro de comunicacion y\r\nluego se ha quitado solo.\r\n• Síntomas: Fallo intermitente de comunicacion\r\n• Testigos: TES-08\r\n• Códigos DTC: HTM-0504\r\n• Mediciones relevantes: Tasa de error de trama CAN 1.8% durante 45 segundos, luego\r\nnormal\r\n• Diagnóstico: Conector CAN de la TCU con resistencia de contacto elevada\r\n• Causa raíz: Terminal ligeramente oxidado en conector CMP-26\r\n• Acción correctiva: Limpieza y proteccion del conector CMP-26\r\n• Resultado: Resuelto, sin recurrencia en 2 semanas de seguimiento\r\n• Documentos consultados: HTM240-PRC-010;HTM240-DTC-001(HTM-0504)",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-013",
+      "pagina": 4,
+      "versiones": [
+        "V1.0"
+      ],
+      "componente": "control_tcu",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-20",
+      "orden_en_seccion": 13,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-26",
+        "HTM-0504",
+        "PRC-010",
+        "TES-08",
+        "V1.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p4_caso_014",
+      "score": 0,
+      "texto": "HTM-CASO-014 — 2025-09-28 (V1.1, 61200 km)\r\n• Condiciones ambientales: 27 C, seco\r\n• Descripción del usuario: Se han encendido tres luces del cuadro a la vez de repente.\r\n• Síntomas: Activacion simultanea de multiples testigos\r\n• Testigos: TES-01;TES-02;TES-04\r\n• Códigos DTC: HTM-0405;HTM-0401\r\n• Mediciones relevantes: Perdida de comunicacion con la TCU de 8 segundos registrada\r\n• Diagnóstico: Fallo de alimentacion comun de la TCU, no fallo termico real\r\n• Causa raíz: Fusible de alimentacion de la TCU con contacto deficiente\r\n• Acción correctiva: Sustitucion de fusible y conector asociado\r\n• Resultado: Resuelto tras prueba funcional completa (HTM240-PRC-012)\r\n• Documentos consultados: HTM240-PRC-012;HTM240-ADV-001",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-014",
+      "pagina": 4,
+      "versiones": [
+        "V1.1"
+      ],
+      "componente": "control_tcu",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-09-28",
+      "orden_en_seccion": 14,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "ADV-001",
+        "HTM-0401",
+        "HTM-0405",
+        "PRC-012",
+        "TES-01",
+        "TES-02",
+        "TES-04",
+        "V1.1"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p4_caso_015",
+      "score": 0,
+      "texto": "HTM-CASO-015 — 2025-10-05 (V2.0, 15600 km)\r\n• Condiciones ambientales: 12 C, nublado\r\n• Descripción del usuario: Un codigo de averia que el taller anterior no supo interpretar\r\nbien.\r\n• Síntomas: Confusion en interpretacion de codigo DTC segun version\r\n• Testigos: TES-06\r\n• Códigos DTC: HTM-0142\r\n• Mediciones relevantes: Lectura combinada del sensor CMP-18 fuera de rango\r\n• Diagnóstico: Fallo del sensor combinado CMP-18 (interpretacion correcta para V2.0)\r\n• Causa raíz: Sensor CMP-18 con deriva de senal\r\n• Acción correctiva: Sustitucion del sensor CMP-18\r\n• Resultado: Resuelto tras verificar version de software antes de diagnosticar\r\n• Documentos consultados: HTM240-BOL-003;HTM240-DTC-001(HTM-0142)",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-015",
+      "pagina": 4,
+      "versiones": [
+        "V2.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-10-05",
+      "orden_en_seccion": 15,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "BOL-003",
+        "CMP-18",
+        "HTM-0142",
+        "TES-06",
+        "V2.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p5_caso_016",
+      "score": 0,
+      "texto": "HTM-CASO-016 — 2025-10-11 (V1.0, 19900 km)\r\n• Condiciones ambientales: 21 C, seco\r\n• Descripción del usuario: Un codigo de averia que el taller anterior no supo interpretar\r\nbien.\r\n• Síntomas: Confusion en interpretacion de codigo DTC segun version\r\n• Testigos: Ninguno\r\n• Códigos DTC: HTM-0142\r\n• Mediciones relevantes: Tiempo de precalentamiento de bateria superado en 6 minutos\r\n• Diagnóstico: Estrategia de precalentamiento no completada (interpretacion correcta\r\npara V1.0)\r\n• Causa raíz: Ambiente muy frio combinado con PTC de 3kW al limite de su capacidad\r\n• Acción correctiva: Ninguna correctiva; se documenta como comportamiento esperado\r\nen frio extremo\r\n• Resultado: Sin intervencion, se informa al usuario\r\n• Documentos consultados: HTM240-BOL-003;HTM240-DIA-001>4.3",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-016",
+      "pagina": 5,
+      "versiones": [
+        "V1.0"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-10-11",
+      "orden_en_seccion": 16,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "BOL-003",
+        "DIA-001",
+        "HTM-0142",
+        "V1.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p5_caso_017",
+      "score": 0,
+      "texto": "HTM-CASO-017 — 2025-10-18 (V1.1, 44300 km)\r\n• Condiciones ambientales: 18 C, lluvia\r\n• Descripción del usuario: El coche funciona bien pero el taller detecto una presion rara\r\nen una revision.\r\n• Síntomas: Presion de circuito motor ligeramente fuera de rango, sin sintomas\r\npercibidos\r\n• Testigos: Ninguno\r\n• Códigos DTC: HTM-0106\r\n• Mediciones relevantes: Presion 0.55 bar con motor caliente\r\n• Diagnóstico: Purga de aire pendiente tras una intervencion previa no documentada\r\n• Causa raíz: Purgado incompleto en servicio anterior\r\n• Acción correctiva: Purgado completo (HTM240-PRC-002)\r\n• Resultado: Resuelto, presion normalizada a 1.3 bar\r\n• Documentos consultados: HTM240-PRC-002;HTM240-PRC-009\r\nThermoDrive HTM-240 — Documentacion sintetica para uso educativo",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-017",
+      "pagina": 5,
+      "versiones": [
+        "V1.1"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-10-18",
+      "orden_en_seccion": 17,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "HTM-0106",
+        "PRC-002",
+        "PRC-009",
+        "V1.1"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p5_caso_018",
+      "score": 0,
+      "texto": "HTM-CASO-018 — 2025-10-25 (V2.0, 2100 km)\r\n• Condiciones ambientales: 29 C, soleado\r\n• Descripción del usuario: El coche ha limitado la velocidad durante un viaje largo con\r\nmucho equipaje.\r\n• Síntomas: Rendimiento reducido del vehiculo (modo Proteccion)\r\n• Testigos: TES-06\r\n• Códigos DTC: HTM-0301\r\n• Mediciones relevantes: Temp inversor 97 C sostenida durante ascenso prolongado\r\n• Diagnóstico: Sobretemperatura de electronica de potencia por bomba B con\r\nrendimiento reducido\r\n• Causa raíz: Cavitacion en bomba auxiliar B por aire en el circuito\r\n• Acción correctiva: Purgado del circuito 3 (adaptacion de HTM240-PRC-002)\r\n• Resultado: Resuelto\r\n• Documentos consultados: HTM240-DIA-001>4.12;HTM240-DTC-001(HTM-0301)",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-018",
+      "pagina": 5,
+      "versiones": [
+        "V2.0"
+      ],
+      "componente": "electronica_potencia",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-10-25",
+      "orden_en_seccion": 18,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "DIA-001",
+        "HTM-0301",
+        "PRC-002",
+        "TES-06",
+        "V2.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p5_caso_019",
+      "score": 0,
+      "texto": "HTM-CASO-019 — 2025-11-01 (V1.0, 7800 km)\r\n• Condiciones ambientales: 16 C, seco\r\n• Descripción del usuario: Lecturas de temperatura del motor que no cuadran con lo\r\nque se nota conduciendo.\r\n• Síntomas: Lecturas incoherentes de temperatura\r\n• Testigos: TES-04\r\n• Códigos DTC: HTM-0102\r\n• Mediciones relevantes: Sensor CMP-14 fuera de rango durante 8 segundos, luego nor-\r\nmal\r\n• Diagnóstico: Fallo intermitente de sensor de temperatura motor\r\n• Causa raíz: Conector con falso contacto bajo vibracion\r\nLimpieza y fijacion del conector del sensor CMP-14 • Acción correctiva:\r\n• Resultado: Resuelto tras prueba de vibracion de 15 min sin reaparicion\r\n• Documentos consultados: HTM240-PRC-007;HTM240-DIA-001>4.8",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-019",
+      "pagina": 5,
+      "versiones": [
+        "V1.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-11-01",
+      "orden_en_seccion": 19,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-14",
+        "DIA-001",
+        "HTM-0102",
+        "PRC-007",
+        "TES-04",
+        "V1.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p6_caso_020",
+      "score": 0,
+      "texto": "HTM-CASO-020 — 2025-11-08 (V1.1, 52700 km)\r\n• Condiciones ambientales: 23 C, seco\r\n• Descripción del usuario: El coche mezcla mal el calor, a veces da mucho calor a la\r\nbateria y poco al habitaculo.\r\n• Síntomas: Calefaccion insuficiente y desequilibrio termico\r\n• Testigos: Ninguno\r\n• Códigos DTC: HTM-0403\r\n• Mediciones relevantes: Valvula CMP-04 con desviacion del 22% respecto a consigna\r\n• Diagnóstico: Actuador de la valvula de 4 vias parcialmente agarrotado\r\n• Causa raíz: Desgaste mecanico del actuador\r\n• Acción correctiva: Sustitucion del actuador de la valvula CMP-04\r\n• Resultado: Resuelto\r\n• Documentos consultados: HTM240-PRC-006;HTM240-DIA-001>4.6",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-020",
+      "pagina": 6,
+      "versiones": [
+        "V1.1"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-11-08",
+      "orden_en_seccion": 20,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-04",
+        "DIA-001",
+        "HTM-0403",
+        "PRC-006",
+        "V1.1"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p6_caso_021",
+      "score": 0,
+      "texto": "HTM-CASO-021 — 2025-11-15 (V2.0, 400 km)\r\n• Condiciones ambientales: 14 C, nublado\r\n• Descripción del usuario: Vehiculo nuevo, un tecnico junior no localizaba una fuga que\r\nel cliente reportaba.\r\n• Síntomas: Perdida de refrigerante sin fuga visible en primera inspeccion\r\n• Testigos: TES-03\r\n• Códigos DTC: HTM-0104\r\n• Mediciones relevantes: Fluorescencia de trazador detectada en el vaso de expansion\r\ntras prueba con HTM-TRACE\r\n• Diagnóstico: Microfisura en el vaso de expansion CMP-07\r\n• Causa raíz: Defecto de fabricacion en el vaso de expansion\r\n• Acción correctiva: Sustitucion del vaso de expansion CMP-07 y purgado\r\n• Resultado: Resuelto\r\n• Documentos consultados: HTM240-PRC-008;HTM240-PRC-002",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-021",
+      "pagina": 6,
+      "versiones": [
+        "V2.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-11-15",
+      "orden_en_seccion": 21,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-07",
+        "HTM-0104",
+        "PRC-002",
+        "PRC-008",
+        "TES-03",
+        "V2.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p6_caso_022",
+      "score": 0,
+      "texto": "HTM-CASO-022 — 2025-11-20 (V1.0, 33500 km)\r\n• Condiciones ambientales: 26 C, seco\r\n• Descripción del usuario: Un chirrido raro que solo se oye a veces al acelerar fuerte.\r\n• Síntomas: Ruido intermitente sin testigo asociado\r\n• Testigos: Ninguno\r\n• Códigos DTC: Ninguno\r\n• Mediciones relevantes: Sin DTC almacenado, ruido no reproducido en banco de prue-\r\nbas estatico\r\n• Diagnóstico: No concluyente en primera visita\r\n• Causa raíz: No determinada, pendiente de reproduccion en carretera\r\n• Acción correctiva: Programar prueba de carretera con tecnico y registrador de audio\r\n• Resultado: Caso abierto, pendiente de seguimiento\r\n• Documentos consultados: HTM240-DIA-001>4.9",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-022",
+      "pagina": 6,
+      "versiones": [
+        "V1.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-11-20",
+      "orden_en_seccion": 22,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "DIA-001",
+        "V1.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p6_caso_023",
+      "score": 0,
+      "texto": "HTM-CASO-023 — 2025-11-27 (V1.1, 48800 km)\r\n• Condiciones ambientales: 9 C, frio\r\n• Descripción del usuario: El cliente pregunta si puede seguir circulando con la luz\r\namarilla de bateria encendida sola.\r\n• Síntomas: Testigo temperatura bateria aislado, amarillo, sin otros testigos\r\n• Testigos: TES-02\r\n• Códigos DTC: HTM-0201\r\n• Mediciones relevantes: Temp bateria 53 C, caudal circuito bateria normal\r\n• Diagnóstico: Radiador auxiliar CMP-06 parcialmente obstruido por suciedad externa\r\n• Causa raíz: Acumulacion de insectos y polvo en el radiador auxiliar\r\n• Acción correctiva: Limpieza del radiador auxiliar CMP-06\r\n• Resultado: Resuelto, temperatura normalizada\r\n• Documentos consultados: HTM240-DIA-001>4.2;HTM240-ADV-001",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-023",
+      "pagina": 6,
+      "versiones": [
+        "V1.1"
+      ],
+      "componente": "bateria",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-11-27",
+      "orden_en_seccion": 23,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "ADV-001",
+        "CMP-06",
+        "DIA-001",
+        "HTM-0201",
+        "TES-02",
+        "V1.1"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-HIS-001@1.0_p6_caso_024",
+      "score": 0,
+      "texto": "HTM-CASO-024 — 2025-12-03 (V2.0, 5200 km)\r\n• Condiciones ambientales: 17 C, seco\r\n• Descripción del usuario: Se ha encendido la luz roja de alta tension y el coche ha\r\npedido parar.\r\n• Síntomas: Testigo de alta tension activado\r\n• Testigos: TES-05\r\n• Códigos DTC: HTM-0207\r\n• Mediciones relevantes: Resistencia de aislamiento por debajo del umbral de seguridad\r\ndetectada por la TCU\r\n• Diagnóstico: Degradacion de aislamiento en cableado del calentador PTC\r\n• Causa raíz: Humedad infiltrada en conector de alta tension del PTC\r\n• Acción correctiva: Escalado a personal habilitado en alta tension; sustitucion de conec-\r\ntor y sellado\r\n• Resultado: Resuelto por personal habilitado, vehiculo verificado antes de entrega\r\n• Documentos consultados: HTM240-SEG-001;HTM240-DTC-001(HTM-0207)\r\n8",
+      "documento": "HTM240-HIS-001",
+      "seccion": "HTM-CASO-024",
+      "pagina": 6,
+      "versiones": [
+        "V2.0"
+      ],
+      "componente": "calefaccion",
+      "tipo_documento": "casos_servicio",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-12-03",
+      "orden_en_seccion": 24,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "HTM-0207",
+        "SEG-001",
+        "TES-05",
+        "V2.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-ESQ-001@1.0_p1_arquitectura_general",
+      "score": 0,
+      "texto": "HTM240-ESQ-001 — Esquemas técnicos del sistema ThermoDrive HTM-240.\nApartado 1: Diagrama de arquitectura general.\nEstructura de interconexión de los tres circuitos térmicos:\n- TCU (Unidad de Control Térmico CMP-13): Gobierna todos los circuitos térmicos y la válvula de 4 vías (CMP-04).\n- CIR-01 (Motor combustión): Bomba mecánica CMP-01 -> Bloque motor -> Intercambiador de aceite CMP-11 -> Termostato CMP-08 -> Radiador principal CMP-05 -> Vaso expansión CMP-07. Calentador PTC CMP-12 acoplado.\n- CIR-02 (Batería alta tensión): Bomba auxiliar A CMP-02 -> Filtro CMP-24 -> Intercambiador de batería CMP-10 -> Radiador auxiliar CMP-06.\n- CIR-03 (Electrónica de potencia): Bomba auxiliar B CMP-03 -> Inversor / Convertidor DC-DC -> Radiador auxiliar CMP-06.\n- Interconexión: La válvula de 4 vías (CMP-04) permite interconexión opcional en frío hacia el intercambiador de batería CMP-10.\n- El electroventilador (CMP-09) refrigera tanto el radiador principal (CMP-05) como el radiador auxiliar (CMP-06).\nExplicación técnica: La TCU gobierna los tres circuitos y la válvula distribuidora. El radiador auxiliar (CMP-06) es compartido entre el circuito de batería (CIR-02) y el de electrónica de potencia (CIR-03), por lo que una obstrucción o degradación en este componente afecta a ambos subsistemas simultáneamente.",
+      "documento": "HTM240-ESQ-001",
+      "seccion": "1. Diagrama de arquitectura general",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "esquemas",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-07-01",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CIR-01",
+        "CIR-02",
+        "CIR-03",
+        "CMP-01",
+        "CMP-02",
+        "CMP-03",
+        "CMP-04",
+        "CMP-05",
+        "CMP-06",
+        "CMP-07",
+        "CMP-08",
+        "CMP-09",
+        "CMP-10",
+        "CMP-11",
+        "CMP-12",
+        "CMP-13",
+        "CMP-24"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-ESQ-001@1.0_p1_flujo_calentamiento_frio",
+      "score": 0,
+      "texto": "HTM240-ESQ-001 — Apartado 2: Flujo del refrigerante en modo calentamiento en frío.\nLógica de funcionamiento térmico tras arranque en frío:\n- Con motor frío, el termostato CMP-08 permanece cerrado, forzando la recirculación corta en el motor.\n- Si la batería también está fría: la válvula de 4 vías deriva calor residual del circuito motor hacia CIR-02 (batería), logrando que la batería alcance su rango óptimo antes sin consumir energía eléctrica adicional.\n- Si la batería no está fría: los circuitos operan de forma independiente.\n- Si se requiere calefacción suplementaria: se activa el calentador PTC (CMP-12).\nExplicación técnica: La transferencia cruzada de calor residual del motor hacia la batería ahorra energía de tracción en fases frías.",
+      "documento": "HTM240-ESQ-001",
+      "seccion": "2. Flujo del refrigerante en modo calentamiento en frío",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "refrigeracion",
+      "tipo_documento": "esquemas",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-07-01",
+      "orden_en_seccion": 2,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CIR-02",
+        "CMP-04",
+        "CMP-08",
+        "CMP-12"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-ESQ-001@1.0_p2_arbol_diagnostico_superior",
+      "score": 0,
+      "texto": "HTM240-ESQ-001 — Apartado 3: Árbol general de diagnóstico (nivel superior).\nFlujo de triaje y enrutamiento ante un síntoma reportado:\n1. Comprobación crítica: ¿Testigo TES-01 rojo o TES-05 activo?\n   - SÍ: Detener el vehículo de forma segura inmediatamente.\n   - NO: Continuar evaluación de número de testigos.\n2. Número de testigos activos simultáneamente:\n   - 3 o más testigos: Enrutar directamente a árbol 4.11 de HTM240-DIA-001 (activación múltiple / fallo común).\n   - 1 o 2 testigos: Determinar el subsistema implicado.\n3. Subsistema implicado:\n   - Motor: Árbol 4.1 de HTM240-DIA-001.\n   - Batería: Árbol 4.2 de HTM240-DIA-001.\n   - Electrónica de potencia: Árbol 4.12 de HTM240-DIA-001.\n   - Comunicación: Árbol 4.10 de HTM240-DIA-001.\nExplicación técnica: Este diagrama remite al procedimiento de diagnóstico específico según la criticidad inicial y el área afectada.",
+      "documento": "HTM240-ESQ-001",
+      "seccion": "3. Árbol general de diagnóstico (nivel superior)",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "control_tcu",
+      "tipo_documento": "esquemas",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-07-01",
+      "orden_en_seccion": 3,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "HTM240-DIA-001",
+        "TES-01",
+        "TES-05"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-ESQ-001@1.0_p2_secuencia_can",
+      "score": 0,
+      "texto": "HTM240-ESQ-001 — Apartado 4: Comunicación entre unidades del vehículo.\nSecuencia de mensajes en el bus CAN:\n1. TCU solicita temperatura de módulos al BMS (Módulo de gestión de batería).\n2. BMS responde con la matriz de temperatura de los 4 módulos de celdas.\n3. TCU solicita temperatura del inversor a la unidad de electrónica de potencia.\n4. Inversor responde con su lectura térmica.\n5. TCU procesa internamente el cálculo de la estrategia térmica (caudales, bypass y ventilación).\n6. TCU envía orden de activación de testigos al cuadro de instrumentos si algún parámetro excede los umbrales configurados.\nExplicación técnica: La TCU consulta periódicamente al BMS y al inversor vía CAN antes de conmutar actuadores y notifica al cuadro en caso de anomalía.",
+      "documento": "HTM240-ESQ-001",
+      "seccion": "4. Comunicación entre unidades del vehículo",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "control_tcu",
+      "tipo_documento": "esquemas",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-07-01",
+      "orden_en_seccion": 4,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-13"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-ESQ-001@1.0_p3_matriz_sensores_actuadores",
+      "score": 0,
+      "texto": "HTM240-ESQ-001 — Apartado 5: Relación entre sensores, actuadores y TCU.\nMatriz de entradas y salidas de la TCU (CMP-13):\n- Sensores (Entradas a TCU):\n  • CMP-14: Temperatura de motor.\n  • CMP-15: Temperatura de batería.\n  • CMP-16: Temperatura de inversor.\n  • CMP-17: Presión de CIR-01.\n  • CMP-18: Caudal de CIR-02.\n  • CMP-19: Nivel de refrigerante.\n  • CMP-20: Temperatura ambiente.\n  • CMP-21: Posición de válvula distribuidora.\n- Actuadores (Salidas gobernadas por TCU):\n  • CMP-01: Bomba mecánica.\n  • CMP-02: Bomba auxiliar A.\n  • CMP-03: Bomba auxiliar B.\n  • CMP-04: Válvula de 4 vías.\n  • CMP-08: Termostato.\n  • CMP-09: Electroventilador.\n  • CMP-12: Calentador PTC.\nExplicación técnica: Todos los sensores alimentan a la TCU central (CMP-13). Ningún sensor actúa directamente sobre un actuador sin pasar por la lógica de control de la TCU.",
+      "documento": "HTM240-ESQ-001",
+      "seccion": "5. Relación entre sensores, actuadores y TCU",
+      "pagina": 3,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "control_tcu",
+      "tipo_documento": "esquemas",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-07-01",
+      "orden_en_seccion": 5,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CIR-01",
+        "CIR-02",
+        "CMP-01",
+        "CMP-02",
+        "CMP-03",
+        "CMP-04",
+        "CMP-08",
+        "CMP-09",
+        "CMP-12",
+        "CMP-13",
+        "CMP-14",
+        "CMP-15",
+        "CMP-16",
+        "CMP-17",
+        "CMP-18",
+        "CMP-19",
+        "CMP-20",
+        "CMP-21"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DIC-001@1.0_p1_terminos_p1",
+      "score": 0,
+      "texto": "HTM240-DIC-001 — Diccionario técnico y coloquial ThermoDrive HTM-240 (Parte 1 de 4).\r\nTérminos técnicos, expresiones coloquiales de usuarios y equivalencias formales:\r\n- Se calienta: El motor o la batería superan su temperatura normal de funcionamiento. Ver HTM-0101, HTM-0201.\r\n- Sube la aguja: Expresión coloquial para el aumento de la temperatura de motor mostrada en el cuadro.\r\n- Pierde líquido: Fuga de refrigerante detectable por descenso del nivel en el vaso de expansión. Ver HTM240-PRC-008.\r\n- Ventilador a tope: El electroventilador (CMP-09) funciona al 100% de su velocidad.\r\n- Modo tortuga: Expresión coloquial para el modo Protección, que limita la potencia del vehículo (testigo TES-06).\r\n- No da calefacción: Calefacción insuficiente en el habitáculo. Ver árbol 4.6 de HTM240- DIA-001.\r\n- Se ha quedado sin batería: Confusión habitual entre agotamiento de carga y avería del sistema térmico de la batería; deben distinguirse.\r\n- El coche pita raro: Expresión ambigua; puede referirse a alarmas de testigo o a ruido mecánico, requiere aclaración.\r\n- Huele a quemado: Posible indicio de sobrecalentamiento severo o fallo eléctrico; condi- ción de parada inmediata.\r\n- Echa vapor: Puede indicar fuga de refrigerante en contacto con superficie caliente; requiere inspección de fugas (HTM240-PRC-008).\r\n- La luz del motor: Referencia coloquial al testigo TES-01 de temperatura de motor.\r\n- La luz de la batería: Referencia coloquial al testigo TES-02 de temperatura de batería de alta tensión.\r\n- Se ha apagado solo: Puede referirse a parada de emergencia del vehículo o a apagado normal tras contacto; requiere aclaración.\r\n- Va como si tuviera el freno de mano puesto: Expresión coloquial para el rendimiento reducido en modo Protección.\r\n- El líquido está blanco: Aspecto lechoso del refrigerante, indicio de contaminación cruzada con aceite. Ver HTM-0109.\r\n- Burbujea el depósito: Presencia de aire en el circuito, posible indicio de purga pendi- ente o fuga con entrada de aire.\r\n- No arranca en frío: Puede confundirse con un problema del sistema térmico cuando en realidad es del sistema de arranque; fuera de alcance de este corpus.\r\n- Se queda pegado el ventilador: El electroventilador no responde a las órdenes de parada; ver HTM-0404.\r\n- Tarda mucho en calentar: Tiempo de calentamiento del habitáculo o del motor superior al esperado; ver HTM240-DIA-001>4.3 y HTM240-BOL-007.\r\n- Pierde fuerza cuesta arriba: Síntoma compatible con rendimiento reducido por so- bretemperatura, ver árbol 4.12.\r\n- Se enciende una luz ámbar: Testigo en color amarillo, urgencia media salvo combi- nación con otros testigos.\r\n- Luz roja parpadeando: Urgencia muy alta; exige detención inmediata del vehículo.\r\n- El líquido refrigerante: Fluido ThermoGlyc HX-40 (ficticio) que circula por los tres 1 circuitos térmicos.\r\n- El agua del motor: Expresión coloquial incorrecta pero habitual para referirse al re- frigerante del circuito motor.\r\n- Bomba de agua: Expresión coloquial para la bomba mecánica de refrigerante CMP-01.\r\n- Ventilador del radiador: Expresión coloquial para el electroventilador CMP-09.\r\n",
+      "documento": "HTM240-DIC-001",
+      "seccion": "Términos del diccionario (Parte 1)",
+      "pagina": 1,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "general",
+      "tipo_documento": "diccionario",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-10-15",
+      "orden_en_seccion": 1,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "BOL-007",
+        "CMP-01",
+        "CMP-09",
+        "DIA-001",
+        "DIC-001",
+        "HTM-0101",
+        "HTM-0109",
+        "HTM-0201",
+        "HTM-0404",
+        "PRC-008",
+        "TES-01",
+        "TES-02",
+        "TES-06"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DIC-001@1.0_p2_terminos_p2",
+      "score": 0,
+      "texto": "HTM240-DIC-001 — Diccionario técnico y coloquial ThermoDrive HTM-240 (Parte 2 de 4).\r\nTérminos técnicos, expresiones coloquiales de usuarios y equivalencias formales:\r\n- Termostato: Componente CMP-08 que regula el paso de refrigerante hacia el radiador principal.\r\n- Vaso de expansión: Componente CMP-07; depósito que compensa la dilatación del re- frigerante.\r\n- Radiador pequeño: Expresión coloquial para el radiador auxiliar de baja temperatura CMP-06.\r\n- Radiador grande: Expresión coloquial para el radiador principal CMP-05.\r\n- Válvula de agua: Expresión coloquial imprecisa para la válvula distribuidora de cuatro vías CMP-04.\r\n- Ordenador del motor: Expresión coloquial imprecisa; en este sistema corresponde a la TCU (CMP-13), no al motor en sí.\r\n- Sensor de temperatura: Cualquiera de los sensores CMP-14, CMP-15, CMP-16 o CMP- 20 según el circuito.\r\n- Modo Eco: Modo de funcionamiento que prioriza la eficiencia energética sobre el mar- gen térmico.\r\n- Modo deportivo: Expresión coloquial que suele corresponder al modo Alta Demanda del sistema térmico.\r\n- Se ha estropeado la calefacción: Expresión general que puede deberse a varias causas distintas; requiere diagnóstico según árbol 4.6.\r\n- Chorrea líquido: Fuga de refrigerante visible y de caudal apreciable; requiere inspec- ción urgente.\r\n- Mancha verde/rosa en el suelo: Indicio visual típico de fuga de refrigerante (el color depende del aditivo, no especificado para ThermoGlyc HX-40).\r\n- El aire acondicionado no enfría: Fuera del alcance de este corpus; el sistema Ther- moDrive gestiona la temperatura de motor, batería y electrónica de potencia, no el cir- cuito de A/C del habitáculo.\r\n- Autonomía baja en invierno: Consecuencia esperada del uso de energía para calen- tamiento en frío; no siempre indica avería.\r\n- El coche pide parar: Mensaje de detención inmediata mostrado ante condiciones de máxima urgencia (ver HTM240-ADV-001).\r\n- Testigo: Icono luminoso del cuadro de instrumentos que informa de un estado o avería.\r\n- DTC: Código de diagnóstico de avería (Diagnostic Trouble Code).\r\n- CAN: Red de comunicación interna del vehículo utilizada por la TCU.\r\n- Purgar el circuito: Eliminar el aire acumulado en un circuito de refrigerante tras una intervención (HTM240-PRC-002).\r\n- Modo de mantenimiento: Estado seguro del vehículo que deshabilita la alta tensión de tracción para permitir intervenciones.\r\n- Alta tensión: Sistema eléctrico de la batería de tracción y componentes asociados, de tensión elevada respecto al sistema de 12V.\r\n- Circuito dedicado: Circuito térmico que refrigera un único subsistema (batería o elec- trónica de potencia).\r\n- Calor residual: Calor generado por el motor de combustión que puede reaprovecharse para calentar otros circuitos.\r\n- Intercambiador: Componente que transfiere calor entre dos fluidos o entre un fluido y un sólido (batería, aceite, etc.).\r\n- Caudal: Cantidad de refrigerante que circula por unidad de tiempo, medido en l/min.\r\n- Nivel de refrigerante: Cantidad de fluido presente en el vaso de expansión, comparado con las marcas MIN y MAX. 2\r\n",
+      "documento": "HTM240-DIC-001",
+      "seccion": "Términos del diccionario (Parte 2)",
+      "pagina": 2,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "general",
+      "tipo_documento": "diccionario",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-10-15",
+      "orden_en_seccion": 2,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "ADV-001",
+        "CMP-04",
+        "CMP-05",
+        "CMP-06",
+        "CMP-07",
+        "CMP-08",
+        "CMP-13",
+        "CMP-14",
+        "CMP-15",
+        "CMP-16",
+        "DIC-001",
+        "PRC-002"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DIC-001@1.0_p3_terminos_p3",
+      "score": 0,
+      "texto": "HTM240-DIC-001 — Diccionario técnico y coloquial ThermoDrive HTM-240 (Parte 3 de 4).\r\nTérminos técnicos, expresiones coloquiales de usuarios y equivalencias formales:\r\n- Presión de circuito: Presión interna del circuito motor, medida por el sensor CMP-17.\r\n- Rendimiento reducido: Limitación deliberada de potencia del vehículo por parte de la TCU ante una condición térmica no resuelta.\r\n- Escalar la incidencia: Derivar el caso a un técnico de mayor nivel de especialización cuando el diagnóstico no puede completarse.\r\n- Boletín técnico: Documento que actualiza, corrige o matiza información previa de man- uales o procedimientos.\r\n- Documento sustituido: Documento cuya versión vigente ha sido reemplazada; no debe usarse como fuente de respuesta.\r\n- Procedimiento: Documento que describe paso a paso cómo realizar una comprobación o intervención de mantenimiento.\r\n- Árbol de diagnóstico: Estructura de decisión que guía el diagnóstico de un síntoma a través de preguntas y comprobaciones sucesivas.\r\n- Versión del sistema: Identificador (V1.0, V1.1, V2.0) que distingue variantes del sis-\r\n- Sensor de caudal: Sensor que mide la cantidad de refrigerante que circula por un circuito (p. ej. CMP-18).\r\n- Rele: Componente electromecánico que conmuta la alimentación de un actuador, como el relé CMP-25.\r\n- Filtro del circuito: Elemento (CMP-24) que retiene partículas en el circuito de batería.\r\n- Actuador: Componente que ejecuta una orden mecánica de la TCU, como la válvula de 4 vías o el electroventilador.\r\n- Conector CAN: Punto de conexión física de la red CAN, como el conector CMP-26 de la TCU.\r\n- Fallo intermitente: Anomalía que aparece y desaparece de forma no constante, dificul- tando su reproducción.\r\n- Deriva de sensor: Desviación progresiva de la lectura de un sensor respecto al valor real.\r\n- Rango nominal: Intervalo de valores considerado normal para una magnitud determi- nada.\r\n- Criterio de aceptación: Condición que debe cumplirse para considerar conforme el resultado de una comprobación.\r\n- Ciclo de conducción: Periodo de uso del vehículo desde el arranque hasta la parada, usado como referencia temporal en comprobaciones. : Sinónimo formal del modo Protección descrito en el • Modo de proteccion térmica manual de operación.\r\n- Testigo combinado: Situación en la que dos o más testigos se activan a la vez, lo que puede cambiar el nivel de urgencia.\r\n- PTC: Calentador eléctrico (CMP-12) basado en un elemento de coeficiente de temper- atura positivo.\r\n- Inversor: Componente de la electrónica de potencia que convierte corriente continua en alterna para el motor eléctrico.\r\n- Convertidor DC-DC: Componente de la electrónica de potencia que adapta la tensión entre distintos sistemas eléctricos del vehículo.\r\n- Pack de batería: Conjunto de módulos de celdas que forman la batería de alta tensión.\r\n- Módulo de batería: Subconjunto de celdas dentro del pack de batería, monitorizado individualmente por el sensor CMP-15.\r\n- Desequilibrio térmico: Diferencia de temperatura relevante entre distintos módulos de la batería.\r\n- Trazador de fugas: Sustancia añadida al refrigerante para facilitar la localización de fugas mediante luz ultravioleta.\r\n",
+      "documento": "HTM240-DIC-001",
+      "seccion": "Términos del diccionario (Parte 3)",
+      "pagina": 3,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "general",
+      "tipo_documento": "diccionario",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-10-15",
+      "orden_en_seccion": 3,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "CMP-12",
+        "CMP-15",
+        "CMP-17",
+        "CMP-18",
+        "CMP-24",
+        "CMP-25",
+        "CMP-26",
+        "DIC-001",
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ]
+    },
+    {
+      "chunk_id": "HTM240-DIC-001@1.0_p4_terminos_p4",
+      "score": 0,
+      "texto": "HTM240-DIC-001 — Diccionario técnico y coloquial ThermoDrive HTM-240 (Parte 4 de 4).\r\nTérminos técnicos, expresiones coloquiales de usuarios y equivalencias formales:\r\n- Manguito: Tubo flexible que conecta distintos elementos de un circuito de refrigerante.\r\n- Abrazadera: Elemento de sujeción que asegura la conexión de un manguito a su racor.\r\n- Racor: Punto de conexión roscada o a presión entre elementos de un circuito de fluido. 3\r\n- Purga de aire: Proceso de eliminación del aire atrapado en un circuito de refrigerante.\r\n- Cavitación: Formación de burbujas de vapor en el interior de una bomba por presión insuficiente, que reduce su rendimiento.\r\n- Consigna: Valor ordenado por la TCU a un actuador (por ejemplo, posición de la válvula o velocidad del ventilador).\r\n- Retroalimentación (feedback): Señal devuelta por un sensor que informa a la TCU del estado real de un actuador.\r\n- Umbral crítico: Valor a partir del cual se activa una protección o una alarma.\r\n- Histéresis térmica: Diferencia entre el umbral de activación y el de desactivación de una estrategia, para evitar oscilaciones.\r\n- Prueba funcional: Comprobación activa de un componente mediante órdenes de prueba, en lugar de una simple observación pasiva.\r\n- Autodiagnóstico: Proceso mediante el cual la TCU revisa el estado de sensores y actu- adores al arrancar el vehículo.\r\n- Checksum: Mecanismo de verificación de integridad de datos utilizado por el software de la TCU.\r\n- Watchdog: Mecanismo de seguridad que reinicia un sistema electrónico si detecta que ha dejado de responder correctamente.\r\n- Perfil autorizado: Nivel de formación y habilitación requerido para realizar una inter- vención concreta.\r\n- Consignación: Proceso de bloqueo seguro de un sistema antes de una intervención, para evitar su activación accidental.\r\n- Aislamiento eléctrico: Barrera que impide el paso no deseado de corriente entre cir- cuitos de distinta tensión.\r\n- Resistencia de aislamiento: Magnitud que indica la calidad de la separación eléctrica entre un circuito de alta tensión y el chasis.\r\n- Severidad: Nivel de gravedad asignado a un código DTC según su impacto potencial.\r\n- Nivel de confianza: Grado de certeza con el que un documento asocia un síntoma o dato a una causa concreta.\r\n- Referencia documental: Documento y sección concretos que respaldan una afirmación técnica.\r\n- Sección estable: Identificador de apartado dentro de un documento Markdown que no depende de la paginación.\r\n- Corpus documental: Conjunto organizado de documentos relacionados entre sí, usado como base de conocimiento del asistente.\r\n- Asistente RAG: Sistema de inteligencia artificial que combina recuperación de docu- mentos con generación de texto para responder consultas. 4\r\n",
+      "documento": "HTM240-DIC-001",
+      "seccion": "Términos del diccionario (Parte 4)",
+      "pagina": 4,
+      "versiones": [
+        "V1.0",
+        "V1.1",
+        "V2.0"
+      ],
+      "componente": "general",
+      "tipo_documento": "diccionario",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": [],
+      "fecha_revision": "2025-10-15",
+      "orden_en_seccion": 4,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": [
+        "DIC-001"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "indice": {
+    "version": "v1.0-bd",
+    "modelo_embeddings": "BAAI/bge-m3"
+  },
+  "resultados": [
+    {
+      "chunk_id": "c45",
+      "score": "0.8324",
+      "texto": "Fragmento de prueba con score serializado como texto.",
+      "documento": "HTM240-DTC-001",
+      "seccion": "2.1",
+      "pagina": 3,
+      "versiones": ["V1.1"],
+      "componente": "refrigeracion",
+      "tipo_documento": "codigo_averia",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": ["V1.1"],
+      "fecha_revision": "2026-10-15",
+      "orden_en_seccion": 3,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": []
+    },
+    {
+      "chunk_id": "c46",
+      "score": true,
+      "texto": "Fragmento de prueba con score booleano.",
+      "documento": "HTM240-PRC-011",
+      "seccion": "4.2",
+      "pagina": 12,
+      "versiones": ["V1.0"],
+      "componente": "motor",
+      "tipo_documento": "procedimiento",
+      "obsoleto": false,
+      "sustituido_por": null,
+      "vigente_para": ["V1.0"],
+      "fecha_revision": "2026-09-30",
+      "orden_en_seccion": 2,
+      "version_documento": "1.0",
+      "afectado_por": [],
+      "ids_referenciados": []
+    }
+  ]
+}
