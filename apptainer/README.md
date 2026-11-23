@@ -2,6 +2,46 @@
 
 PostgreSQL y FastAPI se ejecutan como instancias de Apptainer en Ubuntu WSL2. El frontend PySide6 se puede abrir en Windows o desde WSLg. Ingesta se ejecuta bajo demanda y Agentes tiene un adaptador HTTP para Agente 1.
 
+## Arrancar todo junto
+
+Orden completo para ejecutar el Frontend en modo real, desde Ubuntu (WSL2). Cada bloque indica en qué terminal va.
+
+1. **Preparar la configuración privada (una vez).** Copia las plantillas y rellena credenciales y token (`openssl rand -hex 32`); el mismo token va en los dos archivos.
+
+   ```bash
+   mkdir -p ~/.config/arsoft && chmod 700 ~/.config/arsoft
+   cp apptainer/.env.local.example ~/.config/arsoft/local.env
+   cp apptainer/.env.agentes.example ~/.config/arsoft/agentes.env
+   ```
+
+2. **Construir las imágenes (una vez, o tras cambiar código).**
+
+   ```bash
+   bash apptainer/build-all.sh postgres backend agentes frontend
+   ```
+
+3. **Terminal 1: PostgreSQL y Backend.**
+
+   ```bash
+   export ARSOFT_LOCAL_ENV="$HOME/.config/arsoft/local.env"
+   bash apptainer/start-local.sh
+   apptainer exec instance://arsoft-api python -m app.usuarios_prueba --desarrollo   # solo desarrollo
+   ```
+
+4. **Terminal 2: Agentes** (con Ollama en marcha y el modelo descargado). Usa el comando de la sección *Arranque local*.
+
+5. **Terminal 3: Frontend en modo real.** Entra con `usuario1` / `usuario123`.
+
+   ```bash
+   ARSOFT_API_URL=http://127.0.0.1:8000 bash apptainer/run-frontend.sh
+   ```
+
+   Sin `ARSOFT_API_URL` abre la demo simulada. El script solo pasa al contenedor las variables del Frontend (`ARSOFT_MODO`, `ARSOFT_API_URL`, `ARSOFT_LOGIN_PATH`, `ARSOFT_HISTORIAL_PATH`, `ARSOFT_CONSULTA_PATH`, `ARSOFT_TIMEOUT_S`, `ARSOFT_ALLOW_HTTP`, `ARSOFT_MOCK_EMPTY_HISTORY`).
+
+6. **Comprobar.** `curl http://127.0.0.1:8000/health` (Backend) y `/ready` (PostgreSQL y Agentes).
+
+7. **Parar.** Cierra el Frontend, `Ctrl+C` en Agentes y `bash apptainer/stop-local.sh`.
+
 ## Arranque local
 
 Desde PowerShell, abre Ubuntu en la raíz del repositorio.
@@ -41,6 +81,28 @@ ARSOFT_MANUALES_DIR=/ruta/a/los/manuales bash apptainer/run-ingesta.sh
 ```
 
 El comando de ingesta carga el índice en PostgreSQL. Añade `--sin-embeddings` para extraer solo fragmentos. Los resultados y la caché quedan en `~/arsoft-state`.
+
+## Paquete final del Frontend
+
+El paquete es un `.tar.gz` autosuficiente: solo necesita Apptainer y una sesión gráfica en la máquina de destino.
+
+```bash
+bash apptainer/package-frontend.sh             # usa ~/arsoft-images/frontend.sif si existe
+bash apptainer/package-frontend.sh --rebuild   # reconstruye la imagen antes (pide sudo)
+```
+
+Genera en `dist/` (fuera de git) `arsoft-frontend-<AAAAMMDD>-<commit>.tar.gz` y su `.sha256`. Dentro: `frontend.sif`, `run-frontend.sh`, `verificar.sh`, `SHA256SUMS` y `LEEME.txt`.
+
+En la máquina de destino (por ejemplo, una Ubuntu o WSL2 limpia con Apptainer instalado según [`GUIA_INSTALACION_WINDOWS.md`](GUIA_INSTALACION_WINDOWS.md)):
+
+```bash
+sha256sum -c arsoft-frontend-*.tar.gz.sha256
+tar -xzf arsoft-frontend-*.tar.gz && cd arsoft-frontend-*/
+bash verificar.sh        # Apptainer, DISPLAY, sumas, arranque sin ventana y limpieza de la imagen
+bash run-frontend.sh     # demo; con ARSOFT_API_URL=... abre el modo real
+```
+
+La imagen se construye desde `Frontend/apptainer/frontend.def` y no incluye `__pycache__`, `.vscode` ni `.env`. Su fase `%test` comprueba al construir que Qt y la configuración cargan.
 
 ## Agentes en Slurm
 

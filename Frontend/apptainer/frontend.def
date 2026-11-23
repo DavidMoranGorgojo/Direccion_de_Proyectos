@@ -1,10 +1,14 @@
-
 Bootstrap: docker
 From: python@sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e669c
 
 %labels
     Project ARSOFT
     Service Frontend-PySide6
+
+%help
+    Frontend PySide6 de ARSOFT.
+    Ejecutar:  apptainer run --cleanenv frontend.sif   (necesita DISPLAY; ver apptainer/run-frontend.sh)
+    Modo simulado (demo) sin ARSOFT_API_URL; modo real con ARSOFT_API_URL=https://... (ver Frontend/readme.md).
 
 %files
     Frontend /opt/arsoft/frontend
@@ -33,11 +37,21 @@ From: python@sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e
     python -m pip install --no-cache-dir \
         -r /opt/arsoft/frontend/requirements.txt
 
+    # Fuera de la imagen: cachés de Python, ajustes de editor, secretos y plantillas locales.
+    find /opt/arsoft/frontend -name '__pycache__' -type d -prune -exec rm -rf {} +
+    rm -rf /opt/arsoft/frontend/.vscode /opt/arsoft/frontend/.env /opt/arsoft/frontend/apptainer
+
 %environment
     export PYTHONUNBUFFERED=1
+    export PYTHONDONTWRITEBYTECODE=1
     export PYTHONPATH=/opt/arsoft/frontend
     export QT_QPA_PLATFORM=xcb
 
 %runscript
     cd /opt/arsoft/frontend
     exec python main.py
+
+%test
+    # Se ejecuta al final de la construcción: falla el build si la imagen no arranca.
+    cd /opt/arsoft/frontend
+    QT_QPA_PLATFORM=offscreen python -c "import PySide6.QtWidgets, config, services.api as api; print('Frontend OK, modo simulado:', api.is_mock())"

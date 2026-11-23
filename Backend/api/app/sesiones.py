@@ -38,6 +38,7 @@ bearer = HTTPBearer(auto_error=False)
 router = APIRouter(prefix="/auth", tags=["Login (CTR-005)"])
 
 SESION_CADUCADA = {"codigo_error": "sesion_caducada", "mensaje": "Tu sesión ha caducado."}
+ACCESO_DENEGADO = {"codigo_error": "acceso_denegado", "mensaje": "Tu usuario no tiene acceso."}
 NO_DISPONIBLE = {"codigo_error": "servicio_no_disponible",
                  "mensaje": "El servicio no está disponible. Inténtalo más tarde."}
 
@@ -111,14 +112,16 @@ def usuario_actual(credentials: Annotated[HTTPAuthorizationCredentials | None, D
                 (usuario_id,)).fetchone()
     except psycopg.Error:
         raise HTTPException(503, detail=NO_DISPONIBLE)
-    if not usuario or not usuario["activo"]:
+    if not usuario:
         raise HTTPException(401, detail=SESION_CADUCADA, headers={"WWW-Authenticate": "Bearer"})
+    if not usuario["activo"]:  # sesión válida, pero el usuario ya no tiene acceso
+        raise HTTPException(403, detail=ACCESO_DENEGADO)
     return usuario
 
 
 def solo_admin(usuario: Annotated[dict, Depends(usuario_actual)]) -> dict:
     if usuario["rol"] != "admin":
-        raise HTTPException(403, detail={"codigo_error": "acceso_denegado", "mensaje": "Solo administradores."})
+        raise HTTPException(403, detail={**ACCESO_DENEGADO, "mensaje": "Solo administradores."})
     return usuario
 
 

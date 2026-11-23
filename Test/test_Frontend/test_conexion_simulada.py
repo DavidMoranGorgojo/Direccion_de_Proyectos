@@ -18,6 +18,7 @@ from __future__ import annotations
 import os
 import sys
 import unittest
+from datetime import timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -33,9 +34,10 @@ from Test.test_Frontend import qt_test_harness
 
 qt_test_harness.setup_qt_harness()
 
-from models.conversation import Conversation  # noqa: E402
-from models.message import ROLE_BOT, ROLE_USER  # noqa: E402
-from models.response import (  # noqa: E402
+from models.conversation import Conversation, DEFAULT_TITLE
+from models.dates import parse as parse_date
+from models.message import Message, ROLE_BOT, ROLE_USER
+from models.response import (
     GENERIC_ERROR,
     STATUS_CLARIFY,
     STATUS_ERROR,
@@ -44,9 +46,9 @@ from models.response import (  # noqa: E402
     STATUS_OUT_OF_SCOPE,
     Response,
 )
-from models.source import Source  # noqa: E402
-from services import api, auth, session  # noqa: E402
-
+from models.source import Source
+from services import api, auth, session
+import config
 
 class BaseFrontendTestCase(unittest.TestCase):
     """Configuración base para aislar las pruebas de variables de entorno y retardos."""
@@ -57,6 +59,9 @@ class BaseFrontendTestCase(unittest.TestCase):
         if "ARSOFT_API_URL" in os.environ:
             del os.environ["ARSOFT_API_URL"]
         api.API_URL = ""
+        # Ignorar el ARSOFT_MODO que pueda haber en el .env local del desarrollador
+        self._orig_modo = api.MODO
+        api.MODO = config.MODO_AUTO
 
         # Evitar los 1.2 segundos de sleep intencionales del mock en los tests
         self._sleep_patcher = patch("time.sleep", return_value=None)
@@ -72,6 +77,7 @@ class BaseFrontendTestCase(unittest.TestCase):
             api.API_URL = self._orig_api_url.rstrip("/")
         else:
             api.API_URL = ""
+        api.MODO = self._orig_modo
         session.clear()
 
 
@@ -138,7 +144,10 @@ class TestCTR001LecturaRespuestas(BaseFrontendTestCase):
         self.assertEqual(res.fuentes, [])
 
     def test_ctr001_contrato_mock_call_formato_exacto(self):
-        """Verifica que _mock_call devuelve exactamente los campos especificados en CTR-001."""
+        """Verifica que _mock_call devuelve exactamente los campos especificados en CTR-001.
+
+        El Backend devuelve también el conversacion_id de la consulta (ver services/api.py).
+        """
         status, data = api._mock_call("POST", api.CONSULTA_PATH, {
             "conversacion_id": "test-conv",
             "pregunta": "revisar refrigerante en el motor"
@@ -146,8 +155,10 @@ class TestCTR001LecturaRespuestas(BaseFrontendTestCase):
 
         self.assertEqual(status, 200)
         self.assertIsInstance(data, dict)
+        # El Backend añade conversacion_id a los campos de CTR-001
         campos_esperados = {"trace_id", "conversacion_id", "estado", "texto", "fuentes", "codigo_error"}
         self.assertEqual(set(data.keys()), campos_esperados)
+        self.assertEqual(data["conversacion_id"], "test-conv")
         self.assertIsInstance(data["fuentes"], list)
 
         # Campos de cada fuente
@@ -254,6 +265,112 @@ class TestCTR006LecturaHistorial(BaseFrontendTestCase):
         self.assertEqual(len(conv_recuperada.messages), 1)
         self.assertEqual(conv_recuperada.messages[0].text, "¿Nivel de aceite?")
 
+    def test_ctr006_continuar_chat_con_su_conversacion_id(self):
+        """Un chat del historial se continúa con su propio conversacion_id (no con ID vacío)."""
+        d = {"conversacion_id": "abc123", "titulo": "Prueba de motor",
+             "created_at": "2026-01-15T10:00:00Z", "updated_at": "2026-01-15T10:03:00Z",
+             "mensajes": [{"message_id": "m1", "trace_id": "t1", "role": "user",
+                           "contenido": "¿Nivel de aceite?", "estado": "respuesta",
+                           "timestamp": "2026-01-15T10:00:00Z", "fuentes": []}]}
+        conv = Conversation.from_dict(d)
+        self.assertEqual(conv.id, "abc123")
+        self.assertEqual(conv.server_id, "abc123")
+        self.assertEqual(conv.title, "Prueba de motor")
+        self.assertEqual(len(conv.messages), 1)
+
+    def test_chat_nuevo_envia_conversacion_id_vacio(self):
+        """CTR-001: la primera pregunta de un chat nuevo lleva conversacion_id vacío."""
+        self.assertEqual(Conversation().server_id, "")
+
+    def test_ctr006_conversation_from_dict(self):
+        """Comprueba la lectura de un chat de CTR-006 con Conversation.from_dict.
+
+        El historial lo gestiona el Backend, así que el Frontend solo lee chats (no los serializa).
+        """
+        raw = {
+            "conversacion_id": "conv-aceite",
+            "titulo": "Prueba de motor",
+            "created_at": "2026-11-16T10:00:00",
+            "updated_at": "2026-11-16T10:05:00",
+            "mensajes": [
+                {"role": ROLE_USER, "contenido": "¿Nivel de aceite?", "message_id": "m-1"},
+            ],
+        }
+        conv = Conversation.from_dict(raw)
+
+        self.assertEqual(conv.id, "conv-aceite")
+        self.assertEqual(conv.title, "Prueba de motor")
+        self.assertEqual(conv.created_at, "2026-11-16T10:00:00")
+        self.assertEqual(conv.updated_at, "2026-11-16T10:05:00")
+        self.assertEqual(len(conv.messages), 1)
+        self.assertEqual(conv.messages[0].role, ROLE_USER)
+        self.assertEqual(conv.messages[0].text, "¿Nivel de aceite?")
+
+    def test_ctr006_conversation_from_dict_sin_titulo(self):
+        """Un chat de CTR-006 sin título usa el título por defecto."""
+        conv = Conversation.from_dict({"conversacion_id": "conv-sin-titulo"})
+
+        self.assertEqual(conv.title, DEFAULT_TITLE)
+        self.assertEqual(conv.messages, [])
+
+    def test_ctr006_message_from_dict_sin_message_id(self):
+        """Un mensaje sin `message_id` se lee igualmente, con identificador vacío."""
+        conv = Conversation.from_dict({
+            "conversacion_id": "conv-sin-mid",
+            "mensajes": [
+                {"role": ROLE_USER, "contenido": "¿Presión de aceite?"},
+                {"role": ROLE_BOT, "contenido": "Entre 2 y 4 bar.", "estado": "respuesta"},
+            ],
+        })
+
+        self.assertEqual(len(conv.messages), 2)
+        self.assertTrue(all(m.message_id == "" for m in conv.messages))
+        self.assertEqual(conv.messages[0].text, "¿Presión de aceite?")
+        self.assertEqual(conv.messages[1].text, "Entre 2 y 4 bar.")
+
+    def test_ctr006_message_from_dict_fuentes_ausentes(self):
+        """`fuentes` ausente, nulo o vacío produce una lista de fuentes vacía."""
+        base = {"role": ROLE_BOT, "contenido": "Respuesta", "estado": "respuesta"}
+        casos = {
+            "clave ausente": dict(base),
+            "valor null": {**base, "fuentes": None},
+            "lista vacía": {**base, "fuentes": []},
+        }
+        for nombre, raw in casos.items():
+            with self.subTest(nombre):
+                self.assertEqual(Message.from_dict(raw).sources, [])
+
+        # Un chat completo con mensajes sin fuentes tampoco debe fallar.
+        conv = Conversation.from_dict({"conversacion_id": "c", "mensajes": [dict(base)]})
+        self.assertEqual(conv.messages[0].sources, [])
+
+    def test_ctr006_fechas_con_sufijo_z(self):
+        """Las fechas con sufijo Z (formato que emite el Backend) se conservan y se interpretan."""
+        conv = Conversation.from_dict({
+            "conversacion_id": "conv-z",
+            "created_at": "2026-01-15T10:00:00Z",
+            "updated_at": "2026-01-15T10:03:00Z",
+            "mensajes": [{"role": ROLE_USER, "contenido": "Hola",
+                          "timestamp": "2026-01-15T10:00:00Z"}],
+        })
+
+        # El modelo guarda el texto tal cual lo emite el Backend...
+        self.assertEqual(conv.created_at, "2026-01-15T10:00:00Z")
+        self.assertEqual(conv.updated_at, "2026-01-15T10:03:00Z")
+        self.assertEqual(conv.messages[0].timestamp, "2026-01-15T10:00:00Z")
+
+        # ...y `dates.parse` lo convierte a hora local sin zona, respetando el orden.
+        creada, actualizada = parse_date(conv.created_at), parse_date(conv.updated_at)
+        self.assertIsNotNone(creada)
+        self.assertIsNone(creada.tzinfo)
+        self.assertEqual(actualizada - creada, timedelta(minutes=3))
+        self.assertEqual(parse_date("2026-01-15T10:00:00Z"), parse_date("2026-01-15T10:00:00+00:00"))
+
+    def test_fechas_vacias_o_invalidas_no_rompen(self):
+        """Una fecha vacía o ilegible devuelve None en lugar de lanzar excepción."""
+        self.assertIsNone(parse_date(""))
+        self.assertIsNone(parse_date("no-es-una-fecha"))
+
 
 # ==============================================================================
 # 3. ENVÍO DE CONSULTAS AL ASISTENTE
@@ -267,6 +384,17 @@ class TestEnvioConsulta(BaseFrontendTestCase):
         self.assertIsInstance(resp, Response)
         self.assertEqual(resp.estado, STATUS_OK)
         self.assertIn("refrigerante", resp.texto.lower())
+
+    def test_ruta_de_consulta_es_post_consulta(self):
+        """El Frontend habla con el Backend en POST /consulta, no con la ruta interna de Agentes."""
+        self.assertEqual(api.CONSULTA_PATH, "/consulta")
+        with patch("services.api.call") as mock_call:
+            mock_call.return_value = (200, {"trace_id": "t", "estado": STATUS_OK, "texto": "Ok",
+                                            "fuentes": [], "codigo_error": "", "conversacion_id": "nuevo-1"})
+            resp = api.send_message("", "primera pregunta")
+        mock_call.assert_called_once_with("POST", "/consulta",
+                                          {"conversacion_id": "", "pregunta": "primera pregunta"})
+        self.assertEqual(resp.conversacion_id, "nuevo-1")
 
     def test_envio_consulta_preserva_texto_exacto(self):
         """CTR-001 exige que la pregunta se envíe EXACTAMENTE como se escribió (sin strip)."""
@@ -294,6 +422,25 @@ class TestEnvioConsulta(BaseFrontendTestCase):
             resp = api.send_message("c-err", "alguna pregunta")
             self.assertEqual(resp.estado, STATUS_ERROR)
             self.assertEqual(resp.texto, GENERIC_ERROR)
+
+    def test_envio_consulta_con_error_de_configuracion(self):
+        """Una configuración inválida (p. ej. modo real sin URL) se muestra al usuario, no el error genérico."""
+        with patch("services.api.call", side_effect=api.ConfigError(api.MISSING_URL)):
+            resp = api.send_message("c-cfg", "alguna pregunta")
+            self.assertEqual(resp.estado, STATUS_ERROR)
+            self.assertEqual(resp.texto, api.MISSING_URL)
+            self.assertEqual(resp.codigo_error, "configuracion")
+
+    def test_envio_consulta_modo_real_sin_url(self):
+        """ARSOFT_MODO=real sin ARSOFT_API_URL: la consulta explica que falta el servidor."""
+        orig_modo = api.MODO
+        api.MODO = config.MODO_REAL
+        try:
+            resp = api.send_message("c-sin-url", "alguna pregunta")
+        finally:
+            api.MODO = orig_modo
+        self.assertEqual(resp.estado, STATUS_ERROR)
+        self.assertEqual(resp.texto, api.MISSING_URL)
 
     def test_envio_consulta_chat_worker(self):
         """El ChatWorker ejecuta la consulta en segundo plano y emite finished_ok."""
@@ -361,11 +508,30 @@ class TestErroresHTTP(BaseFrontendTestCase):
         self.assertIn("Demasiados intentos", res.error)
 
     def test_error_429_en_consulta(self):
-        """HTTP 429 en CTR-001 produce una respuesta genérica de error."""
+        """HTTP 429 en CTR-001 pide esperar, sin llamarlo «asistente no disponible»."""
         with patch("services.api.call", return_value=(429, {"mensaje": "Rate limit"})):
             resp = api.send_message("c-429", "pregunta")
             self.assertEqual(resp.estado, STATUS_ERROR)
-            self.assertEqual(resp.texto, GENERIC_ERROR)
+            self.assertEqual(resp.codigo_error, "demasiadas_consultas")
+            self.assertEqual(resp.texto, api.TOO_MANY_REQUESTS)
+            self.assertNotEqual(resp.texto, GENERIC_ERROR)
+
+    def test_error_404_en_consulta_conversacion_no_encontrada(self):
+        """HTTP 404 en CTR-001: el chat no existe o no es del usuario."""
+        body = {"codigo_error": "conversacion_no_encontrada", "mensaje": "La conversación no existe."}
+        with patch("services.api.call", return_value=(404, body)):
+            resp = api.send_message("c-404", "pregunta")
+            self.assertEqual(resp.estado, STATUS_ERROR)
+            self.assertEqual(resp.codigo_error, "conversacion_no_encontrada")
+            self.assertEqual(resp.texto, api.CONVERSATION_NOT_FOUND)
+
+    def test_error_422_en_consulta_entrada_invalida(self):
+        """HTTP 422 en CTR-001: formato de entrada incorrecto."""
+        with patch("services.api.call", return_value=(422, {"codigo_error": "entrada_invalida"})):
+            resp = api.send_message("c-422", "pregunta")
+            self.assertEqual(resp.estado, STATUS_ERROR)
+            self.assertEqual(resp.codigo_error, "entrada_invalida")
+            self.assertEqual(resp.texto, api.INVALID_INPUT)
 
     def test_error_429_en_historial(self):
         """HTTP 429 en CTR-006 devuelve HistoryResult no exitoso."""

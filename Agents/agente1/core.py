@@ -675,7 +675,7 @@ class RespuestaSimuladorAgente2(dict):
             evidencias=evidencias,
             campo_ambiguo=campo_ambiguo,
             mensaje_error=mensaje_error,
-            codigo_error=codigo_error or ""
+            codigo_error=codigo_error
         )
 
     def __iter__(self):
@@ -883,8 +883,19 @@ def _simular_agente_2(query_json: Dict[str, Any]) -> RespuestaSimuladorAgente2:
     )
 
 
-def es_obsoleta(evidencia: Dict[str, Any]) -> bool:
-    meta = evidencia.get("metadata", {})
+def _version_norm(version: Any) -> Optional[str]:
+    if not isinstance(version, str) or not version.strip():
+        return None
+    return version.strip().upper().lstrip("V")
+
+
+def es_obsoleta(evidencia: Dict[str, Any], version: Optional[str] = None) -> bool:
+    """Criterio A2-06: un documento obsoleto o sustituido sigue vigente para
+    las versiones de ``vigente_para``; sin versión solicitada no hay excepción."""
+    meta = evidencia.get("metadata") or {}
+    pedida = _version_norm(version)
+    if pedida is not None and pedida in {_version_norm(v) for v in meta.get("vigente_para") or []}:
+        return False
     return (evidencia.get("estado_documento") in {"obsoleto", "sustituido"}
             or meta.get("obsoleto") is True or bool(meta.get("sustituido_por")))
 
@@ -914,12 +925,12 @@ def simulador_agente_2(query_json: Dict[str, Any]) -> RespuestaSimuladorAgente2:
     if version:
         evidencias = [e for e in evidencias if e.get("metadata", {}).get("version") == version]
     if not opciones.get("incluir_obsoletos", True):
-        evidencias = [e for e in evidencias if not es_obsoleta(e)]
+        evidencias = [e for e in evidencias if not es_obsoleta(e, version)]
     estado = respuesta["estado"]
     if not evidencias:
         estado = "sin_evidencia"
     elif version or estado != "ambiguo":
-        estado = "solo_obsoleto" if all(es_obsoleta(e) for e in evidencias) else "suficiente"
+        estado = "solo_obsoleto" if all(es_obsoleta(e, version) for e in evidencias) else "suficiente"
     # No truncar variantes antes de pedir aclaración.
     return RespuestaSimuladorAgente2(estado, evidencias if estado == "ambiguo" else evidencias[:top_k],
                                     "version" if estado == "ambiguo" else None)
@@ -1081,7 +1092,7 @@ def _redactar_respuesta_con_verificacion(
             "reintentos": 0
         }
 
-    # REINTENTO 1 (Regla de Juanmi: regenerar una vez con feedback del fallo)
+    # REINTENTO 1 (Regenerar una vez con información del fallo)
     logger.warning(f"Verificación de citas falló en intento 1 (citas falsas: {check_1['citas_falsas']}). Regenerando con reintento...")
     chunks_validos_lista = [e.get("chunk_id") for e in evidencias]
     mensajes_reintento = mensajes_base + [
@@ -1176,9 +1187,9 @@ def normalizar_respuesta_agente2(respuesta: Any) -> RespuestaSimuladorAgente2:
     Adaptador universal y normalizador para respuestas de recuperación (CTR-004).
 
     Garantiza compatibilidad robusta entre:
-      - Especificación oficial CTR-004 (evidencias, metadata, scores.rerank, estado).
-      - Implementación de Agente 2 de Víctor (PR #18: rerank_score, rrf_score).
-      - Variante de pruebas de OpenCode (resultados, metadatos, score_final, sin estado).
+      - Especificación oficial CTR-004 (resultados, metadatos, score_final).
+      - Implementación de Agente 2 con rerank_score y rrf_score.
+      - Formato interno de integración (evidencias, metadata y estado).
 
     Cumple estrictamente con las validaciones de contrato:
       1. Mapeo prioritario de 'rerank_score' y 'rrf_score' (PR #18) para evitar score = 0.0.
@@ -1270,7 +1281,7 @@ def normalizar_respuesta_agente2(respuesta: Any) -> RespuestaSimuladorAgente2:
         if not isinstance(estado_doc, str) or estado_doc not in {"vigente", "obsoleto", "sustituido"}:
             return error
 
-        # Extracción segura de puntuaciones (PR #18 de Víctor: rerank_score, rrf_score)
+        # Extracción segura de puntuaciones (rerank_score, rrf_score)
         scores_dict = c.get("scores") if isinstance(c.get("scores"), dict) else {}
         rerank_cand = None
         for cand in [
@@ -1337,11 +1348,11 @@ def normalizar_respuesta_agente2(respuesta: Any) -> RespuestaSimuladorAgente2:
     if any(not evidencia_valida(e) for e in chunks_normalizados):
         return error
 
-    codigo_error = respuesta.get("codigo_error", "")
-    if codigo_error not in {"entrada_invalida", "modelo_no_disponible", "modelo_incompatible",
+    codigo_error = respuesta.get("codigo_error")
+    if codigo_error not in {"entrada_invalida", "filtro_invalido", "modelo_no_disponible", "modelo_incompatible",
                             "indice_no_disponible", "tiempo_agotado", "error_verificacion",
                             "servicio_no_disponible"}:
-        codigo_error = ""
+        codigo_error = None
     if estado == "error" and not codigo_error:
         codigo_error = "error_verificacion"
 
@@ -1380,7 +1391,7 @@ def resolver_evidencias(pregunta: str, respuesta_a2: dict, agente: Agente1, *, v
         if not compatibles:
             return {"estado": "error", "texto": "Las evidencias no corresponden a la versión solicitada.", "fuentes": []}
         evidencias = compatibles
-    vigentes = [e for e in evidencias if not es_obsoleta(e)]
+    vigentes = [e for e in evidencias if not es_obsoleta(e, version)]
     if estado == "solo_obsoleto" and vigentes:
         return {"estado": "error", "texto": "Estado de obsolescencia incoherente en Agente 2.", "fuentes": []}
     seleccion = vigentes or evidencias
@@ -1397,6 +1408,7 @@ def _ejecutar_turno(pregunta: str, agente: Agente1, agente2, nueva_consulta: boo
     inicio = time.monotonic()
     trace = f"t-{uuid.uuid4().hex[:6]}"
     respuesta_a2 = None
+    version_pedida = None
     resultado = {"estado": "error", "mensaje": "No se pudo procesar la consulta."}
     evidencias = []
     try:
@@ -1408,6 +1420,7 @@ def _ejecutar_turno(pregunta: str, agente: Agente1, agente2, nueva_consulta: boo
             else:
                 query = resultado["query_json"]
                 trace = query["trace_id"]
+                version_pedida = query["filtros"]["version"]
                 try:
                     respuesta_a2 = agente2(query)
                 except Exception as exc:
@@ -1417,7 +1430,7 @@ def _ejecutar_turno(pregunta: str, agente: Agente1, agente2, nueva_consulta: boo
                                     "codigo_error": "servicio_no_disponible"}
                 respuesta_a2 = normalizar_respuesta_agente2(respuesta_a2)
                 evidencias = respuesta_a2["evidencias"]
-                final = resolver_evidencias(pregunta, respuesta_a2, agente, version=query["filtros"]["version"])
+                final = resolver_evidencias(pregunta, respuesta_a2, agente, version=version_pedida)
                 if final["estado"] == "aclaracion":
                     agente._query_pendiente = query
                     aclaracion = agente.pedir_aclaracion(pregunta, final["texto"])
@@ -1443,7 +1456,7 @@ def _ejecutar_turno(pregunta: str, agente: Agente1, agente2, nueva_consulta: boo
             versiones = meta.get("versiones", [meta["version"]] if meta.get("version") else [])
             fuentes.append({"chunk_id": ev["chunk_id"], "documento": meta.get("documento", ""),
                             "seccion": meta.get("seccion", ""), "pagina": meta.get("pagina", 0),
-                            "versiones": versiones, "obsoleto": es_obsoleta(ev)})
+                            "versiones": versiones, "obsoleto": es_obsoleta(ev, version_pedida)})
     respuesta = {"trace_id": trace, "estado": estado, "texto": final["texto"],
                  "fuentes": fuentes, "codigo_error": codigo}
     # Lista cerrada: no se guardan pregunta, prompt, respuesta, configuración ni excepciones.
@@ -1486,7 +1499,7 @@ def ejecutar_paso_a_paso(pregunta: str, agente: Optional[Agente1] = None,
 # ============================================================================
 def ejecutar_bateria_5_casos(agente: Optional[Agente1] = None):
     """
-    Ejecuta automáticamente una batería con los 5 casos de prueba de Juanmi:
+    Ejecuta automáticamente una batería con cinco casos de prueba:
       1. Resultados buenos
       2. Lista vacía (sin evidencia)
       3. Varias versiones (ambigüedad)
