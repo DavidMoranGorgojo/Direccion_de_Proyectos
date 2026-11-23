@@ -59,3 +59,16 @@ CREATE TABLE IF NOT EXISTS aplicacion.registro_consulta (
 );
 CREATE INDEX IF NOT EXISTS registro_por_fecha ON aplicacion.registro_consulta (creado_en DESC);
 CREATE INDEX IF NOT EXISTS registro_por_usuario ON aplicacion.registro_consulta (usuario_id, creado_en DESC);
+
+-- CTR-001 · Valoración de la utilidad de una respuesta. Una por usuario y respuesta (trace_id): valorar
+-- de nuevo la misma respuesta actualiza la fila. No hay clave foránea a registro_consulta porque su
+-- trace_id no es único; la pertenencia se comprueba contra el registro al guardar.
+CREATE TABLE IF NOT EXISTS aplicacion.valoracion (
+    id              BIGSERIAL   PRIMARY KEY,
+    trace_id        TEXT        NOT NULL CHECK (trace_id <> ''),
+    usuario_id      BIGINT      NOT NULL REFERENCES aplicacion.usuario (id) ON DELETE CASCADE,
+    util            BOOLEAN     NOT NULL,
+    creado_en       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    actualizado_en  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (usuario_id, trace_id)
+);
