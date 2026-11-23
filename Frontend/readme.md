@@ -15,7 +15,7 @@ Interfaz gráfica de escritorio para el asistente conversacional técnico sobre 
 | `ui/` | Archivos XML de diseño de Qt Designer (`login_window.ui`, `main_window.ui`). |
 | `views/` | Controladores de ventanas: pantalla de login (`login_window.py`) y pantalla principal de chat (`main_window.py`). |
 | `assets/` | Estilos CSS/QSS (`style.qss`), iconos vectoriales SVG e imágenes corporativas. |
-| `apptainer/` | Definición del contenedor del Frontend (`frontend.def`). |
+| `apptainer/` | Definición del contenedor del Frontend (`frontend.def`). Empaquetado en la sección 6. |
 | `main.py` | Punto de entrada de la aplicación que gestiona el ciclo de vida login → chat → logout. |
 
 ---
@@ -149,27 +149,55 @@ python -m unittest discover -s Test/test_Frontend -p "test_*.py"
 
 ---
 
-## 5. Para conectar con Backend y Agentes
+## 5. Contratos con Backend y Agentes (estado confirmado)
 
-Lista de aspectos pendientes a confirmar con las **personas 1 (Agentes)** y **2 (Backend)** para la integración final. Cuando se confirmen, basta con cambiar los valores en `.env` (o los valores por defecto de `config.py`).
+Valores por defecto de `config.py`; si cambian, basta con modificarlos en `.env`.
 
-1. **Rutas (Endpoints HTTP)**:
-   - **CTR-001 (Consulta)**: Confirmada. El cliente usa `POST /consulta` (`CONSULTA_PATH`), con Bearer de sesión. `/agentes/consulta` es la ruta interna Backend → Agentes y el Frontend no la usa.
-   - **CTR-006 (Historial)**: Confirmar la ruta de recuperación del historial (actualmente `HISTORIAL_PATH = "/chats"`) y soporte para operaciones de borrado.
-   - **CTR-005 (Login)**: Confirmar la ruta final de autenticación (`/auth/login`) y endpoints complementarios (logout, validación de sesión).
+| Contrato | Ruta (variable) | Estado |
+|---|---|---|
+| CTR-005 Login | `POST /auth/login` (`ARSOFT_LOGIN_PATH`) | Confirmada. Cuerpo `{"usuario", "contrasena"}`; devuelve `token`. |
+| CTR-001 Consulta | `POST /consulta` (`ARSOFT_CONSULTA_PATH`) | Confirmada. `/agentes/consulta` es la ruta interna Backend → Agentes; el Frontend no la usa. |
+| CTR-006 Historial | `GET /chats` (`ARSOFT_HISTORIAL_PATH`) | Confirmada. Respuesta `{"chats": [...], "total": n}`. |
 
-2. **Identificador de la conversación (`conversacion_id`)**:
-   - **Formato confirmado**: la primera pregunta de un chat nuevo lleva `conversacion_id` vacío; el Backend genera el ID y lo devuelve en la respuesta, y el Frontend lo reutiliza (`Conversation.server_id`). Un chat cargado del historial se continúa con su propio `conversacion_id`. El UUID local de `Conversation.id` solo identifica el chat en la interfaz.
-   - **Agentes**: `Agente1` conserva ese identificador y su memoria para los turnos sucesivos; la función CTR-001 devuelve `trace_id`, `estado`, `texto`, `fuentes` y `codigo_error`.
-   - **Persistencia**: Backend guarda el chat y sus mensajes con ese ID (CTR-006) y cada usuario solo accede a los suyos; un ID ajeno responde 404 `conversacion_no_encontrada` y el Frontend muestra «Esta conversación ya no está disponible».
+- **`conversacion_id`:** la primera pregunta de un chat nuevo lleva `conversacion_id` vacío; el Backend genera el ID y lo devuelve en la respuesta, y el Frontend lo reutiliza (`Conversation.server_id`). Un chat cargado del historial se continúa con su propio `conversacion_id`. El UUID local de `Conversation.id` solo identifica el chat en la interfaz.
+- **Agentes:** `Agente1` conserva ese identificador y su memoria entre turnos. La respuesta de CTR-001 trae `trace_id`, `estado`, `texto`, `fuentes` y `codigo_error`; los fallos controlados de Agentes llegan como HTTP 200 con `estado: "error"`.
+- **Persistencia:** Backend guarda el chat y sus mensajes con ese ID y cada usuario solo accede a los suyos.
+- **Sesión:** token Bearer (JWT). El `token` del login se conserva en memoria y se envía en `Authorization: Bearer <token>`. Caduca a los 480 minutos por defecto; no hay renovación ni revocación en el servidor.
+- **Errores de la consulta y el historial:**
 
-3. **Mecanismo de sesión**:
-   - **Tipo de token**: Confirmar el uso de Bearer token (`Authorization: Bearer <token>`) o cookie de sesión.
-   - **Caducidad**: Formato de error y flujo de renovación ante expiración (HTTP 401 / 403).
+  | HTTP | Qué muestra el Frontend |
+  |---|---|
+  | 401 / 403 | «Tu sesión ha caducado…» y vuelta al login. |
+  | 404 | «Esta conversación ya no está disponible…» (chat ajeno o borrado). |
+  | 422 | «La consulta no se ha podido enviar…». |
+  | 429 | «Demasiadas consultas seguidas…». |
+  | 5xx, JSON no válido, sin conexión, tiempo agotado | Mensaje de error genérico del asistente. |
 
-   **Estado comprobado en el Frontend:** el `token` devuelto por login se conserva en memoria y,
-   si existe, se envía en la cabecera `Authorization`. Comprobado contra el Backend real
-   (`Test/test_Frontend/test_conexion_real.py`): sin sesión o con token manipulado la consulta y el
-   historial responden 401 `sesion_caducada`. La caducidad y la renovación del token siguen
-   pendientes de confirmación con Backend. Ante 401/403, tanto al cargar el historial como en una
-   consulta, se avisa con «Tu sesión ha caducado…» y se cierra la sesión (vuelve a la pantalla de login).
+  Comprobado contra el Backend real en `Test/test_Frontend/test_conexion_real.py` (requiere `ARSOFT_TEST_DATABASE_URL`).
+
+Pendiente de acordar entre departamentos: renovación del token y endpoints adicionales de sesión (logout, validación).
+
+---
+
+## 6. Empaquetado y arranque con Apptainer
+
+La imagen se define en `Frontend/apptainer/frontend.def` (Python con PySide6 y las librerías de Qt/XCB). No incluye `__pycache__`, `.vscode` ni `.env`, y su fase `%test` falla la construcción si Qt o la configuración no cargan.
+
+Desde la raíz del repositorio, en Ubuntu/WSL2 con Apptainer (guía: `apptainer/GUIA_INSTALACION_WINDOWS.md`):
+
+```bash
+bash apptainer/build-all.sh frontend            # construye ~/arsoft-images/frontend.sif
+bash apptainer/run-frontend.sh                  # demo simulada
+ARSOFT_API_URL=http://127.0.0.1:8000 bash apptainer/run-frontend.sh   # modo real
+```
+
+`run-frontend.sh` pasa al contenedor solo las variables de la sección 3 (`ARSOFT_MODO`, `ARSOFT_API_URL`, rutas, `ARSOFT_TIMEOUT_S`, `ARSOFT_ALLOW_HTTP`, `ARSOFT_MOCK_EMPTY_HISTORY`).
+
+**Paquete final.** `bash apptainer/package-frontend.sh` crea `dist/arsoft-frontend-<versión>.tar.gz` con `frontend.sif`, `run-frontend.sh`, `verificar.sh`, `SHA256SUMS` y `LEEME.txt`. En la máquina de destino basta con Apptainer y sesión gráfica:
+
+```bash
+tar -xzf arsoft-frontend-*.tar.gz && cd arsoft-frontend-*/
+bash verificar.sh && bash run-frontend.sh
+```
+
+Para arrancar Frontend junto con PostgreSQL, Backend y Agentes, ver `apptainer/README.md` (sección «Arrancar todo junto»).

@@ -1,0 +1,4 @@
+# Scripts y definiciones de Apptainer: siempre LF (si no, fallan en Linux/WSL con "\r: command not found")
+*.sh text eol=lf
+*.def text eol=lf
+*.sbatch text eol=lf
