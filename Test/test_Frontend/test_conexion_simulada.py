@@ -459,6 +459,25 @@ class TestEnvioConsulta(BaseFrontendTestCase):
             self.assertEqual(resp.estado, STATUS_ERROR)
             self.assertEqual(resp.texto, GENERIC_ERROR)
 
+    def test_envio_consulta_con_error_de_configuracion(self):
+        """Una configuración inválida (p. ej. modo real sin URL) se muestra al usuario, no el error genérico."""
+        with patch("services.api.call", side_effect=api.ConfigError(api.MISSING_URL)):
+            resp = api.send_message("c-cfg", "alguna pregunta")
+            self.assertEqual(resp.estado, STATUS_ERROR)
+            self.assertEqual(resp.texto, api.MISSING_URL)
+            self.assertEqual(resp.codigo_error, "configuracion")
+
+    def test_envio_consulta_modo_real_sin_url(self):
+        """ARSOFT_MODO=real sin ARSOFT_API_URL: la consulta explica que falta el servidor."""
+        orig_modo = api.MODO
+        api.MODO = config.MODO_REAL
+        try:
+            resp = api.send_message("c-sin-url", "alguna pregunta")
+        finally:
+            api.MODO = orig_modo
+        self.assertEqual(resp.estado, STATUS_ERROR)
+        self.assertEqual(resp.texto, api.MISSING_URL)
+
     def test_envio_consulta_chat_worker(self):
         """El ChatWorker ejecuta la consulta en segundo plano y emite finished_ok."""
         worker = api.ChatWorker("conv-async", "¿Cómo comprobar el nivel de refrigerante?")

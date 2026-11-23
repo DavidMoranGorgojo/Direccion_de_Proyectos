@@ -8,7 +8,8 @@ CONTRATO CTR-005 (Backend es la única autoridad que concede el acceso):
     401:  {"estado": "no_autenticado", "mensaje": "...", "codigo_error": "credenciales_invalidas"}
     También: 422 (datos incompletos), 429 (demasiados intentos), 500.
 La contraseña solo viaja en el cuerpo (nunca en la URL), no se guarda ni se registra.
-El contrato aún no define token ni cookie de sesión: si la respuesta trae "token" se usará.
+La respuesta 200 trae un "token" (JWT): se guarda en memoria y se envía como Authorization: Bearer
+(ver api.auth_headers). Si no trae token, no se envía ninguna cabecera.
 En MODO SIMULADO (sin ARSOFT_API_URL o con ARSOFT_MODO=simulado), api.call proporciona las
 respuestas simuladas.
 """

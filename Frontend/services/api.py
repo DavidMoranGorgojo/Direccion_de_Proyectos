@@ -117,6 +117,8 @@ def send_message(conversation_id: str, pregunta: str) -> Response:
     try:
         status, data = call("POST", CONSULTA_PATH,
                             {"conversacion_id": conversation_id, "pregunta": pregunta})
+    except ConfigError as e:                   # falta la URL o no es segura: el usuario debe saberlo
+        return Response.error(str(e), "configuracion")
     except ConnectionFailed:
         return Response.error()
     if status in (401, 403):
