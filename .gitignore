@@ -1,16 +1,22 @@
 # Entornos y dependencias
 .venv/
+venv/
 env/
 node_modules/
+
+# Caché de Python
 __pycache__/
-*.pyc
+*.py[cod]
 
 # Editores
-.vscode
+.vscode/
 
-# Variables de entorno y secretos
+# Variables de entorno y secretos (las plantillas *.example sí se suben)
 .env
+.env.*
 *.env
+!.env.example
+!.env.*.example
 
 # Archivos pesados y documentos (van al Drive)
 *.pdf
@@ -25,14 +31,9 @@ pruebas_procesamiento_datos/manuales_entrada/
 *.sqlite3
 salida_ingesta/
 .pytest_cache/
-.vscode
-__pycache__/
-*.py[cod]
 agente1_registros.jsonl
 
 # Artefactos locales de ejecución y revisión; no son datos de evaluación.
-*.log
-.pytest_cache/
 .coverage
 htmlcov/
 coverage.xml

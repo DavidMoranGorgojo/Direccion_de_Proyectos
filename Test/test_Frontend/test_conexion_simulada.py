@@ -20,6 +20,7 @@ import os
 import sys
 import types
 import unittest
+from datetime import timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -68,35 +69,21 @@ except ImportError:
         sys.modules["PySide6"].QtCore = qtcore_mock
         sys.modules["PySide6.QtCore"] = qtcore_mock
 
-# Importación de modelos y servicios (soporta resolución directa o prefijada por Frontend)
-try:
-    from models.conversation import Conversation, DEFAULT_TITLE
-    from models.message import Message, ROLE_USER, ROLE_BOT
-    from models.response import (
-        Response,
-        GENERIC_ERROR,
-        STATUS_OK,
-        STATUS_CLARIFY,
-        STATUS_NO_EVIDENCE,
-        STATUS_OUT_OF_SCOPE,
-        STATUS_ERROR,
-    )
-    from models.source import Source
-    from services import api, auth, session
-except ImportError:
-    from Frontend.models.conversation import Conversation, DEFAULT_TITLE  # type: ignore
-    from Frontend.models.message import Message, ROLE_USER, ROLE_BOT  # type: ignore
-    from Frontend.models.response import (  # type: ignore
-        Response,
-        GENERIC_ERROR,
-        STATUS_OK,
-        STATUS_CLARIFY,
-        STATUS_NO_EVIDENCE,
-        STATUS_OUT_OF_SCOPE,
-        STATUS_ERROR,
-    )
-    from Frontend.models.source import Source  # type: ignore
-    from Frontend.services import api, auth, session  # type: ignore
+from models.conversation import Conversation, DEFAULT_TITLE
+from models.dates import parse as parse_date
+from models.message import Message, ROLE_USER, ROLE_BOT
+from models.response import (
+    Response,
+    GENERIC_ERROR,
+    STATUS_OK,
+    STATUS_CLARIFY,
+    STATUS_NO_EVIDENCE,
+    STATUS_OUT_OF_SCOPE,
+    STATUS_ERROR,
+)
+from models.source import Source
+from services import api, auth, session
+import config
 
 
 class BaseFrontendTestCase(unittest.TestCase):
@@ -108,6 +95,9 @@ class BaseFrontendTestCase(unittest.TestCase):
         if "ARSOFT_API_URL" in os.environ:
             del os.environ["ARSOFT_API_URL"]
         api.API_URL = ""
+        # Ignorar el ARSOFT_MODO que pueda haber en el .env local del desarrollador
+        self._orig_modo = api.MODO
+        api.MODO = config.MODO_AUTO
 
         # Evitar los 1.2 segundos de sleep intencionales del mock en los tests
         self._sleep_patcher = patch("time.sleep", return_value=None)
@@ -123,6 +113,7 @@ class BaseFrontendTestCase(unittest.TestCase):
             api.API_URL = self._orig_api_url.rstrip("/")
         else:
             api.API_URL = ""
+        api.MODO = self._orig_modo
         session.clear()
 
 
@@ -189,7 +180,10 @@ class TestCTR001LecturaRespuestas(BaseFrontendTestCase):
         self.assertEqual(res.fuentes, [])
 
     def test_ctr001_contrato_mock_call_formato_exacto(self):
-        """Verifica que _mock_call devuelve exactamente los campos especificados en CTR-001."""
+        """Verifica que _mock_call devuelve exactamente los campos especificados en CTR-001.
+
+        El Backend devuelve también el conversacion_id de la consulta (ver services/api.py).
+        """
         status, data = api._mock_call("POST", api.CONSULTA_PATH, {
             "conversacion_id": "test-conv",
             "pregunta": "revisar refrigerante en el motor"
@@ -200,6 +194,7 @@ class TestCTR001LecturaRespuestas(BaseFrontendTestCase):
         # El Backend añade conversacion_id a los campos de CTR-001
         campos_esperados = {"trace_id", "conversacion_id", "estado", "texto", "fuentes", "codigo_error"}
         self.assertEqual(set(data.keys()), campos_esperados)
+        self.assertEqual(data["conversacion_id"], "test-conv")
         self.assertIsInstance(data["fuentes"], list)
 
         # Campos de cada fuente
@@ -306,7 +301,7 @@ class TestCTR006LecturaHistorial(BaseFrontendTestCase):
         self.assertEqual(len(conv_recuperada.messages), 1)
         self.assertEqual(conv_recuperada.messages[0].text, "¿Nivel de aceite?")
 
-    def test_ctr006_conversation_from_dict(self):
+    def test_ctr006_continuar_chat_con_su_conversacion_id(self):
         """Un chat del historial se continúa con su propio conversacion_id (no con ID vacío)."""
         d = {"conversacion_id": "abc123", "titulo": "Prueba de motor",
              "created_at": "2026-01-15T10:00:00Z", "updated_at": "2026-01-15T10:03:00Z",
@@ -322,6 +317,95 @@ class TestCTR006LecturaHistorial(BaseFrontendTestCase):
     def test_chat_nuevo_envia_conversacion_id_vacio(self):
         """CTR-001: la primera pregunta de un chat nuevo lleva conversacion_id vacío."""
         self.assertEqual(Conversation().server_id, "")
+
+    def test_ctr006_conversation_from_dict(self):
+        """Comprueba la lectura de un chat de CTR-006 con Conversation.from_dict.
+
+        El historial lo gestiona el Backend, así que el Frontend solo lee chats (no los serializa).
+        """
+        raw = {
+            "conversacion_id": "conv-aceite",
+            "titulo": "Prueba de motor",
+            "created_at": "2026-11-16T10:00:00",
+            "updated_at": "2026-11-16T10:05:00",
+            "mensajes": [
+                {"role": ROLE_USER, "contenido": "¿Nivel de aceite?", "message_id": "m-1"},
+            ],
+        }
+        conv = Conversation.from_dict(raw)
+
+        self.assertEqual(conv.id, "conv-aceite")
+        self.assertEqual(conv.title, "Prueba de motor")
+        self.assertEqual(conv.created_at, "2026-11-16T10:00:00")
+        self.assertEqual(conv.updated_at, "2026-11-16T10:05:00")
+        self.assertEqual(len(conv.messages), 1)
+        self.assertEqual(conv.messages[0].role, ROLE_USER)
+        self.assertEqual(conv.messages[0].text, "¿Nivel de aceite?")
+
+    def test_ctr006_conversation_from_dict_sin_titulo(self):
+        """Un chat de CTR-006 sin título usa el título por defecto."""
+        conv = Conversation.from_dict({"conversacion_id": "conv-sin-titulo"})
+
+        self.assertEqual(conv.title, DEFAULT_TITLE)
+        self.assertEqual(conv.messages, [])
+
+    def test_ctr006_message_from_dict_sin_message_id(self):
+        """Un mensaje sin `message_id` se lee igualmente, con identificador vacío."""
+        conv = Conversation.from_dict({
+            "conversacion_id": "conv-sin-mid",
+            "mensajes": [
+                {"role": ROLE_USER, "contenido": "¿Presión de aceite?"},
+                {"role": ROLE_BOT, "contenido": "Entre 2 y 4 bar.", "estado": "respuesta"},
+            ],
+        })
+
+        self.assertEqual(len(conv.messages), 2)
+        self.assertTrue(all(m.message_id == "" for m in conv.messages))
+        self.assertEqual(conv.messages[0].text, "¿Presión de aceite?")
+        self.assertEqual(conv.messages[1].text, "Entre 2 y 4 bar.")
+
+    def test_ctr006_message_from_dict_fuentes_ausentes(self):
+        """`fuentes` ausente, nulo o vacío produce una lista de fuentes vacía."""
+        base = {"role": ROLE_BOT, "contenido": "Respuesta", "estado": "respuesta"}
+        casos = {
+            "clave ausente": dict(base),
+            "valor null": {**base, "fuentes": None},
+            "lista vacía": {**base, "fuentes": []},
+        }
+        for nombre, raw in casos.items():
+            with self.subTest(nombre):
+                self.assertEqual(Message.from_dict(raw).sources, [])
+
+        # Un chat completo con mensajes sin fuentes tampoco debe fallar.
+        conv = Conversation.from_dict({"conversacion_id": "c", "mensajes": [dict(base)]})
+        self.assertEqual(conv.messages[0].sources, [])
+
+    def test_ctr006_fechas_con_sufijo_z(self):
+        """Las fechas con sufijo Z (formato que emite el Backend) se conservan y se interpretan."""
+        conv = Conversation.from_dict({
+            "conversacion_id": "conv-z",
+            "created_at": "2026-01-15T10:00:00Z",
+            "updated_at": "2026-01-15T10:03:00Z",
+            "mensajes": [{"role": ROLE_USER, "contenido": "Hola",
+                          "timestamp": "2026-01-15T10:00:00Z"}],
+        })
+
+        # El modelo guarda el texto tal cual lo emite el Backend...
+        self.assertEqual(conv.created_at, "2026-01-15T10:00:00Z")
+        self.assertEqual(conv.updated_at, "2026-01-15T10:03:00Z")
+        self.assertEqual(conv.messages[0].timestamp, "2026-01-15T10:00:00Z")
+
+        # ...y `dates.parse` lo convierte a hora local sin zona, respetando el orden.
+        creada, actualizada = parse_date(conv.created_at), parse_date(conv.updated_at)
+        self.assertIsNotNone(creada)
+        self.assertIsNone(creada.tzinfo)
+        self.assertEqual(actualizada - creada, timedelta(minutes=3))
+        self.assertEqual(parse_date("2026-01-15T10:00:00Z"), parse_date("2026-01-15T10:00:00+00:00"))
+
+    def test_fechas_vacias_o_invalidas_no_rompen(self):
+        """Una fecha vacía o ilegible devuelve None en lugar de lanzar excepción."""
+        self.assertIsNone(parse_date(""))
+        self.assertIsNone(parse_date("no-es-una-fecha"))
 
 
 # ==============================================================================
