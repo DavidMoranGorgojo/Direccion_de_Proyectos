@@ -73,7 +73,18 @@ class ClienteBackendAgentes:
         self.base_url = (base_url or os.environ.get("BACKEND_URL", "http://localhost:8000")).rstrip("/")
         self.ruta_offline = Path(ruta_offline or os.environ.get("AGENTE1_OFFLINE_LOG", "auditoria_offline.jsonl"))
         self.timeout = float(timeout)
-        self.token_auth = token_auth or os.environ.get("BACKEND_TOKEN")
+        self.token_auth = token_auth or os.environ.get("ARSOFT_SERVICE_TOKEN") or os.environ.get("BACKEND_TOKEN")
+
+    def login(self, usuario: str, contrasena: str) -> Dict[str, Any]:
+        """Autentica contra el endpoint CTR-005 (POST /auth/login) y almacena el JWT en self.token_auth."""
+        ruta = "/auth/login"
+        status_code, respuesta = self._post_http(ruta, {"usuario": usuario, "contrasena": contrasena})
+        if status_code == 200 and "token" in respuesta:
+            self.token_auth = respuesta["token"]
+            logger.info(f"Autenticación exitosa en Backend para usuario '{usuario}'")
+            return respuesta
+        logger.warning(f"Fallo en login de Backend (HTTP {status_code}): {respuesta}")
+        raise PermissionError(f"Error en login (HTTP {status_code}): {respuesta.get('mensaje', respuesta)}")
 
     def _headers(self) -> Dict[str, str]:
         """Encabezados HTTP estándar con autenticación Bearer opcional."""
@@ -307,6 +318,51 @@ class ClienteBackendAgentes:
             "pendientes": len(aun_pendientes)
         }
 
+    def obtener_consultas_mias(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        """CTR-003: Recupera el registro de consultas del usuario autenticado vía GET /consultas/mias."""
+        ruta = "/consultas/mias"
+        params = {"limit": limit, "offset": offset}
+        try:
+            status_code, respuesta = self._get_http(ruta, params=params)
+            if status_code == 200 and isinstance(respuesta, dict):
+                return respuesta.get("consultas", [])
+            logger.warning(f"Error al obtener consultas propias (HTTP {status_code}): {respuesta}")
+            return []
+        except ConnectionError as e:
+            logger.warning(f"Backend no alcanzable para obtener consultas propias: {e}")
+            return []
+
+    def obtener_todas_consultas(
+        self,
+        usuario_id: Optional[int] = None,
+        tipo: Optional[str] = None,
+        estado: Optional[str] = None,
+        desde: Optional[str] = None,
+        hasta: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0
+    ) -> List[Dict[str, Any]]:
+        """CTR-003: Consulta el registro completo de consultas (solo admin) vía GET /consultas."""
+        ruta = "/consultas"
+        params = {
+            "usuario_id": usuario_id,
+            "tipo": tipo,
+            "estado": estado,
+            "desde": desde,
+            "hasta": hasta,
+            "limit": limit,
+            "offset": offset
+        }
+        try:
+            status_code, respuesta = self._get_http(ruta, params=params)
+            if status_code == 200 and isinstance(respuesta, dict):
+                return respuesta.get("consultas", [])
+            logger.warning(f"Error al obtener registro global de consultas (HTTP {status_code}): {respuesta}")
+            return []
+        except ConnectionError as e:
+            logger.warning(f"Backend no alcanzable para obtener registro global: {e}")
+            return []
+
     # =========================================================================
     # 2. CTR-006 / CTR-007: HISTORIAL DE CHATS Y MENSAJES
     # =========================================================================
@@ -367,6 +423,9 @@ class ClienteBackendAgentes:
                 )
                 logger.info(f"Historial recuperado para chat {chat_id}: {len(mensajes)} mensajes")
                 return mensajes
+            if status_code == 404:
+                logger.info(f"Chat {chat_id} no encontrado en Backend (HTTP 404).")
+                return []
             logger.warning(f"Error al recuperar historial de chat {chat_id} (HTTP {status_code}): {respuesta}")
             return []
         except ConnectionError as e:

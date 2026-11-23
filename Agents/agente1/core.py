@@ -393,6 +393,36 @@ class Agente1:
         self.consulta_pendiente = False
         self._query_pendiente = None
 
+    def restaurar_memoria_desde_backend(self, cliente_backend: Optional[Any] = None, limit: int = 6) -> int:
+        """CTR-007: Carga el historial previo desde el Backend (GET /chats/{cid}) para reconstruir el contexto."""
+        if cliente_backend is None:
+            try:
+                from .cliente_backend import ClienteBackendAgentes
+                cliente_backend = ClienteBackendAgentes()
+            except Exception as e:
+                logger.warning(f"No se pudo instanciar ClienteBackendAgentes para CTR-007: {e}")
+                return 0
+        try:
+            mensajes = cliente_backend.obtener_historial(self.conversacion_id, limit=limit)
+        except Exception as e:
+            logger.warning(f"Error al obtener historial CTR-007 desde backend: {e}")
+            return 0
+        if not mensajes:
+            return 0
+        self.historial.clear()
+        cargados = 0
+        for m in mensajes:
+            rol = m.get("role") or m.get("rol")
+            contenido = m.get("contenido")
+            if rol in ("user", "assistant", "usuario", "asistente") and contenido:
+                rol_norm = "user" if rol in ("user", "usuario") else "assistant"
+                self.historial.append({"role": rol_norm, "content": contenido})
+                cargados += 1
+        if len(self.historial) > self.max_turnos * 2:
+            self.historial = self.historial[-self.max_turnos * 2:]
+        logger.info(f"CTR-007: Restaurados {cargados} mensajes de historial para conversación {self.conversacion_id}")
+        return cargados
+
     def pedir_aclaracion(self, entrada: str, mensaje: str) -> dict:
         """Dos repreguntas como máximo; después se abstiene y termina la consulta."""
         if self.aclaraciones_consecutivas >= 2:
