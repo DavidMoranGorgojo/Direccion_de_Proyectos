@@ -1,19 +1,22 @@
 # Direccion_de_Proyectos
 Repositorio para organizar todo el codigo del proyecto.
 
-## Para conectar con Backend y Agentes
+## Para conectar con Backend y Agentes (Estado de Integración)
 
-Lista de aspectos técnicos a confirmar con las **personas 1 (Agentes)** y **2 (Backend)** para la integración definitiva entre Frontend, Backend y Agentes:
+Estado y acuerdos técnicos confirmados con las **personas 1 (Agentes)** y **2 (Backend)** tras la validación de la suite de pruebas del Frontend:
 
 1. **Rutas (Endpoints HTTP)**:
-   - **Consulta al asistente (CTR-001)**: Confirmar la ruta final expuesta por el Backend hacia el Frontend para procesar las consultas técnicas (definida provisionalmente como `CONSULTA_PATH = "/agentes/consulta"`).
-   - **Historial de conversaciones (CTR-006)**: Confirmar la ruta definitiva de consulta del historial (definida provisionalmente como `HISTORIAL_PATH = "/chats"`), así como la disponibilidad de operaciones adicionales (borrado de conversaciones, edición de títulos).
-   - **Autenticación (CTR-005)**: Confirmar la ruta final del servicio de login (actualmente `POST /auth/login`), y si se implementarán rutas adicionales (cierre de sesión, comprobación de estado de autenticación o refresco de token).
+   - **Consulta al asistente (CTR-001)**: Ruta confirmada en el Backend como `POST /consulta` (en `Frontend/services/api.py` figura provisionalmente como `/agentes/consulta` a la espera de unificación de contrato).
+   - **Historial de conversaciones (CTR-006)**: Ruta confirmada como `GET /chats`. El Backend también expone `PATCH /chats/{id}` (renombrar) y `DELETE /chats/{id}` (eliminar con aviso a Agentes).
+   - **Autenticación (CTR-005)**: Ruta confirmada en `POST /auth/login`. Devuelve `token` (JWT), objeto `usuario` y tiempo de expiración `expires_in`.
 
 2. **Identificador de la conversación (`conversacion_id`)**:
-   - **Origen y generación**: Confirmar quién es responsable de generar el `conversacion_id` para una conversación nueva: si el Frontend genera un identificador único (UUID v4) y lo envía en el cuerpo de la primera consulta, o si el Backend/Agentes lo asigna en la primera respuesta o mediante un endpoint específico de creación de conversación (`POST /chats`).
-   - **Persistencia y contexto multiturno**: Confirmar cómo gestionan Agentes y Backend la memoria contextual de la conversación a través del `conversacion_id` a lo largo de turnos sucesivos y su vinculación con el usuario activo.
+   - **Generación y preservación**: El cliente puede enviar un ID o dejarlo vacío; el Backend lo reserva y devuelve el identificador oficial.
+   - **Continuidad multiturno**: Al continuar un chat recuperado del historial, el chat debe propagar su identificador para mantener la memoria contextual en Backend y Agentes sin crear chats duplicados.
 
 3. **Mecanismo de sesión**:
-   - **Mecanismo de autenticación**: Confirmar el método de autenticación acordado (Bearer token en cabecera `Authorization: Bearer <token>`, cookies de sesión HTTP-only, etc.).
-   - **Gestión de caducidad**: Confirmar la expiración del token/sesión, el formato de respuesta ante sesión caducada o permisos insuficientes (códigos HTTP 401 / 403) y el procedimiento de reautenticación o refresco de credenciales.
+   - **Método**: Cabecera HTTP `Authorization: Bearer <token>`.
+   - **Control de expiración y errores**: Código HTTP 401 indica sesión caducada o credenciales inválidas (provoca redirección al login en Frontend). Código HTTP 403 indica permisos insuficientes (`acceso_denegado`). Límite de 5 intentos fallidos antes de bloqueo HTTP 429 durante 5 minutos.
+
+### Documentación Adicional de Testing Frontend
+* **Lista de comprobación manual**: [Frontend/CHECKLIST_MANUAL.md](Frontend/CHECKLIST_MANUAL.md)

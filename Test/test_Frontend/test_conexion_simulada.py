@@ -15,88 +15,37 @@ o bien:
 """
 
 from __future__ import annotations
-import json
 import os
 import sys
-import types
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-# Asegurar que las carpetas Frontend y raíz están en sys.path para resolución de módulos
+# Frontend/ y la raíz del repositorio en sys.path (los módulos del Frontend se importan como
+# «models.*» y «services.*», igual que cuando se ejecuta Frontend/main.py)
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 FRONTEND_DIR = ROOT_DIR / "Frontend"
 for path_dir in (str(FRONTEND_DIR), str(ROOT_DIR)):
     if path_dir not in sys.path:
         sys.path.insert(0, path_dir)
 
-# Proveer el arnés mock compatible de PySide6 para pruebas sin depender de GUI/DLLs del sistema
-try:
-    import Test.test_Frontend.qt_test_harness
-except ImportError:
-    if "PySide6.QtCore" not in sys.modules:
-        qtcore_mock = types.ModuleType("PySide6.QtCore")
+from Test.test_Frontend import qt_test_harness
 
-        class _MockSignal:
-            def __init__(self, *types_):
-                self._callbacks = []
+qt_test_harness.setup_qt_harness()
 
-            def connect(self, callback):
-                self._callbacks.append(callback)
-
-            def emit(self, *args, **kwargs):
-                for cb in self._callbacks:
-                    cb(*args, **kwargs)
-
-        class _MockQThread:
-            def __init__(self, parent=None):
-                pass
-
-            def start(self):
-                self.run()
-
-            def wait(self, timeout=None):
-                pass
-
-            def run(self):
-                pass
-
-        qtcore_mock.Signal = _MockSignal
-        qtcore_mock.QThread = _MockQThread
-        if "PySide6" not in sys.modules:
-            sys.modules["PySide6"] = types.ModuleType("PySide6")
-        sys.modules["PySide6"].QtCore = qtcore_mock
-        sys.modules["PySide6.QtCore"] = qtcore_mock
-
-# Importación de modelos y servicios (soporta resolución directa o prefijada por Frontend)
-try:
-    from models.conversation import Conversation, DEFAULT_TITLE
-    from models.message import Message, ROLE_USER, ROLE_BOT
-    from models.response import (
-        Response,
-        GENERIC_ERROR,
-        STATUS_OK,
-        STATUS_CLARIFY,
-        STATUS_NO_EVIDENCE,
-        STATUS_OUT_OF_SCOPE,
-        STATUS_ERROR,
-    )
-    from models.source import Source
-    from services import api, auth, session
-except ImportError:
-    from Frontend.models.conversation import Conversation, DEFAULT_TITLE  # type: ignore
-    from Frontend.models.message import Message, ROLE_USER, ROLE_BOT  # type: ignore
-    from Frontend.models.response import (  # type: ignore
-        Response,
-        GENERIC_ERROR,
-        STATUS_OK,
-        STATUS_CLARIFY,
-        STATUS_NO_EVIDENCE,
-        STATUS_OUT_OF_SCOPE,
-        STATUS_ERROR,
-    )
-    from Frontend.models.source import Source  # type: ignore
-    from Frontend.services import api, auth, session  # type: ignore
+from models.conversation import Conversation  # noqa: E402
+from models.message import ROLE_BOT, ROLE_USER  # noqa: E402
+from models.response import (  # noqa: E402
+    GENERIC_ERROR,
+    STATUS_CLARIFY,
+    STATUS_ERROR,
+    STATUS_NO_EVIDENCE,
+    STATUS_OK,
+    STATUS_OUT_OF_SCOPE,
+    Response,
+)
+from models.source import Source  # noqa: E402
+from services import api, auth, session  # noqa: E402
 
 
 class BaseFrontendTestCase(unittest.TestCase):
@@ -483,7 +432,7 @@ class TestJSONNoValidoYCorrupcion(BaseFrontendTestCase):
             mock_response.__enter__.return_value = mock_response
 
             with patch("urllib.request.urlopen", return_value=mock_response):
-                status, data = api.call("POST", "/agentes/consulta")
+                status, data = api.call("POST", api.CONSULTA_PATH)
                 self.assertEqual(status, 200)
                 self.assertIsNone(data)
 

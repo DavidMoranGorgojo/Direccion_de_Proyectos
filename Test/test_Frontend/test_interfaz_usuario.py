@@ -18,62 +18,43 @@ o bien:
 """
 
 from __future__ import annotations
-import os
 import sys
 import unittest
 from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-# Asegurar que Frontend y el arnés de pruebas están en sys.path
-FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "Frontend"
+# Frontend/ y la raíz del repositorio en sys.path
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+FRONTEND_DIR = ROOT_DIR / "Frontend"
 if str(FRONTEND_DIR) not in sys.path:
     sys.path.insert(0, str(FRONTEND_DIR))
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(1, str(ROOT_DIR))
 
-# Cargar el arnés mock compatible de PySide6 para ejecución headless
-import Test.test_Frontend.qt_test_harness
-from PySide6.QtCore import Qt, QEvent
-from PySide6.QtWidgets import QApplication, QLineEdit
+from Test.test_Frontend import qt_test_harness
 
-try:
-    from components.chat_message import ChatMessage, BADGES
-    from components.conversation_item import ConversationItem, _fmt
-    from components.source_card import SourceCard
-    from models.conversation import Conversation
-    from models.message import Message, ROLE_USER, ROLE_BOT
-    from models.response import (
-        Response,
-        STATUS_OK,
-        STATUS_CLARIFY,
-        STATUS_NO_EVIDENCE,
-        STATUS_OUT_OF_SCOPE,
-        STATUS_ERROR,
-    )
-    from models.source import Source
-    from services import api, auth, session
-    from views.login_window import LoginWindow
-    from views.main_window import MainWindow, _EnterToSend
-except ImportError:
-    from Frontend.components.chat_message import ChatMessage, BADGES  # type: ignore
-    from Frontend.components.conversation_item import ConversationItem, _fmt  # type: ignore
-    from Frontend.components.source_card import SourceCard  # type: ignore
-    from Frontend.models.conversation import Conversation  # type: ignore
-    from Frontend.models.message import Message, ROLE_USER, ROLE_BOT  # type: ignore
-    from Frontend.models.response import (  # type: ignore
-        Response,
-        STATUS_OK,
-        STATUS_CLARIFY,
-        STATUS_NO_EVIDENCE,
-        STATUS_OUT_OF_SCOPE,
-        STATUS_ERROR,
-    )
-    from Frontend.models.source import Source  # type: ignore
-    from Frontend.services import api, auth, session  # type: ignore
-    from Frontend.views.login_window import LoginWindow  # type: ignore
-    from Frontend.views.main_window import MainWindow, _EnterToSend  # type: ignore
+qt_test_harness.setup_qt_harness()
+from PySide6.QtCore import Qt, QEvent  # noqa: E402
+from PySide6.QtWidgets import QApplication, QLineEdit  # noqa: E402
+
+from components.chat_message import ChatMessage  # noqa: E402
+from components.conversation_item import _fmt  # noqa: E402
+from components.source_card import SourceCard  # noqa: E402
+from models.conversation import Conversation  # noqa: E402
+from models.message import Message, ROLE_USER, ROLE_BOT  # noqa: E402
+from models.response import (  # noqa: E402
+    Response,
+    STATUS_OK,
+    STATUS_CLARIFY,
+    STATUS_NO_EVIDENCE,
+    STATUS_OUT_OF_SCOPE,
+    STATUS_ERROR,
+)
+from models.source import Source  # noqa: E402
+from services import api, auth, session  # noqa: E402
+from views.login_window import LoginWindow  # noqa: E402
+from views.main_window import MainWindow, _EnterToSend  # noqa: E402
 
 
 # ==============================================================================
