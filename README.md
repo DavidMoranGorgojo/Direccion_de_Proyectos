@@ -47,7 +47,15 @@ Repositorio de ARSOFT: asistente técnico conversacional sobre la documentación
 
 ## Arrancar todo junto (Ubuntu / WSL2)
 
-Pasos completos en [`apptainer/README.md`](apptainer/README.md#arrancar-todo-junto). En resumen: construir las imágenes, `bash apptainer/start-local.sh` (PostgreSQL + Backend), arrancar Agentes con Ollama, crear los usuarios de prueba y abrir el Frontend con `ARSOFT_API_URL=http://127.0.0.1:8000 bash apptainer/run-frontend.sh`.
+Desde Ubuntu/WSL2 con Apptainer instalado y WSLg activo:
+
+~~~bash
+bash apptainer/start-all.sh
+~~~
+
+El primer arranque crea credenciales locales seguras, construye las imágenes que falten y levanta PostgreSQL con pgvector, Backend, Agentes y Frontend. Si hay PDF en data/manuales (o en ARSOFT_MANUALES_DIR), ejecuta la ingesta; si no, la omite y avisa. También prepara usuarios de desarrollo (usuario1 / usuario123) para probar login e historial. Cierra la ventana o pulsa Ctrl+C para detener las instancias que inició el comando.
+
+Ollama y el modelo conversacional son necesarios para probar respuestas del asistente; los PDF son necesarios para probar recuperación RAG. La interfaz, el login y el historial se pueden comprobar sin ellos.
 
 ## Paquete del Frontend
 
