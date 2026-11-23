@@ -131,6 +131,16 @@ Las pruebas unitarias y de integración del Frontend se ubican en `Test/test_Fro
   - Componentes visuales (`ChatMessage`, `SourceCard`, `ConversationItem`): renderizado de burbujas de usuario y asistente, asignación de badges según estado (`aclaracion`, `sin_evidencia`, `fuera_de_ambito`, `error`), tarjetas de fuentes documentales con aviso de obsolescencia y formateo relativo de fechas (`Hoy HH:MM` vs `DD/MM/AAAA`).
   - Coordinador de aplicación (`App` en `main.py`): flujo completo de navegación y ciclo de vida login → chat → logout → login con almacenamiento y limpieza del estado de sesión.
 
+- **`Test/test_Frontend/test_backend_real.py`**:
+  - Servidor real Uvicorn en bucle local (`127.0.0.1`) levantando la aplicación FastAPI del Backend (`Backend/api/app/main.py`).
+  - Autenticación real CTR-005: emisión de JWT, validación de credenciales con bcrypt, errores 401, 422 y límite de intentos 429.
+  - Historial CTR-006: creación automática de chat en consulta, aislamiento por usuario, persistencia del `server_id` y errores 401/503.
+  - Consulta CTR-001: comunicación completa cliente -> Backend -> Agentes, validación de todos los estados (`respuesta`, `aclaracion`, `fuera_de_ambito`, `sin_evidencia`, `error`), gestión de errores 401, 403, 429, 500 y 503.
+  - Pruebas end-to-end de principio a fin activables con la variable `ARSOFT_E2E_URL`.
+
+Además se dispone de:
+* **Lista de comprobación manual**: [`CHECKLIST_MANUAL.md`](CHECKLIST_MANUAL.md) con el protocolo para verificación manual de toda la interfaz.
+
 Ejecución de las pruebas (desde la raíz del repositorio):
 ```bash
 pytest Test/test_Frontend/
@@ -148,6 +158,24 @@ python -m unittest discover -s Test/test_Frontend -p "test_*.py"
 ```
 
 ---
+
+## 4. Para conectar con Backend y Agentes (Estado Confirmado)
+
+Estado verificado de la integración tras la batería de pruebas contra el Backend real:
+
+1. **Rutas (Endpoints HTTP)**:
+   - **CTR-001 (Consulta)**: Ruta confirmada en el Backend como `POST /consulta` (en `Frontend/services/api.py` figura provisionalmente como `/agentes/consulta` a la espera de unificación de contrato).
+   - **CTR-006 (Historial)**: Ruta confirmada como `GET /chats`. También existen en Backend `PATCH /chats/{id}` y `DELETE /chats/{id}`.
+   - **CTR-005 (Login)**: Confirmado en `POST /auth/login`. Devuelve `token` (JWT), `usuario` y `expires_in`.
+
+2. **Identificador de la conversación (`conversacion_id`)**:
+   - Si el Frontend envía `conversacion_id` vacío o un ID local, el Backend lo respeta o genera uno nuevo, devolviéndolo en la respuesta.
+   - Al continuar un chat recuperado del historial, el chat debe propagar su identificador para que los mensajes siguientes continúen el mismo hilo en Backend y Agentes.
+
+3. **Mecanismo de sesión**:
+   - **Tipo de token**: Bearer JWT en cabecera `Authorization: Bearer <token>`.
+   - **Caducidad**: 480 minutos por defecto. HTTP 401 activa `session_expired` y redirige al Login.
+   - **Seguridad**: Límite de 5 intentos fallidos antes de bloquear por HTTP 429 durante 5 minutos.
 
 ## 5. Contratos con Backend y Agentes (estado confirmado)
 

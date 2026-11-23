@@ -11,7 +11,6 @@ from __future__ import annotations
 import sys
 import types
 import xml.etree.ElementTree as ET
-from datetime import datetime
 
 
 def setup_qt_harness() -> None:
