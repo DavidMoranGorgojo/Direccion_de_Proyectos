@@ -10,6 +10,7 @@ entrada_invalida, 429 demasiadas_valoraciones (con Retry-After), 500 error_inter
 servicio_no_disponible.
 """
 
+import logging
 from typing import Annotated
 
 import psycopg
@@ -20,6 +21,7 @@ from . import limite_consultas
 from .links import connect
 from .sesiones import NO_DISPONIBLE, usuario_actual
 
+log = logging.getLogger("arsoft.backend")
 router = APIRouter(prefix="/valoracion", tags=["Valoración (CTR-001)"])
 RESPUESTA_NO_ENCONTRADA = {"codigo_error": "respuesta_no_encontrada", "mensaje": "La respuesta no existe."}
 DEMASIADAS = {"codigo_error": "demasiadas_valoraciones",
@@ -53,6 +55,8 @@ def valorar(datos: Valoracion, usuario: Annotated[dict, Depends(usuario_actual)]
         with connect() as conn:
             util = guardar(conn, usuario["id"], datos.trace_id, datos.util)
     except psycopg.Error:
+        # También cubre una tabla sin migrar (UndefinedTable): el cliente ve 503, el motivo queda en el log.
+        log.exception("No se pudo guardar la valoración")
         raise HTTPException(503, detail=NO_DISPONIBLE)
     if util is None:
         raise HTTPException(404, detail=RESPUESTA_NO_ENCONTRADA)

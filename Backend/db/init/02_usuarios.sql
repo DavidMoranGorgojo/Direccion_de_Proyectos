@@ -59,6 +59,8 @@ CREATE TABLE IF NOT EXISTS aplicacion.registro_consulta (
 );
 CREATE INDEX IF NOT EXISTS registro_por_fecha ON aplicacion.registro_consulta (creado_en DESC);
 CREATE INDEX IF NOT EXISTS registro_por_usuario ON aplicacion.registro_consulta (usuario_id, creado_en DESC);
+-- CTR-001 · POST /valoracion busca la respuesta por usuario y trace_id.
+CREATE INDEX IF NOT EXISTS registro_por_trace ON aplicacion.registro_consulta (usuario_id, trace_id);
 
 -- CTR-001 · Valoración de la utilidad de una respuesta. Una por usuario y respuesta (trace_id): valorar
 -- de nuevo la misma respuesta actualiza la fila. No hay clave foránea a registro_consulta porque su

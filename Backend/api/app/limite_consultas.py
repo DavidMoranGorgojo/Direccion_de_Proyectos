@@ -13,7 +13,9 @@ from collections import deque
 
 VENTANA_S = 60
 POR_DEFECTO = 20
-VARIABLES = {"consulta": ("ARSOFT_CONSULTAS_POR_MINUTO", POR_DEFECTO), "valoracion": ("ARSOFT_VALORACIONES_POR_MINUTO", 60)}
+POR_DEFECTO_VALORACIONES = 60
+VARIABLES = {"consulta": ("ARSOFT_CONSULTAS_POR_MINUTO", POR_DEFECTO),
+             "valoracion": ("ARSOFT_VALORACIONES_POR_MINUTO", POR_DEFECTO_VALORACIONES)}
 _consultas: dict[tuple, deque] = {}
 _candado = threading.Lock()
 

@@ -231,6 +231,24 @@ class ConBaseDeDatos(unittest.TestCase):
         self.assertEqual((r.status_code, r.json()["codigo_error"]), (503, "servicio_no_disponible"))
         self.assertIn("mensaje", r.json())
 
+    def test_tabla_sin_migrar_da_503_y_queda_en_el_log(self):
+        h = self.login()
+        trace = self.preguntar(h)
+        with connect() as conn:
+            conn.execute("DROP TABLE aplicacion.valoracion")
+        with self.assertLogs("arsoft.backend", level="ERROR") as log:
+            r = self.valorar(h, trace, True)
+        self.assertEqual((r.status_code, r.json()["codigo_error"]), (503, "servicio_no_disponible"))
+        self.assertIn("valoracion", "\n".join(log.output))  # el motivo real se ve en el log, no en la respuesta
+        self.assertNotIn("valoracion", r.text)
+
+    def test_hay_indice_para_buscar_la_respuesta_por_usuario_y_trace_id(self):
+        with connect() as conn:
+            defs = [f["indexdef"] for f in conn.execute(
+                "SELECT indexdef FROM pg_indexes WHERE schemaname='aplicacion' AND tablename='registro_consulta'"
+            ).fetchall()]
+        self.assertTrue(any("(usuario_id, trace_id)" in d for d in defs), defs)
+
 
 if __name__ == "__main__":
     unittest.main()
