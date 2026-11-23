@@ -76,6 +76,20 @@ Esta lista de verificación detalla el protocolo paso a paso para realizar prueb
 
 ---
 
+### Valoración de respuestas (👍 / 👎)
+
+| ID | Caso de Prueba | Pasos a Ejecutar | Comportamiento Esperado | Estado |
+|---|---|---|---|:---:|
+| **VL-01** | Botones solo en respuestas valorables | Obtener una respuesta `respuesta`, una `aclaracion` y una `sin_evidencia`. | Solo la respuesta `respuesta` muestra 👍 y 👎. Ni las demás ni los mensajes del usuario los muestran. | [ ] |
+| **VL-02** | Valorar | Pulsar 👍 en una respuesta. | El botón queda marcado, se envía `POST /valoracion` y no aparece ningún error. | [ ] |
+| **VL-03** | Cambiar la valoración | Tras VL-02, pulsar 👎. | Se marca 👎 y se desmarca 👍. Pulsar de nuevo el mismo botón no envía nada ni lo desmarca. | [ ] |
+| **VL-04** | Valoración al cambiar de chat | Valorar, abrir otro chat y volver. | La valoración sigue marcada (en memoria). Al cerrar y reabrir la aplicación, los botones salen sin marcar. | [ ] |
+| **VL-05** | Fallo al enviar (500, 503 o sin conexión) | Parar el Backend y pulsar 👍. | El botón vuelve a su valor anterior y aparece bajo la respuesta: «No se pudo enviar tu valoración. Inténtalo de nuevo.». | [ ] |
+| **VL-06** | Demasiadas valoraciones (429) | Valorar muchas veces seguidas hasta que el Backend limite. | Aparece «Demasiadas valoraciones seguidas. Espera un momento.» bajo la respuesta. | [ ] |
+| **VL-07** | Sesión caducada al valorar | Invalidar el token y pulsar 👍. | Aviso «Tu sesión ha caducado…» y vuelta al Login. | [ ] |
+
+---
+
 ## 5. Gestión de Sesión y Salida de la Aplicación
 
 | ID | Caso de Prueba | Pasos a Ejecutar | Comportamiento Esperado | Estado |

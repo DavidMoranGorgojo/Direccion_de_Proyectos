@@ -191,6 +191,12 @@ def setup_qt_harness() -> None:
         def setProperty(self, name, value):
             self._properties[name] = value
 
+        def setToolTip(self, tip):
+            self._tool_tip = tip
+
+        def toolTip(self):
+            return getattr(self, "_tool_tip", "")
+
         def windowTitle(self):
             return self._window_title
 

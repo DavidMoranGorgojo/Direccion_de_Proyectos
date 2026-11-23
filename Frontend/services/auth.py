@@ -6,7 +6,7 @@ CONTRATO CTR-005 (Backend es la única autoridad que concede el acceso):
     Petición:  {"usuario": "...", "contrasena": "..."}
     200:  {"estado": "autenticado", "mensaje": "...", "usuario": {"id": "u-123", "nombre_usuario": "..."}}
     401:  {"estado": "no_autenticado", "mensaje": "...", "codigo_error": "credenciales_invalidas"}
-    También: 422 (datos incompletos), 429 (demasiados intentos), 500.
+    También: 403 (sin permiso), 422 (datos incompletos), 429 (demasiados intentos), 500.
 La contraseña solo viaja en el cuerpo (nunca en la URL), no se guarda ni se registra.
 La respuesta 200 trae un "token" (JWT): se guarda en memoria y se envía como Authorization: Bearer
 (ver api.auth_headers). Si no trae token, no se envía ninguna cabecera.
@@ -32,6 +32,8 @@ class AuthResult:
 
 # --------------------------------------------------------------------- backend
 BAD_CREDENTIALS = "Usuario o contraseña incorrectos"
+NO_PERMISSION = "No tienes permiso para entrar. Habla con el administrador."
+SERVER_ERROR = "El servidor ha tenido un problema. Inténtalo más tarde."
 
 
 def _remote_login(username: str, password: str) -> AuthResult:
@@ -51,6 +53,10 @@ def _remote_login(username: str, password: str) -> AuthResult:
         return AuthResult(False, error="Faltan datos o el formato es incorrecto.")
     if status == 429:
         return AuthResult(False, error="Demasiados intentos. Espera un momento antes de reintentar.")
+    if status == 403:
+        return AuthResult(False, error=NO_PERMISSION)
+    if status >= 500:
+        return AuthResult(False, error=SERVER_ERROR)
     return AuthResult(False, error="El servicio no está disponible. Inténtalo más tarde.")
 
 

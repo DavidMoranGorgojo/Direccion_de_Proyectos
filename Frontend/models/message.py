@@ -18,6 +18,7 @@ class Message:
     sources: list[Source] = field(default_factory=list)
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat(timespec="seconds"))
     message_id: str = ""
+    rating: bool | None = None                    # valoración del usuario (solo en memoria)
 
     @property
     def is_user(self) -> bool:
