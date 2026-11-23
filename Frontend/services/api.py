@@ -14,13 +14,13 @@ Contratos que implementa este módulo:
   CTR-006  Historial:  GET /chats  ->  {"chats": [...], "total": n}
   CTR-005  Login: ver services/auth.py
 
-La URL base del Backend se lee de la variable de entorno ARSOFT_API_URL. Si no está definida se
-usa un MODO SIMULADO solo para desarrollar la interfaz. NO es el asistente real.
+Toda la configuración (URL, rutas, tiempo máximo y modo) se lee en config.py.
+Sin ARSOFT_API_URL (o con ARSOFT_MODO=simulado) se usa un MODO SIMULADO solo para desarrollar
+la interfaz. NO es el asistente real.
 Fuera de entornos locales se exige HTTPS (ARSOFT_ALLOW_HTTP=1 lo desactiva, solo para pruebas).
 """
 from __future__ import annotations
 import json
-import os
 import time
 from copy import deepcopy
 import urllib.error
@@ -35,20 +35,28 @@ from models.conversation import Conversation
 from models.response import (Response, STATUS_CLARIFY, STATUS_NO_EVIDENCE, STATUS_OK,
                              STATUS_OUT_OF_SCOPE)
 from models.source import Source
+import config
 from services import session
 
-API_URL = os.environ.get("ARSOFT_API_URL", "").rstrip("/")
-TIMEOUT_S = 60
-CONSULTA_PATH = "/consulta"                  # CTR-001: Frontend -> Backend (el Backend reenvía a /agentes/consulta)
-LOGIN_PATH = "/auth/login"                   # CTR-005
-HISTORIAL_PATH = "/chats"                    # CTR-006
+# Valores tomados de config.py (no definir aquí: config.py es el único sitio).
+MODO = config.MODO
+API_URL = config.API_URL
+TIMEOUT_S = config.TIMEOUT_S
+CONSULTA_PATH = config.CONSULTA_PATH          # CTR-001: Frontend -> Backend (el Backend reenvía a /agentes/consulta)
+LOGIN_PATH = config.LOGIN_PATH                # CTR-005
+HISTORIAL_PATH = config.HISTORIAL_PATH        # CTR-006
 SESSION_EXPIRED = "Tu sesión ha caducado. Cierra sesión y vuelve a entrar."
 TOO_MANY_REQUESTS = "Demasiadas consultas seguidas. Espera un momento antes de volver a intentarlo."
 CONVERSATION_NOT_FOUND = "Esta conversación ya no está disponible. Empieza un chat nuevo."
 INVALID_INPUT = "La consulta no se ha podido enviar: faltan datos o el formato es incorrecto."
+MISSING_URL = "Modo real sin servidor configurado: define ARSOFT_API_URL en el archivo .env."
 
 
 def is_mock() -> bool:
+    if MODO == config.MODO_SIMULADO:
+        return True
+    if MODO == config.MODO_REAL:
+        return False
     return not API_URL
 
 
@@ -57,14 +65,17 @@ class ConnectionFailed(Exception):
     """No se obtuvo respuesta HTTP (sin conexión, tiempo agotado o conexión no segura)."""
 
 
+class ConfigError(ConnectionFailed):
+    """La configuración impide conectar (falta la URL o no es segura). El mensaje se muestra."""
+
+
 def _is_local(host: str) -> bool:
     return host in ("localhost", "127.0.0.1", "::1") or host.endswith(".local")
 
 
 def _insecure() -> bool:
     u = urlparse(API_URL)
-    return (u.scheme == "http" and not _is_local(u.hostname or "")
-            and os.environ.get("ARSOFT_ALLOW_HTTP") != "1")
+    return u.scheme == "http" and not _is_local(u.hostname or "") and not config.ALLOW_HTTP
 
 
 def auth_headers() -> dict:
@@ -77,8 +88,10 @@ def call(method: str, path: str, body: dict | None = None) -> tuple[int, dict | 
     """Devuelve (código HTTP, JSON o None). Solo lanza ConnectionFailed si no hay respuesta."""
     if is_mock():
         return _mock_call(method, path, body)
+    if not API_URL:
+        raise ConfigError(MISSING_URL)
     if _insecure():
-        raise ConnectionFailed("Conexión no segura: fuera de un entorno local se exige HTTPS.")
+        raise ConfigError("Conexión no segura: fuera de un entorno local se exige HTTPS.")
     headers = {"Accept": "application/json", **auth_headers()}
     data = None
     if body is not None:
@@ -104,6 +117,8 @@ def send_message(conversation_id: str, pregunta: str) -> Response:
     try:
         status, data = call("POST", CONSULTA_PATH,
                             {"conversacion_id": conversation_id, "pregunta": pregunta})
+    except ConfigError as e:                   # falta la URL o no es segura: el usuario debe saberlo
+        return Response.error(str(e), "configuracion")
     except ConnectionFailed:
         return Response.error()
     if status in (401, 403):
@@ -163,7 +178,7 @@ class HistoryWorker(QThread):
 
 
 # ---------------------------------------------------------------- modo simulado
-_MOCK_EMPTY_HISTORY = os.environ.get("ARSOFT_MOCK_EMPTY_HISTORY") == "1"
+_MOCK_EMPTY_HISTORY = config.MOCK_EMPTY_HISTORY
 _MOCK_CHATS = [
     {
         "conversacion_id": "demo-chat-001",

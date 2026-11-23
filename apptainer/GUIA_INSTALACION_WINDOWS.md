@@ -55,7 +55,7 @@ Cambia esa ruta por la ubicación donde tengas el proyecto. Construye únicament
 find . -type f -name "*.sh" -not -path "./.git/*" -print0 |
   xargs -0 -r sed -i 's/\r$//'
   
-bash apptainer/build-all.sh
+bash apptainer/build-all.sh frontend
 ```
 
 La primera construcción puede tardar varios minutos.
