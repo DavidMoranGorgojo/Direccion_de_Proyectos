@@ -27,6 +27,7 @@ from .registro import registrar
 from .registro import router as registro
 from .sesiones import router as sesiones
 from .sesiones import usuario_actual
+from .valoracion import router as valoracion
 from .vectorial import crear_router as crear_router_vectorial
 
 AGENT_TIMEOUT_SECONDS = 25.0
@@ -52,6 +53,7 @@ app.include_router(crear_router_vectorial(connect, service_access))  # POST /con
 app.include_router(sesiones)
 app.include_router(historial)
 app.include_router(registro)
+app.include_router(valoracion)  # POST /valoracion (CTR-001)
 
 
 class Pregunta(BaseModel):
@@ -116,7 +118,7 @@ async def validation_error(request: Request, error: RequestValidationError):
     if request.url.path == "/auth/login":  # CTR-005: 422 con el cuerpo de login
         return JSONResponse({"estado": "no_autenticado", "codigo_error": "datos_incompletos",
                              "mensaje": "Faltan datos o el formato es incorrecto."}, status_code=422)
-    if request.url.path == "/consulta" and await bearer(request) is None:
+    if request.url.path in ("/consulta", "/valoracion") and await bearer(request) is None:
         return JSONResponse({"codigo_error": "sesion_caducada", "mensaje": "Tu sesión ha caducado."},
                             status_code=401)
     return JSONResponse({"codigo_error": "entrada_invalida", "mensaje": "Faltan datos o el formato es incorrecto."},
