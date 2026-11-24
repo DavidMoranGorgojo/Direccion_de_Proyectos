@@ -52,6 +52,7 @@ Las respuestas son **de ejemplo**, no las del asistente real; sirve para desarro
    | Una frase con `tiempo` o `receta` | Fuera de ámbito (`fuera_de_ambito`) |
    | Cualquier otra frase | Sin evidencia (`sin_evidencia`) |
    | Una frase con `simular_error`, `error_simulado` o `timeout` | Error 503 del motor de búsqueda (`error`) |
+   | Una frase con `servidor_caido`, `backend_caido` o `agentes_caido` | Servicio no disponible (`error`) |
    | Usuario `rate_limit` en el login | Error 429 (demasiados intentos) |
    | Contraseña incorrecta | Error 401 (credenciales inválidas) |
 
@@ -164,7 +165,7 @@ python -m unittest discover -s Test/test_Frontend -p "test_*.py"
 Estado verificado de la integración tras la batería de pruebas contra el Backend real:
 
 1. **Rutas (Endpoints HTTP)**:
-   - **CTR-001 (Consulta)**: Ruta confirmada en el Backend como `POST /consulta` (en `Frontend/services/api.py` figura provisionalmente como `/agentes/consulta` a la espera de unificación de contrato).
+   - **CTR-001 (Consulta)**: Ruta confirmada en el Backend como `POST /consulta`. `/agentes/consulta` es únicamente la ruta interna Backend → Agentes.
    - **CTR-006 (Historial)**: Ruta confirmada como `GET /chats`. También existen en Backend `PATCH /chats/{id}` y `DELETE /chats/{id}`.
    - **CTR-005 (Login)**: Confirmado en `POST /auth/login`. Devuelve `token` (JWT), `usuario` y `expires_in`.
 
@@ -204,6 +205,17 @@ Valores por defecto de `config.py`; si cambian, basta con modificarlos en `.env`
   Comprobado contra el Backend real en `Test/test_Frontend/test_conexion_real.py` (requiere `ARSOFT_TEST_DATABASE_URL`).
 
 Pendiente de acordar entre departamentos: renovación del token y endpoints adicionales de sesión (logout, validación).
+
+### 5.1 Cierre de versión estable — 24-11-2026
+
+Queda congelado para CTR-001 el acuerdo de integración siguiente:
+
+- Frontend → Backend: `POST /consulta`.
+- Primer mensaje de un chat nuevo: `conversacion_id` vacío; Backend devuelve el identificador oficial.
+- Mensajes posteriores o chats cargados: se reutiliza el mismo `conversacion_id` en Backend y Agentes.
+- Sesión: `Authorization: Bearer <token>`; 401/403 se tratan como sesión caducada.
+- Respuestas admitidas: `respuesta`, `aclaracion`, `sin_evidencia`, `fuera_de_ambito` y `error`.
+- Timeout y servidor inaccesible se muestran como errores controlados y no bloquean la interfaz.
 
 ---
 

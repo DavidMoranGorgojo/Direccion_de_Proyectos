@@ -21,6 +21,7 @@ Fuera de entornos locales se exige HTTPS (ARSOFT_ALLOW_HTTP=1 lo desactiva, solo
 """
 from __future__ import annotations
 import json
+import socket
 import time
 from copy import deepcopy
 import urllib.error
@@ -42,7 +43,7 @@ from services import session
 MODO = config.MODO
 API_URL = config.API_URL
 TIMEOUT_S = config.TIMEOUT_S
-CONSULTA_PATH = config.CONSULTA_PATH          # CTR-001: Frontend -> Backend (el Backend reenvía a /agentes/consulta)
+CONSULTA_PATH = config.CONSULTA_PATH          # CTR-001: Frontend -> Backend
 LOGIN_PATH = config.LOGIN_PATH                # CTR-005
 HISTORIAL_PATH = config.HISTORIAL_PATH        # CTR-006
 SESSION_EXPIRED = "Tu sesión ha caducado. Cierra sesión y vuelve a entrar."
@@ -63,6 +64,10 @@ def is_mock() -> bool:
 # ------------------------------------------------------------------- HTTP común
 class ConnectionFailed(Exception):
     """No se obtuvo respuesta HTTP (sin conexión, tiempo agotado o conexión no segura)."""
+
+    def __init__(self, message: str = "", code: str = "servicio_no_disponible"):
+        super().__init__(message)
+        self.code = code
 
 
 class ConfigError(ConnectionFailed):
@@ -103,8 +108,10 @@ def call(method: str, path: str, body: dict | None = None) -> tuple[int, dict | 
             status, raw = r.status, r.read()
     except urllib.error.HTTPError as e:
         status, raw = e.code, e.read()
-    except (urllib.error.URLError, TimeoutError, OSError) as e:
-        raise ConnectionFailed(str(e)) from e
+    except (socket.timeout, TimeoutError) as e:
+        raise ConnectionFailed(str(e), "tiempo_agotado") from e
+    except (urllib.error.URLError, OSError) as e:
+        raise ConnectionFailed(str(e), "servicio_no_disponible") from e
     try:
         parsed = json.loads(raw.decode("utf-8"))
     except (ValueError, UnicodeDecodeError):
@@ -119,8 +126,8 @@ def send_message(conversation_id: str, pregunta: str) -> Response:
                             {"conversacion_id": conversation_id, "pregunta": pregunta})
     except ConfigError as e:                   # falta la URL o no es segura: el usuario debe saberlo
         return Response.error(str(e), "configuracion")
-    except ConnectionFailed:
-        return Response.error()
+    except ConnectionFailed as e:
+        return Response.error(codigo=e.code)
     if status in (401, 403):
         return Response.error(SESSION_EXPIRED, "sesion_caducada")
     if status == 429:
@@ -254,6 +261,8 @@ def _mock_call(method: str, path: str, body: dict | None) -> tuple[int, dict | N
 def _mock_response(pregunta: str) -> Response:
     time.sleep(1.2)
     text = pregunta.lower()
+    if any(marker in text for marker in ("servidor_caido", "backend_caido", "agentes_caido")):
+        return Response.error(codigo="servicio_no_disponible")
     if any(marker in text for marker in ("error_simulado", "simular_error", "timeout")):
         return Response.error(
             "Error 503: Motor de búsqueda vectorial BGE-M3 no disponible (timeout > 5s).",
