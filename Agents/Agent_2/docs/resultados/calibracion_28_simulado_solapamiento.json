@@ -1,0 +1,7506 @@
+{
+  "fecha": "2026-11-24T11:47:15+00:00",
+  "backend": "simulado",
+  "reranker": "solapamiento",
+  "valido_para_fijar_umbral": false,
+  "granularidad": "documento",
+  "preguntas_evaluadas": 25,
+  "excluidas": [
+    {
+      "id": "CTRL-08",
+      "doc_esperado": "HTM240-PRC-001",
+      "motivo": "documento esperado ausente del índice"
+    },
+    {
+      "id": "CTRL-11",
+      "doc_esperado": "HTM240-PRC-008",
+      "motivo": "documento esperado ausente del índice"
+    },
+    {
+      "id": "CTRL-12",
+      "doc_esperado": "HTM240-PRC-009",
+      "motivo": "documento esperado ausente del índice"
+    }
+  ],
+  "errores": [],
+  "umbral_recomendado": {
+    "threshold": 0.5,
+    "equilibrio": 0.6617647058823529
+  },
+  "trazas": {
+    "CTRL-01": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-ESQ-001",
+        "HTM240-DIC-001",
+        "HTM240-MAN-001",
+        "HTM240-OPE-001",
+        "HTM240-SEG-001",
+        "HTM240-DTC-001",
+        "HTM240-MNT-001",
+        "HTM240-ADV-001",
+        "HTM240-CAT-001"
+      ]
+    },
+    "CTRL-02": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-ESQ-001",
+        "HTM240-MNT-001",
+        "HTM240-DIC-001",
+        "HTM240-MAN-001",
+        "HTM240-SEG-001",
+        "HTM240-HIS-001",
+        "HTM240-BOL-002",
+        "HTM240-ADV-001",
+        "HTM240-DIA-001",
+        "HTM240-DTC-001",
+        "HTM240-BOL-003"
+      ]
+    },
+    "CTRL-03": {
+      "estado_a2": "suficiente",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-ESQ-001"
+      ]
+    },
+    "CTRL-04": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-CAT-001",
+        "HTM240-DIC-001",
+        "HTM240-DTC-001",
+        "HTM240-ESQ-001",
+        "HTM240-MAN-001"
+      ]
+    },
+    "CTRL-05": {
+      "estado_a2": "suficiente",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-MAN-001",
+        "HTM240-CAT-001"
+      ]
+    },
+    "CTRL-06": {
+      "estado_a2": "suficiente",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-HIS-001",
+        "HTM240-BOL-007"
+      ]
+    },
+    "CTRL-07": {
+      "estado_a2": "suficiente",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-MNT-001"
+      ]
+    },
+    "CTRL-09": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-BOL-002",
+        "HTM240-PRC-003",
+        "HTM240-BOL-001",
+        "HTM240-CAT-001",
+        "HTM240-MAN-001",
+        "HTM240-ESQ-001",
+        "HTM240-DTC-001"
+      ]
+    },
+    "CTRL-10": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-DIC-001",
+        "HTM240-SEG-001",
+        "HTM240-ADV-001",
+        "HTM240-OPE-001",
+        "HTM240-DTC-001",
+        "HTM240-HIS-001",
+        "HTM240-MAN-001",
+        "HTM240-CAT-001"
+      ]
+    },
+    "CTRL-13": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-ESQ-001",
+        "HTM240-BOL-004",
+        "HTM240-HIS-001",
+        "HTM240-CAT-001",
+        "HTM240-MNT-001",
+        "HTM240-BOL-001",
+        "HTM240-BOL-006",
+        "HTM240-PRC-003"
+      ]
+    },
+    "CTRL-14": {
+      "estado_a2": "suficiente",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-ADV-001",
+        "HTM240-HIS-001",
+        "HTM240-ESQ-001",
+        "HTM240-SEG-001",
+        "HTM240-OPE-001",
+        "HTM240-MAN-001"
+      ]
+    },
+    "CTRL-15": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-SEG-001",
+        "HTM240-DIC-001",
+        "HTM240-OPE-001",
+        "HTM240-ADV-001",
+        "HTM240-MAN-001",
+        "HTM240-HIS-001",
+        "HTM240-DTC-001"
+      ]
+    },
+    "CTRL-16": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-HIS-001",
+        "HTM240-ADV-001",
+        "HTM240-OPE-001",
+        "HTM240-DIC-001",
+        "HTM240-DIA-001",
+        "HTM240-DTC-001",
+        "HTM240-BOL-003",
+        "HTM240-ESQ-001"
+      ]
+    },
+    "CTRL-17": {
+      "estado_a2": "suficiente",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-BOL-003"
+      ]
+    },
+    "CTRL-18": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-ESQ-001",
+        "HTM240-HIS-001"
+      ]
+    },
+    "CTRL-19": {
+      "estado_a2": "suficiente",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-BOL-006",
+        "HTM240-MNT-001"
+      ]
+    },
+    "CTRL-20": {
+      "estado_a2": "solo_obsoleto",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-PRC-003"
+      ]
+    },
+    "TRAMP-01": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-DIC-001",
+        "HTM240-SEG-001",
+        "HTM240-DTC-001",
+        "HTM240-BOL-003",
+        "HTM240-OPE-001",
+        "HTM240-MAN-001",
+        "HTM240-HIS-001",
+        "HTM240-ADV-001",
+        "HTM240-CAT-001",
+        "HTM240-ESQ-001",
+        "HTM240-DIA-001",
+        "HTM240-MNT-001"
+      ]
+    },
+    "TRAMP-02": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-DIC-001",
+        "HTM240-SEG-001",
+        "HTM240-ESQ-001",
+        "HTM240-HIS-001",
+        "HTM240-ADV-001",
+        "HTM240-OPE-001",
+        "HTM240-CAT-001",
+        "HTM240-MAN-001",
+        "HTM240-DTC-001",
+        "HTM240-MNT-001"
+      ]
+    },
+    "TRAMP-03": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-DIC-001",
+        "HTM240-BOL-005",
+        "HTM240-HIS-001",
+        "HTM240-DTC-001",
+        "HTM240-CAT-001",
+        "HTM240-MAN-001"
+      ]
+    },
+    "TRAMP-04": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-DIC-001",
+        "HTM240-CAT-001",
+        "HTM240-ESQ-001",
+        "HTM240-HIS-001",
+        "HTM240-MAN-001"
+      ]
+    },
+    "TRAMP-05": {
+      "estado_a2": "sin_evidencia",
+      "codigo_error": null,
+      "documentos_entregados": []
+    },
+    "TRAMP-06": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-ESQ-001",
+        "HTM240-DIC-001",
+        "HTM240-ADV-001",
+        "HTM240-SEG-001",
+        "HTM240-DTC-001",
+        "HTM240-MAN-001",
+        "HTM240-CAT-001",
+        "HTM240-OPE-001",
+        "HTM240-HIS-001"
+      ]
+    },
+    "TRAMP-07": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-MNT-001",
+        "HTM240-HIS-001",
+        "HTM240-ESQ-001",
+        "HTM240-BOL-006",
+        "HTM240-BOL-002",
+        "HTM240-BOL-004",
+        "HTM240-CAT-001",
+        "HTM240-BOL-001"
+      ]
+    },
+    "TRAMP-08": {
+      "estado_a2": "ambiguo",
+      "codigo_error": null,
+      "documentos_entregados": [
+        "HTM240-DIC-001",
+        "HTM240-MAN-001",
+        "HTM240-OPE-001",
+        "HTM240-HIS-001",
+        "HTM240-MNT-001",
+        "HTM240-ADV-001",
+        "HTM240-SEG-001",
+        "HTM240-ESQ-001",
+        "HTM240-DTC-001",
+        "HTM240-BOL-001",
+        "HTM240-BOL-002",
+        "HTM240-BOL-003",
+        "HTM240-PRC-003"
+      ]
+    }
+  },
+  "rankings": {
+    "CTRL-01": [
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.8
+      },
+      {
+        "chunk_id": "HTM240-DIC-001",
+        "rerank_score": 0.7
+      },
+      {
+        "chunk_id": "HTM240-MAN-001",
+        "rerank_score": 0.6
+      },
+      {
+        "chunk_id": "HTM240-OPE-001",
+        "rerank_score": 0.6
+      },
+      {
+        "chunk_id": "HTM240-SEG-001",
+        "rerank_score": 0.6
+      },
+      {
+        "chunk_id": "HTM240-DTC-001",
+        "rerank_score": 0.5
+      },
+      {
+        "chunk_id": "HTM240-MNT-001",
+        "rerank_score": 0.5
+      },
+      {
+        "chunk_id": "HTM240-ADV-001",
+        "rerank_score": 0.4
+      },
+      {
+        "chunk_id": "HTM240-CAT-001",
+        "rerank_score": 0.3
+      }
+    ],
+    "CTRL-02": [
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.5384615384615384
+      },
+      {
+        "chunk_id": "HTM240-MNT-001",
+        "rerank_score": 0.5384615384615384
+      },
+      {
+        "chunk_id": "HTM240-DIC-001",
+        "rerank_score": 0.5384615384615384
+      },
+      {
+        "chunk_id": "HTM240-MAN-001",
+        "rerank_score": 0.38461538461538464
+      },
+      {
+        "chunk_id": "HTM240-SEG-001",
+        "rerank_score": 0.38461538461538464
+      },
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.3076923076923077
+      },
+      {
+        "chunk_id": "HTM240-BOL-002",
+        "rerank_score": 0.3076923076923077
+      },
+      {
+        "chunk_id": "HTM240-ADV-001",
+        "rerank_score": 0.3076923076923077
+      },
+      {
+        "chunk_id": "HTM240-DIA-001",
+        "rerank_score": 0.23076923076923078
+      },
+      {
+        "chunk_id": "HTM240-DTC-001",
+        "rerank_score": 0.23076923076923078
+      },
+      {
+        "chunk_id": "HTM240-BOL-003",
+        "rerank_score": 0.15384615384615385
+      }
+    ],
+    "CTRL-03": [
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.5
+      }
+    ],
+    "CTRL-04": [
+      {
+        "chunk_id": "HTM240-CAT-001",
+        "rerank_score": 0.6363636363636364
+      },
+      {
+        "chunk_id": "HTM240-DIC-001",
+        "rerank_score": 0.5454545454545454
+      },
+      {
+        "chunk_id": "HTM240-DTC-001",
+        "rerank_score": 0.45454545454545453
+      },
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.45454545454545453
+      },
+      {
+        "chunk_id": "HTM240-MAN-001",
+        "rerank_score": 0.45454545454545453
+      }
+    ],
+    "CTRL-05": [
+      {
+        "chunk_id": "HTM240-MAN-001",
+        "rerank_score": 0.7692307692307693
+      },
+      {
+        "chunk_id": "HTM240-CAT-001",
+        "rerank_score": 0.5384615384615384
+      }
+    ],
+    "CTRL-06": [
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.47058823529411764
+      },
+      {
+        "chunk_id": "HTM240-BOL-007",
+        "rerank_score": 0.4117647058823529
+      }
+    ],
+    "CTRL-07": [
+      {
+        "chunk_id": "HTM240-MNT-001",
+        "rerank_score": 0.7857142857142857
+      }
+    ],
+    "CTRL-09": [
+      {
+        "chunk_id": "HTM240-BOL-002",
+        "rerank_score": 0.7619047619047619
+      },
+      {
+        "chunk_id": "HTM240-PRC-003",
+        "rerank_score": 0.6666666666666666
+      },
+      {
+        "chunk_id": "HTM240-BOL-001",
+        "rerank_score": 0.6666666666666666
+      },
+      {
+        "chunk_id": "HTM240-CAT-001",
+        "rerank_score": 0.6666666666666666
+      },
+      {
+        "chunk_id": "HTM240-MAN-001",
+        "rerank_score": 0.5714285714285714
+      },
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.42857142857142855
+      },
+      {
+        "chunk_id": "HTM240-DTC-001",
+        "rerank_score": 0.38095238095238093
+      }
+    ],
+    "CTRL-10": [
+      {
+        "chunk_id": "HTM240-DIC-001",
+        "rerank_score": 0.7
+      },
+      {
+        "chunk_id": "HTM240-SEG-001",
+        "rerank_score": 0.5
+      },
+      {
+        "chunk_id": "HTM240-ADV-001",
+        "rerank_score": 0.4
+      },
+      {
+        "chunk_id": "HTM240-OPE-001",
+        "rerank_score": 0.4
+      },
+      {
+        "chunk_id": "HTM240-DTC-001",
+        "rerank_score": 0.3
+      },
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.3
+      },
+      {
+        "chunk_id": "HTM240-MAN-001",
+        "rerank_score": 0.3
+      },
+      {
+        "chunk_id": "HTM240-CAT-001",
+        "rerank_score": 0.1
+      }
+    ],
+    "CTRL-13": [
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.5294117647058824
+      },
+      {
+        "chunk_id": "HTM240-BOL-004",
+        "rerank_score": 0.5294117647058824
+      },
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.47058823529411764
+      },
+      {
+        "chunk_id": "HTM240-CAT-001",
+        "rerank_score": 0.4117647058823529
+      },
+      {
+        "chunk_id": "HTM240-MNT-001",
+        "rerank_score": 0.35294117647058826
+      },
+      {
+        "chunk_id": "HTM240-BOL-001",
+        "rerank_score": 0.35294117647058826
+      },
+      {
+        "chunk_id": "HTM240-BOL-006",
+        "rerank_score": 0.29411764705882354
+      },
+      {
+        "chunk_id": "HTM240-PRC-003",
+        "rerank_score": 0.29411764705882354
+      }
+    ],
+    "CTRL-14": [
+      {
+        "chunk_id": "HTM240-ADV-001",
+        "rerank_score": 0.7
+      },
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.6
+      },
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.5
+      },
+      {
+        "chunk_id": "HTM240-SEG-001",
+        "rerank_score": 0.5
+      },
+      {
+        "chunk_id": "HTM240-OPE-001",
+        "rerank_score": 0.4
+      },
+      {
+        "chunk_id": "HTM240-MAN-001",
+        "rerank_score": 0.3
+      }
+    ],
+    "CTRL-15": [
+      {
+        "chunk_id": "HTM240-SEG-001",
+        "rerank_score": 0.5882352941176471
+      },
+      {
+        "chunk_id": "HTM240-DIC-001",
+        "rerank_score": 0.5294117647058824
+      },
+      {
+        "chunk_id": "HTM240-OPE-001",
+        "rerank_score": 0.4117647058823529
+      },
+      {
+        "chunk_id": "HTM240-ADV-001",
+        "rerank_score": 0.4117647058823529
+      },
+      {
+        "chunk_id": "HTM240-MAN-001",
+        "rerank_score": 0.29411764705882354
+      },
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.23529411764705882
+      },
+      {
+        "chunk_id": "HTM240-DTC-001",
+        "rerank_score": 0.23529411764705882
+      }
+    ],
+    "CTRL-16": [
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.6
+      },
+      {
+        "chunk_id": "HTM240-ADV-001",
+        "rerank_score": 0.4
+      },
+      {
+        "chunk_id": "HTM240-OPE-001",
+        "rerank_score": 0.4
+      },
+      {
+        "chunk_id": "HTM240-DIC-001",
+        "rerank_score": 0.4
+      },
+      {
+        "chunk_id": "HTM240-DIA-001",
+        "rerank_score": 0.3
+      },
+      {
+        "chunk_id": "HTM240-DTC-001",
+        "rerank_score": 0.3
+      },
+      {
+        "chunk_id": "HTM240-BOL-003",
+        "rerank_score": 0.25
+      },
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.2
+      }
+    ],
+    "CTRL-17": [
+      {
+        "chunk_id": "HTM240-BOL-003",
+        "rerank_score": 0.7894736842105263
+      }
+    ],
+    "CTRL-18": [
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.3333333333333333
+      },
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.3333333333333333
+      }
+    ],
+    "CTRL-19": [
+      {
+        "chunk_id": "HTM240-BOL-006",
+        "rerank_score": 0.5909090909090909
+      },
+      {
+        "chunk_id": "HTM240-MNT-001",
+        "rerank_score": 0.5454545454545454
+      }
+    ],
+    "CTRL-20": [
+      {
+        "chunk_id": "HTM240-PRC-003",
+        "rerank_score": 0.15789473684210525
+      }
+    ],
+    "TRAMP-01": [
+      {
+        "chunk_id": "HTM240-DIC-001",
+        "rerank_score": 0.6
+      },
+      {
+        "chunk_id": "HTM240-SEG-001",
+        "rerank_score": 0.5333333333333333
+      },
+      {
+        "chunk_id": "HTM240-DTC-001",
+        "rerank_score": 0.4666666666666667
+      },
+      {
+        "chunk_id": "HTM240-BOL-003",
+        "rerank_score": 0.4666666666666667
+      },
+      {
+        "chunk_id": "HTM240-OPE-001",
+        "rerank_score": 0.4666666666666667
+      },
+      {
+        "chunk_id": "HTM240-MAN-001",
+        "rerank_score": 0.4
+      },
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.4
+      },
+      {
+        "chunk_id": "HTM240-ADV-001",
+        "rerank_score": 0.4
+      },
+      {
+        "chunk_id": "HTM240-CAT-001",
+        "rerank_score": 0.3333333333333333
+      },
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.3333333333333333
+      },
+      {
+        "chunk_id": "HTM240-DIA-001",
+        "rerank_score": 0.26666666666666666
+      },
+      {
+        "chunk_id": "HTM240-MNT-001",
+        "rerank_score": 0.26666666666666666
+      }
+    ],
+    "TRAMP-02": [
+      {
+        "chunk_id": "HTM240-DIC-001",
+        "rerank_score": 0.4166666666666667
+      },
+      {
+        "chunk_id": "HTM240-SEG-001",
+        "rerank_score": 0.4166666666666667
+      },
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.3333333333333333
+      },
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.3333333333333333
+      },
+      {
+        "chunk_id": "HTM240-ADV-001",
+        "rerank_score": 0.3333333333333333
+      },
+      {
+        "chunk_id": "HTM240-OPE-001",
+        "rerank_score": 0.25
+      },
+      {
+        "chunk_id": "HTM240-CAT-001",
+        "rerank_score": 0.25
+      },
+      {
+        "chunk_id": "HTM240-MAN-001",
+        "rerank_score": 0.25
+      },
+      {
+        "chunk_id": "HTM240-DTC-001",
+        "rerank_score": 0.25
+      },
+      {
+        "chunk_id": "HTM240-MNT-001",
+        "rerank_score": 0.25
+      }
+    ],
+    "TRAMP-03": [
+      {
+        "chunk_id": "HTM240-DIC-001",
+        "rerank_score": 0.65
+      },
+      {
+        "chunk_id": "HTM240-BOL-005",
+        "rerank_score": 0.45
+      },
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.4
+      },
+      {
+        "chunk_id": "HTM240-DTC-001",
+        "rerank_score": 0.3
+      },
+      {
+        "chunk_id": "HTM240-CAT-001",
+        "rerank_score": 0.25
+      },
+      {
+        "chunk_id": "HTM240-MAN-001",
+        "rerank_score": 0.2
+      }
+    ],
+    "TRAMP-04": [
+      {
+        "chunk_id": "HTM240-DIC-001",
+        "rerank_score": 0.5
+      },
+      {
+        "chunk_id": "HTM240-CAT-001",
+        "rerank_score": 0.4375
+      },
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.4375
+      },
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.375
+      },
+      {
+        "chunk_id": "HTM240-MAN-001",
+        "rerank_score": 0.3125
+      }
+    ],
+    "TRAMP-05": [],
+    "TRAMP-06": [
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.47058823529411764
+      },
+      {
+        "chunk_id": "HTM240-DIC-001",
+        "rerank_score": 0.4117647058823529
+      },
+      {
+        "chunk_id": "HTM240-ADV-001",
+        "rerank_score": 0.4117647058823529
+      },
+      {
+        "chunk_id": "HTM240-SEG-001",
+        "rerank_score": 0.4117647058823529
+      },
+      {
+        "chunk_id": "HTM240-DTC-001",
+        "rerank_score": 0.35294117647058826
+      },
+      {
+        "chunk_id": "HTM240-MAN-001",
+        "rerank_score": 0.29411764705882354
+      },
+      {
+        "chunk_id": "HTM240-CAT-001",
+        "rerank_score": 0.29411764705882354
+      },
+      {
+        "chunk_id": "HTM240-OPE-001",
+        "rerank_score": 0.29411764705882354
+      },
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.17647058823529413
+      }
+    ],
+    "TRAMP-07": [
+      {
+        "chunk_id": "HTM240-MNT-001",
+        "rerank_score": 0.29411764705882354
+      },
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.23529411764705882
+      },
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.23529411764705882
+      },
+      {
+        "chunk_id": "HTM240-BOL-006",
+        "rerank_score": 0.17647058823529413
+      },
+      {
+        "chunk_id": "HTM240-BOL-002",
+        "rerank_score": 0.17647058823529413
+      },
+      {
+        "chunk_id": "HTM240-BOL-004",
+        "rerank_score": 0.17647058823529413
+      },
+      {
+        "chunk_id": "HTM240-CAT-001",
+        "rerank_score": 0.11764705882352941
+      },
+      {
+        "chunk_id": "HTM240-BOL-001",
+        "rerank_score": 0.11764705882352941
+      }
+    ],
+    "TRAMP-08": [
+      {
+        "chunk_id": "HTM240-DIC-001",
+        "rerank_score": 0.8181818181818182
+      },
+      {
+        "chunk_id": "HTM240-MAN-001",
+        "rerank_score": 0.6363636363636364
+      },
+      {
+        "chunk_id": "HTM240-OPE-001",
+        "rerank_score": 0.5454545454545454
+      },
+      {
+        "chunk_id": "HTM240-HIS-001",
+        "rerank_score": 0.5454545454545454
+      },
+      {
+        "chunk_id": "HTM240-MNT-001",
+        "rerank_score": 0.5454545454545454
+      },
+      {
+        "chunk_id": "HTM240-ADV-001",
+        "rerank_score": 0.5454545454545454
+      },
+      {
+        "chunk_id": "HTM240-SEG-001",
+        "rerank_score": 0.5454545454545454
+      },
+      {
+        "chunk_id": "HTM240-ESQ-001",
+        "rerank_score": 0.5454545454545454
+      },
+      {
+        "chunk_id": "HTM240-DTC-001",
+        "rerank_score": 0.45454545454545453
+      },
+      {
+        "chunk_id": "HTM240-BOL-001",
+        "rerank_score": 0.36363636363636365
+      },
+      {
+        "chunk_id": "HTM240-BOL-002",
+        "rerank_score": 0.36363636363636365
+      },
+      {
+        "chunk_id": "HTM240-BOL-003",
+        "rerank_score": 0.36363636363636365
+      },
+      {
+        "chunk_id": "HTM240-PRC-003",
+        "rerank_score": 0.2727272727272727
+      }
+    ]
+  },
+  "results": [
+    {
+      "threshold": 0.0,
+      "tp": 12,
+      "fp": 132,
+      "fn": 5,
+      "micro": {
+        "precision": 0.08333333333333333,
+        "recall": 0.7058823529411765,
+        "f1": 0.14906832298136644
+      },
+      "macro": {
+        "precision": 0.17101671476671476,
+        "recall": 0.7058823529411765,
+        "f1": 0.3096171802054155
+      },
+      "ranking": {
+        "mrr": 0.622549019607843,
+        "recall_at_k": {
+          "1": 0.5882352941176471,
+          "3": 0.6470588235294118,
+          "5": 0.7058823529411765
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 1,
+        "abstenciones_falsas": 0,
+        "respuestas_sin_evidencia": 7,
+        "tasa_abstencion_correcta": 0.125,
+        "tasa_abstencion_falsa": 0.0
+      },
+      "retained_count": 144,
+      "average_retained_per_query": 5.76,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 1,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.1111111111111111,
+          "recall": 1.0,
+          "f1": 0.19999999999999998,
+          "retained_count": 9,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 1,
+          "fp": 10,
+          "fn": 0,
+          "precision": 0.09090909090909091,
+          "recall": 1.0,
+          "f1": 0.16666666666666669,
+          "retained_count": 11,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 7,
+          "fn": 0,
+          "precision": 0.125,
+          "recall": 1.0,
+          "f1": 0.2222222222222222,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 8,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.16666666666666666,
+          "recall": 1.0,
+          "f1": 0.2857142857142857,
+          "retained_count": 6,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 1,
+          "fp": 7,
+          "fn": 0,
+          "precision": 0.125,
+          "recall": 1.0,
+          "f1": 0.2222222222222222,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 12,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 12,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 10,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 10,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 6,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 5,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 9,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 9,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 8,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 13,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 13,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.05,
+      "tp": 12,
+      "fp": 132,
+      "fn": 5,
+      "micro": {
+        "precision": 0.08333333333333333,
+        "recall": 0.7058823529411765,
+        "f1": 0.14906832298136644
+      },
+      "macro": {
+        "precision": 0.17101671476671476,
+        "recall": 0.7058823529411765,
+        "f1": 0.3096171802054155
+      },
+      "ranking": {
+        "mrr": 0.622549019607843,
+        "recall_at_k": {
+          "1": 0.5882352941176471,
+          "3": 0.6470588235294118,
+          "5": 0.7058823529411765
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 1,
+        "abstenciones_falsas": 0,
+        "respuestas_sin_evidencia": 7,
+        "tasa_abstencion_correcta": 0.125,
+        "tasa_abstencion_falsa": 0.0
+      },
+      "retained_count": 144,
+      "average_retained_per_query": 5.76,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 1,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.1111111111111111,
+          "recall": 1.0,
+          "f1": 0.19999999999999998,
+          "retained_count": 9,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 1,
+          "fp": 10,
+          "fn": 0,
+          "precision": 0.09090909090909091,
+          "recall": 1.0,
+          "f1": 0.16666666666666669,
+          "retained_count": 11,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 7,
+          "fn": 0,
+          "precision": 0.125,
+          "recall": 1.0,
+          "f1": 0.2222222222222222,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 8,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.16666666666666666,
+          "recall": 1.0,
+          "f1": 0.2857142857142857,
+          "retained_count": 6,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 1,
+          "fp": 7,
+          "fn": 0,
+          "precision": 0.125,
+          "recall": 1.0,
+          "f1": 0.2222222222222222,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 12,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 12,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 10,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 10,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 6,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 5,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 9,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 9,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 8,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 13,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 13,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.1,
+      "tp": 12,
+      "fp": 132,
+      "fn": 5,
+      "micro": {
+        "precision": 0.08333333333333333,
+        "recall": 0.7058823529411765,
+        "f1": 0.14906832298136644
+      },
+      "macro": {
+        "precision": 0.17101671476671476,
+        "recall": 0.7058823529411765,
+        "f1": 0.3096171802054155
+      },
+      "ranking": {
+        "mrr": 0.622549019607843,
+        "recall_at_k": {
+          "1": 0.5882352941176471,
+          "3": 0.6470588235294118,
+          "5": 0.7058823529411765
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 1,
+        "abstenciones_falsas": 0,
+        "respuestas_sin_evidencia": 7,
+        "tasa_abstencion_correcta": 0.125,
+        "tasa_abstencion_falsa": 0.0
+      },
+      "retained_count": 144,
+      "average_retained_per_query": 5.76,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 1,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.1111111111111111,
+          "recall": 1.0,
+          "f1": 0.19999999999999998,
+          "retained_count": 9,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 1,
+          "fp": 10,
+          "fn": 0,
+          "precision": 0.09090909090909091,
+          "recall": 1.0,
+          "f1": 0.16666666666666669,
+          "retained_count": 11,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 7,
+          "fn": 0,
+          "precision": 0.125,
+          "recall": 1.0,
+          "f1": 0.2222222222222222,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 8,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.16666666666666666,
+          "recall": 1.0,
+          "f1": 0.2857142857142857,
+          "retained_count": 6,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 1,
+          "fp": 7,
+          "fn": 0,
+          "precision": 0.125,
+          "recall": 1.0,
+          "f1": 0.2222222222222222,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 12,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 12,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 10,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 10,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 6,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 5,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 9,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 9,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 8,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 13,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 13,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.15,
+      "tp": 12,
+      "fp": 129,
+      "fn": 5,
+      "micro": {
+        "precision": 0.0851063829787234,
+        "recall": 0.7058823529411765,
+        "f1": 0.1518987341772152
+      },
+      "macro": {
+        "precision": 0.1717607623857624,
+        "recall": 0.7058823529411765,
+        "f1": 0.3112511671335201
+      },
+      "ranking": {
+        "mrr": 0.622549019607843,
+        "recall_at_k": {
+          "1": 0.5882352941176471,
+          "3": 0.6470588235294118,
+          "5": 0.7058823529411765
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 1,
+        "abstenciones_falsas": 0,
+        "respuestas_sin_evidencia": 7,
+        "tasa_abstencion_correcta": 0.125,
+        "tasa_abstencion_falsa": 0.0
+      },
+      "retained_count": 141,
+      "average_retained_per_query": 5.64,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 1,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.1111111111111111,
+          "recall": 1.0,
+          "f1": 0.19999999999999998,
+          "retained_count": 9,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 1,
+          "fp": 10,
+          "fn": 0,
+          "precision": 0.09090909090909091,
+          "recall": 1.0,
+          "f1": 0.16666666666666669,
+          "retained_count": 11,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 8,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.16666666666666666,
+          "recall": 1.0,
+          "f1": 0.2857142857142857,
+          "retained_count": 6,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 1,
+          "fp": 7,
+          "fn": 0,
+          "precision": 0.125,
+          "recall": 1.0,
+          "f1": 0.2222222222222222,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 12,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 12,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 10,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 10,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 6,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 5,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 9,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 9,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 6,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 13,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 13,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.2,
+      "tp": 12,
+      "fp": 123,
+      "fn": 5,
+      "micro": {
+        "precision": 0.08888888888888889,
+        "recall": 0.7058823529411765,
+        "f1": 0.15789473684210528
+      },
+      "macro": {
+        "precision": 0.17962387853692202,
+        "recall": 0.7058823529411765,
+        "f1": 0.31214243273066805
+      },
+      "ranking": {
+        "mrr": 0.622549019607843,
+        "recall_at_k": {
+          "1": 0.5882352941176471,
+          "3": 0.6470588235294118,
+          "5": 0.7058823529411765
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 1,
+        "abstenciones_falsas": 1,
+        "respuestas_sin_evidencia": 7,
+        "tasa_abstencion_correcta": 0.125,
+        "tasa_abstencion_falsa": 0.058823529411764705
+      },
+      "retained_count": 135,
+      "average_retained_per_query": 5.4,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 1,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.1111111111111111,
+          "recall": 1.0,
+          "f1": 0.19999999999999998,
+          "retained_count": 9,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 1,
+          "fp": 9,
+          "fn": 0,
+          "precision": 0.1,
+          "recall": 1.0,
+          "f1": 0.18181818181818182,
+          "retained_count": 10,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 8,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.16666666666666666,
+          "recall": 1.0,
+          "f1": 0.2857142857142857,
+          "retained_count": 6,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 1,
+          "fp": 7,
+          "fn": 0,
+          "precision": 0.125,
+          "recall": 1.0,
+          "f1": 0.2222222222222222,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 12,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 12,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 10,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 10,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 6,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 5,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 8,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 3,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 13,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 13,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.25,
+      "tp": 12,
+      "fp": 115,
+      "fn": 5,
+      "micro": {
+        "precision": 0.09448818897637795,
+        "recall": 0.7058823529411765,
+        "f1": 0.16666666666666666
+      },
+      "macro": {
+        "precision": 0.18397170462387852,
+        "recall": 0.7058823529411765,
+        "f1": 0.32105508870214755
+      },
+      "ranking": {
+        "mrr": 0.622549019607843,
+        "recall_at_k": {
+          "1": 0.5882352941176471,
+          "3": 0.6470588235294118,
+          "5": 0.7058823529411765
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 1,
+        "abstenciones_falsas": 1,
+        "respuestas_sin_evidencia": 7,
+        "tasa_abstencion_correcta": 0.125,
+        "tasa_abstencion_falsa": 0.058823529411764705
+      },
+      "retained_count": 127,
+      "average_retained_per_query": 5.08,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 1,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.1111111111111111,
+          "recall": 1.0,
+          "f1": 0.19999999999999998,
+          "retained_count": 9,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 1,
+          "fp": 7,
+          "fn": 0,
+          "precision": 0.125,
+          "recall": 1.0,
+          "f1": 0.2222222222222222,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 8,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.16666666666666666,
+          "recall": 1.0,
+          "f1": 0.2857142857142857,
+          "retained_count": 6,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 12,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 12,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 10,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 10,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 5,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 5,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 8,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 1,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 13,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 13,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.3,
+      "tp": 12,
+      "fp": 98,
+      "fn": 5,
+      "micro": {
+        "precision": 0.10909090909090909,
+        "recall": 0.7058823529411765,
+        "f1": 0.1889763779527559
+      },
+      "macro": {
+        "precision": 0.1956890331890332,
+        "recall": 0.7058823529411765,
+        "f1": 0.32707749766573296
+      },
+      "ranking": {
+        "mrr": 0.622549019607843,
+        "recall_at_k": {
+          "1": 0.5882352941176471,
+          "3": 0.6470588235294118,
+          "5": 0.7058823529411765
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 2,
+        "abstenciones_falsas": 1,
+        "respuestas_sin_evidencia": 6,
+        "tasa_abstencion_correcta": 0.25,
+        "tasa_abstencion_falsa": 0.058823529411764705
+      },
+      "retained_count": 110,
+      "average_retained_per_query": 4.4,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 1,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.1111111111111111,
+          "recall": 1.0,
+          "f1": 0.19999999999999998,
+          "retained_count": 9,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 1,
+          "fp": 7,
+          "fn": 0,
+          "precision": 0.125,
+          "recall": 1.0,
+          "f1": 0.2222222222222222,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 6,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 6,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.16666666666666666,
+          "recall": 1.0,
+          "f1": 0.2857142857142857,
+          "retained_count": 6,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 1,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.25,
+          "recall": 1.0,
+          "f1": 0.4,
+          "retained_count": 4,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 1,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.16666666666666666,
+          "recall": 1.0,
+          "f1": 0.2857142857142857,
+          "retained_count": 6,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 10,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 10,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 5,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 4,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 5,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 5,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 12,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 12,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.35,
+      "tp": 12,
+      "fp": 79,
+      "fn": 5,
+      "micro": {
+        "precision": 0.13186813186813187,
+        "recall": 0.7058823529411765,
+        "f1": 0.2222222222222222
+      },
+      "macro": {
+        "precision": 0.21989795918367347,
+        "recall": 0.7058823529411765,
+        "f1": 0.35326797385620917
+      },
+      "ranking": {
+        "mrr": 0.622549019607843,
+        "recall_at_k": {
+          "1": 0.5882352941176471,
+          "3": 0.6470588235294118,
+          "5": 0.7058823529411765
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 2,
+        "abstenciones_falsas": 2,
+        "respuestas_sin_evidencia": 6,
+        "tasa_abstencion_correcta": 0.25,
+        "tasa_abstencion_falsa": 0.11764705882352941
+      },
+      "retained_count": 91,
+      "average_retained_per_query": 3.64,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 1,
+          "fp": 7,
+          "fn": 0,
+          "precision": 0.125,
+          "recall": 1.0,
+          "f1": 0.2222222222222222,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.25,
+          "recall": 1.0,
+          "f1": 0.4,
+          "retained_count": 4,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 6,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 6,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 1,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.25,
+          "recall": 1.0,
+          "f1": 0.4,
+          "retained_count": 4,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 1,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.25,
+          "recall": 1.0,
+          "f1": 0.4,
+          "retained_count": 4,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 8,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 2,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 2,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 3,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 4,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 5,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 12,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 12,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.4,
+      "tp": 11,
+      "fp": 70,
+      "fn": 6,
+      "micro": {
+        "precision": 0.13580246913580246,
+        "recall": 0.6470588235294118,
+        "f1": 0.22448979591836732
+      },
+      "macro": {
+        "precision": 0.2115079365079365,
+        "recall": 0.6470588235294118,
+        "f1": 0.33576097105508873
+      },
+      "ranking": {
+        "mrr": 0.6078431372549019,
+        "recall_at_k": {
+          "1": 0.5882352941176471,
+          "3": 0.6470588235294118,
+          "5": 0.6470588235294118
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 2,
+        "abstenciones_falsas": 2,
+        "respuestas_sin_evidencia": 6,
+        "tasa_abstencion_correcta": 0.25,
+        "tasa_abstencion_falsa": 0.11764705882352941
+      },
+      "retained_count": 81,
+      "average_retained_per_query": 3.24,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 1,
+          "fp": 7,
+          "fn": 0,
+          "precision": 0.125,
+          "recall": 1.0,
+          "f1": 0.2222222222222222,
+          "retained_count": 8,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 0,
+          "fp": 3,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 3,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.16666666666666666,
+          "recall": 1.0,
+          "f1": 0.2857142857142857,
+          "retained_count": 6,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.25,
+          "recall": 1.0,
+          "f1": 0.4,
+          "retained_count": 4,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 4,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 4,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 1,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.25,
+          "recall": 1.0,
+          "f1": 0.4,
+          "retained_count": 4,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 1,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.25,
+          "recall": 1.0,
+          "f1": 0.4,
+          "retained_count": 4,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 8,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 2,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 2,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 3,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 3,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 4,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 9,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 9,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.45,
+      "tp": 11,
+      "fp": 47,
+      "fn": 6,
+      "micro": {
+        "precision": 0.1896551724137931,
+        "recall": 0.6470588235294118,
+        "f1": 0.29333333333333333
+      },
+      "macro": {
+        "precision": 0.28964285714285715,
+        "recall": 0.6470588235294118,
+        "f1": 0.4107843137254902
+      },
+      "ranking": {
+        "mrr": 0.6078431372549019,
+        "recall_at_k": {
+          "1": 0.5882352941176471,
+          "3": 0.6470588235294118,
+          "5": 0.6470588235294118
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 3,
+        "abstenciones_falsas": 2,
+        "respuestas_sin_evidencia": 5,
+        "tasa_abstencion_correcta": 0.375,
+        "tasa_abstencion_falsa": 0.11764705882352941
+      },
+      "retained_count": 58,
+      "average_retained_per_query": 2.32,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 0,
+          "fp": 3,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 3,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 3,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 3,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.25,
+          "recall": 1.0,
+          "f1": 0.4,
+          "retained_count": 4,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 5,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 2,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 2,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 1,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 1,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 9,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 9,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.5,
+      "tp": 11,
+      "fp": 36,
+      "fn": 6,
+      "micro": {
+        "precision": 0.23404255319148937,
+        "recall": 0.6470588235294118,
+        "f1": 0.34375
+      },
+      "macro": {
+        "precision": 0.33849206349206346,
+        "recall": 0.6470588235294118,
+        "f1": 0.43039215686274507
+      },
+      "ranking": {
+        "mrr": 0.6078431372549019,
+        "recall_at_k": {
+          "1": 0.5882352941176471,
+          "3": 0.6470588235294118,
+          "5": 0.6470588235294118
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 4,
+        "abstenciones_falsas": 3,
+        "respuestas_sin_evidencia": 4,
+        "tasa_abstencion_correcta": 0.5,
+        "tasa_abstencion_falsa": 0.17647058823529413
+      },
+      "retained_count": 47,
+      "average_retained_per_query": 1.88,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 1,
+          "fp": 6,
+          "fn": 0,
+          "precision": 0.14285714285714285,
+          "recall": 1.0,
+          "f1": 0.25,
+          "retained_count": 7,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 0,
+          "fp": 3,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 3,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.25,
+          "recall": 1.0,
+          "f1": 0.4,
+          "retained_count": 4,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 2,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 2,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 1,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 1,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 8,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 8,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.55,
+      "tp": 11,
+      "fp": 13,
+      "fn": 6,
+      "micro": {
+        "precision": 0.4583333333333333,
+        "recall": 0.6470588235294118,
+        "f1": 0.5365853658536585
+      },
+      "macro": {
+        "precision": 0.6357142857142858,
+        "recall": 0.6470588235294118,
+        "f1": 0.5490196078431373
+      },
+      "ranking": {
+        "mrr": 0.6078431372549019,
+        "recall_at_k": {
+          "1": 0.5882352941176471,
+          "3": 0.6470588235294118,
+          "5": 0.6470588235294118
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 5,
+        "abstenciones_falsas": 6,
+        "respuestas_sin_evidencia": 3,
+        "tasa_abstencion_correcta": 0.625,
+        "tasa_abstencion_falsa": 0.35294117647058826
+      },
+      "retained_count": 24,
+      "average_retained_per_query": 0.96,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 1,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 1,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 2,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 2,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.6,
+      "tp": 9,
+      "fp": 12,
+      "fn": 8,
+      "micro": {
+        "precision": 0.42857142857142855,
+        "recall": 0.5294117647058824,
+        "f1": 0.4736842105263158
+      },
+      "macro": {
+        "precision": 0.5791666666666667,
+        "recall": 0.5294117647058824,
+        "f1": 0.43529411764705883
+      },
+      "ranking": {
+        "mrr": 0.4901960784313725,
+        "recall_at_k": {
+          "1": 0.47058823529411764,
+          "3": 0.5294117647058824,
+          "5": 0.5294117647058824
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 5,
+        "abstenciones_falsas": 8,
+        "respuestas_sin_evidencia": 3,
+        "tasa_abstencion_correcta": 0.625,
+        "tasa_abstencion_falsa": 0.47058823529411764
+      },
+      "retained_count": 21,
+      "average_retained_per_query": 0.84,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 1,
+          "fp": 4,
+          "fn": 0,
+          "precision": 0.2,
+          "recall": 1.0,
+          "f1": 0.33333333333333337,
+          "retained_count": 5,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.25,
+          "recall": 1.0,
+          "f1": 0.4,
+          "retained_count": 4,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 1,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 1,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 2,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 2,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.65,
+      "tp": 6,
+      "fp": 7,
+      "fn": 11,
+      "micro": {
+        "precision": 0.46153846153846156,
+        "recall": 0.35294117647058826,
+        "f1": 0.4000000000000001
+      },
+      "macro": {
+        "precision": 0.5833333333333334,
+        "recall": 0.35294117647058826,
+        "f1": 0.31764705882352945
+      },
+      "ranking": {
+        "mrr": 0.35294117647058826,
+        "recall_at_k": {
+          "1": 0.35294117647058826,
+          "3": 0.35294117647058826,
+          "5": 0.35294117647058826
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 6,
+        "abstenciones_falsas": 10,
+        "respuestas_sin_evidencia": 2,
+        "tasa_abstencion_correcta": 0.75,
+        "tasa_abstencion_falsa": 0.5882352941176471
+      },
+      "retained_count": 13,
+      "average_retained_per_query": 0.52,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.25,
+          "recall": 1.0,
+          "f1": 0.4,
+          "retained_count": 4,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 1,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 1,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.7,
+      "tp": 6,
+      "fp": 3,
+      "fn": 11,
+      "micro": {
+        "precision": 0.6666666666666666,
+        "recall": 0.35294117647058826,
+        "f1": 0.46153846153846156
+      },
+      "macro": {
+        "precision": 0.75,
+        "recall": 0.35294117647058826,
+        "f1": 0.35294117647058826
+      },
+      "ranking": {
+        "mrr": 0.35294117647058826,
+        "recall_at_k": {
+          "1": 0.35294117647058826,
+          "3": 0.35294117647058826,
+          "5": 0.35294117647058826
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 7,
+        "abstenciones_falsas": 10,
+        "respuestas_sin_evidencia": 1,
+        "tasa_abstencion_correcta": 0.875,
+        "tasa_abstencion_falsa": 0.5882352941176471
+      },
+      "retained_count": 9,
+      "average_retained_per_query": 0.36,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 0,
+          "fp": 2,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 2,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 1,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.75,
+      "tp": 4,
+      "fp": 2,
+      "fn": 13,
+      "micro": {
+        "precision": 0.6666666666666666,
+        "recall": 0.23529411764705882,
+        "f1": 0.3478260869565218
+      },
+      "macro": {
+        "precision": 0.6666666666666666,
+        "recall": 0.23529411764705882,
+        "f1": 0.23529411764705882
+      },
+      "ranking": {
+        "mrr": 0.23529411764705882,
+        "recall_at_k": {
+          "1": 0.23529411764705882,
+          "3": 0.23529411764705882,
+          "5": 0.23529411764705882
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 7,
+        "abstenciones_falsas": 12,
+        "respuestas_sin_evidencia": 1,
+        "tasa_abstencion_correcta": 0.875,
+        "tasa_abstencion_falsa": 0.7058823529411765
+      },
+      "retained_count": 6,
+      "average_retained_per_query": 0.24,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 1,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.8,
+      "tp": 0,
+      "fp": 2,
+      "fn": 17,
+      "micro": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "macro": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "ranking": {
+        "mrr": 0.0,
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 7,
+        "abstenciones_falsas": 16,
+        "respuestas_sin_evidencia": 1,
+        "tasa_abstencion_correcta": 0.875,
+        "tasa_abstencion_falsa": 0.9411764705882353
+      },
+      "retained_count": 2,
+      "average_retained_per_query": 0.08,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 1,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null,
+          "retained_count": 1,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.85,
+      "tp": 0,
+      "fp": 0,
+      "fn": 17,
+      "micro": {
+        "precision": null,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "macro": {
+        "precision": null,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "ranking": {
+        "mrr": 0.0,
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 8,
+        "abstenciones_falsas": 17,
+        "respuestas_sin_evidencia": 0,
+        "tasa_abstencion_correcta": 1.0,
+        "tasa_abstencion_falsa": 1.0
+      },
+      "retained_count": 0,
+      "average_retained_per_query": 0.0,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.9,
+      "tp": 0,
+      "fp": 0,
+      "fn": 17,
+      "micro": {
+        "precision": null,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "macro": {
+        "precision": null,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "ranking": {
+        "mrr": 0.0,
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 8,
+        "abstenciones_falsas": 17,
+        "respuestas_sin_evidencia": 0,
+        "tasa_abstencion_correcta": 1.0,
+        "tasa_abstencion_falsa": 1.0
+      },
+      "retained_count": 0,
+      "average_retained_per_query": 0.0,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 0.95,
+      "tp": 0,
+      "fp": 0,
+      "fn": 17,
+      "micro": {
+        "precision": null,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "macro": {
+        "precision": null,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "ranking": {
+        "mrr": 0.0,
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 8,
+        "abstenciones_falsas": 17,
+        "respuestas_sin_evidencia": 0,
+        "tasa_abstencion_correcta": 1.0,
+        "tasa_abstencion_falsa": 1.0
+      },
+      "retained_count": 0,
+      "average_retained_per_query": 0.0,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        }
+      ]
+    },
+    {
+      "threshold": 1.0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 17,
+      "micro": {
+        "precision": null,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "macro": {
+        "precision": null,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "ranking": {
+        "mrr": 0.0,
+        "recall_at_k": {
+          "1": 0.0,
+          "3": 0.0,
+          "5": 0.0
+        }
+      },
+      "abstencion": {
+        "consultas_sin_relevantes": 8,
+        "consultas_con_relevantes": 17,
+        "abstenciones_correctas": 8,
+        "abstenciones_falsas": 17,
+        "respuestas_sin_evidencia": 0,
+        "tasa_abstencion_correcta": 1.0,
+        "tasa_abstencion_falsa": 1.0
+      },
+      "retained_count": 0,
+      "average_retained_per_query": 0.0,
+      "queries": [
+        {
+          "query_id": "CTRL-01",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-09",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-10",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-13",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-14",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-15",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-16",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-17",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-18",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-19",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "CTRL-20",
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": 0.0,
+          "retained_count": 0,
+          "relevant_count": 1
+        },
+        {
+          "query_id": "TRAMP-01",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-02",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-03",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-04",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-05",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-06",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-07",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        },
+        {
+          "query_id": "TRAMP-08",
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "retained_count": 0,
+          "relevant_count": 0
+        }
+      ]
+    }
+  ]
+}
