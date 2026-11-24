@@ -36,10 +36,10 @@ from Test.test_Frontend import qt_test_harness
 
 qt_test_harness.setup_qt_harness()
 from PySide6.QtCore import Qt, QEvent  # noqa: E402
-from PySide6.QtWidgets import QApplication, QLineEdit  # noqa: E402
+from PySide6.QtWidgets import QApplication, QLineEdit, QMessageBox  # noqa: E402
 
 from components.chat_message import ChatMessage  # noqa: E402
-from components.conversation_item import _fmt  # noqa: E402
+from components.conversation_item import ConversationItem, _fmt  # noqa: E402
 from components.source_card import SourceCard  # noqa: E402
 from models.conversation import Conversation  # noqa: E402
 from models.message import Message, ROLE_USER, ROLE_BOT  # noqa: E402
@@ -370,6 +370,14 @@ class TestMainWindowUI(unittest.TestCase):
         self.window._logout()
         self.assertEqual(len(emisiones), 1)
 
+        self.window._history_action_worker = MagicMock()
+        self.window._logout()
+        self.assertEqual(len(emisiones), 1)
+
+        self.window._history_action_worker = None
+        self.window._logout()
+        self.assertEqual(len(emisiones), 2)
+
     def test_main_window_historial_sesion_caducada_emite_logout(self):
         """Si la carga del historial responde con session_expired=True, la ventana emite logged_out."""
         emisiones = []
@@ -378,6 +386,49 @@ class TestMainWindowUI(unittest.TestCase):
         res = api.HistoryResult(ok=False, session_expired=True, error=api.SESSION_EXPIRED)
         self.window._on_history(res)
         self.assertEqual(len(emisiones), 1)
+
+    def test_main_window_renombrar_y_borrar_actualizan_el_historial(self):
+        conv = Conversation(id="server-chat", server_id="server-chat", title="Título anterior")
+        self.window.conversations = [conv]
+        self.window.current = conv
+        self.window._refresh_list()
+
+        renamed = Conversation(id="server-chat", server_id="server-chat", title="Título nuevo")
+        self.window._on_history_action(
+            ("rename", "server-chat", api.HistoryActionResult(True, conversation=renamed)))
+        self.assertEqual(conv.title, "Título nuevo")
+        self.assertEqual(self.window.title_label.text(), "Título nuevo")
+
+        self.window._on_history_action(
+            ("delete", "server-chat", api.HistoryActionResult(True)))
+        self.assertNotIn(conv, self.window.conversations)
+        self.assertIsNotNone(self.window.current)
+        self.assertEqual(self.window.current.server_id, "")
+
+    def test_main_window_solicita_confirmacion_y_lanza_acciones(self):
+        conv = Conversation(id="server-chat", server_id="server-chat", title="Título")
+        self.window.conversations = [conv]
+        self.window.current = conv
+        self.window._refresh_list()
+
+        with patch("views.main_window.QInputDialog.getText", return_value=(" Nuevo ", True)):
+            with patch.object(api.HistoryActionWorker, "start") as start:
+                self.window._rename_conversation(conv.id)
+                self.assertEqual(self.window._history_action_worker._action, "rename")
+                self.assertEqual(self.window._history_action_worker._title, "Nuevo")
+                start.assert_called_once()
+
+        self.window._history_action_worker = None
+        with patch("views.main_window.QMessageBox.question",
+                   return_value=QMessageBox.No), patch.object(api.HistoryActionWorker, "start") as start:
+            self.window._delete_conversation(conv.id)
+            start.assert_not_called()
+        with patch("views.main_window.QMessageBox.question",
+                   return_value=QMessageBox.Yes), patch.object(api.HistoryActionWorker, "start") as start:
+            self.window._delete_conversation(conv.id)
+            self.assertEqual(self.window._history_action_worker._action, "delete")
+            start.assert_called_once()
+        self.window._history_action_worker = None
 
 
 # ==============================================================================
@@ -476,6 +527,24 @@ class TestComponentesVisuales(unittest.TestCase):
 
         self.assertEqual(_fmt(""), "")
         self.assertEqual(_fmt("fecha_invalida"), "")
+
+    def test_conversation_item_emite_acciones_para_chats_persistidos(self):
+        conv = Conversation(id="server-chat", server_id="server-chat", title="Chat guardado")
+        item = ConversationItem(conv)
+        renames = []
+        deletions = []
+        item.rename_requested.connect(renames.append)
+        item.delete_requested.connect(deletions.append)
+
+        item.btn_rename.click()
+        item.btn_delete.click()
+
+        self.assertEqual(renames, ["server-chat"])
+        self.assertEqual(deletions, ["server-chat"])
+
+        local_item = ConversationItem(Conversation(), editable=False)
+        self.assertTrue(local_item.btn_rename.isHidden())
+        self.assertTrue(local_item.btn_delete.isHidden())
 
 
 # ==============================================================================

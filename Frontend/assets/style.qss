@@ -24,10 +24,15 @@ QListWidget#conversationList::item:selected { background: #212836; }
 
 QLabel#convTitle { color: #d5d9e0; background: transparent; }
 QLabel#convDate  { color: #7b8494; font-size: 11px; background: transparent; }
+QPushButton#btnRenameConv {
+    background: transparent; border: none; border-radius: 6px; color: #7b8494; font-size: 13px;
+}
+QPushButton#btnRenameConv:hover { background: #1d3445; color: #75c4ff; }
 QPushButton#btnDeleteConv {
     background: transparent; border: none; border-radius: 6px; color: #7b8494; font-size: 13px;
 }
 QPushButton#btnDeleteConv:hover { background: #3a2226; color: #ff7b85; }
+QPushButton#btnRenameConv:disabled, QPushButton#btnDeleteConv:disabled { color: #444b58; }
 
 /* ---------- Zona principal ---------- */
 QFrame#mainArea { background: #171b25; }
@@ -84,6 +89,14 @@ QPushButton#btnSend:disabled { background: #2a303b; }
 QLabel#labelDisclaimer { color: #6b7383; font-size: 11px; }
 
 QToolTip { background: #1e2330; color: #e6e8ec; border: 1px solid #2f3541; }
+
+QMessageBox, QInputDialog { background: #1e2330; color: #e6e8ec; }
+QMessageBox QLabel, QInputDialog QLabel { background: transparent; color: #e6e8ec; }
+QMessageBox QPushButton, QInputDialog QPushButton {
+    background: #2b313c; color: #e6e8ec; border: 1px solid #3a4250;
+    border-radius: 6px; padding: 6px 12px;
+}
+QMessageBox QPushButton:hover, QInputDialog QPushButton:hover { background: #3a4250; }
 
 
 /* ---------- Usuario en la barra lateral ---------- */
