@@ -104,6 +104,11 @@ def get_session(cid: str) -> Session:
         sessions.move_to_end(cid)
         return current
 
+@app.get("/health")
+def liveness():
+    """Comprueba que el proceso HTTP de Agentes está operativo, sin probar modelos externos."""
+    return {"status": "ok"}
+
 
 @app.post("/agentes/consulta")
 def query(data: Query):
