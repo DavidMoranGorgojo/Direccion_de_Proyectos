@@ -1,0 +1,117 @@
+# Resultados del checklist manual del Frontend
+
+Hoja de ejecución de [`CHECKLIST_MANUAL.md`](CHECKLIST_MANUAL.md) para entregar a Documentación.
+Los pasos y el comportamiento esperado de cada caso están en el checklist; aquí solo se anota el resultado.
+
+## Datos de la ejecución
+
+| Campo | Valor |
+|---|---|
+| Fecha | |
+| Ejecutado por | |
+| Ayuda de | |
+| Commit / paquete probado | |
+| Equipo (SO, Apptainer) | |
+| Modo | ☐ Simulado  ☐ Real |
+| `ARSOFT_API_URL` | |
+| Usuarios de prueba usados | |
+| LLM | ☐ Simulado  ☐ Real |
+
+## Cómo rellenarla
+
+- **Resultado**: `OK`, `FALLO` o `N/A` (con motivo en Observaciones). No marcar `OK` sin haberlo visto en pantalla.
+- **Cobertura automática**: indica qué test de `Test/test_Frontend` ya cubre la lógica del caso. **No sustituye** la prueba manual: los tests no miran el aspecto real de la ventana ni usan el servidor real. Algunos tests de interfaz usan un sustituto de Qt.
+- **Condición**: lo que hace falta preparar antes. Agrupa los casos para ejecutarlos por tandas (ver el orden recomendado más abajo).
+- Cada `FALLO` lleva su incidencia en la tabla final (pantalla, pasos, esperado, obtenido, captura).
+
+## 1. Inicio de sesión
+
+| ID | Condición | Cobertura automática | Resultado | Observaciones |
+|---|---|---|:---:|---|
+| LG-01 | Ninguna | `test_login_renderizado_inicial` | | |
+| LG-02 | Ninguna | `test_login_validacion_campos_vacios_muestra_error` | | |
+| LG-03 | Ninguna | `test_login_toggle_visibilidad_contrasena` | | |
+| LG-04 | Ninguna | `test_login_limpieza_error_al_escribir` | | |
+| LG-05 | Servidor | `test_login_credenciales_incorrectas`, `test_error_401_en_login_credenciales_invalidas` | | |
+| LG-06 | Servidor; bloquea el usuario unos minutos | `test_login_429_tras_demasiados_intentos`, `test_error_429_en_login_simulado` | | |
+| LG-07 | URL con puerto inactivo | `test_backend_caido_da_error_de_conexion` | | |
+| LG-08 | Servidor y usuario válido | `test_app_flujo_login_a_chat_y_logout`, `test_login_resultado_exitoso_emite_senal_y_limpia_clave` | | |
+
+## 2. Ventana principal y navegación
+
+| ID | Condición | Cobertura automática | Resultado | Observaciones |
+|---|---|---|:---:|---|
+| WN-01 | Sesión iniciada | `test_main_window_renderizado_elementos_cabecera` | | |
+| WN-02 | Probar en modo simulado y en real | `test_modo`, `test_modo_automatico` (solo la lógica del modo) | | |
+| WN-03 | Usuario sin chats | `test_ctr006_historial_vacio_por_entorno`, `test_main_window_estado_vacio_al_abrir_chat_sin_mensajes` | | |
+| WN-04 | Usuario con chats | `test_main_window_ordenacion_conversaciones_por_fecha`, `test_ctr006_lectura_historial_por_defecto` | | |
+| WN-05 | Usuario con 2 o más chats | `test_main_window_seleccion_conversacion_actualiza_interfaz` | | |
+| WN-06 | Ninguna | `test_main_window_nuevo_chat_crea_uno_si_el_actual_tiene_mensajes`, `test_main_window_nuevo_chat_reutiliza_vacio_existente` | | |
+
+## 3. Envío y flujo de consultas
+
+| ID | Condición | Cobertura automática | Resultado | Observaciones |
+|---|---|---|:---:|---|
+| CH-01 | Ninguna | `test_main_window_filtro_enter_y_shift_enter` | | |
+| CH-02 | Ninguna | `test_main_window_filtro_enter_y_shift_enter` | | |
+| CH-03 | Ninguna | `test_main_window_envio_ignora_texto_vacio` | | |
+| CH-04 | Chat nuevo | `test_main_window_envio_mensaje_valido_y_generacion_titulo`, `test_main_window_envio_mensaje_largo_recorta_titulo_con_puntos_suspensivos` | | |
+| CH-05 | Ninguna | `test_chat_message_burbuja_usuario`, `test_pregunta_se_conserva_exacta` | | |
+| CH-06 | Respuesta lenta para verlo | `test_chat_message_burbuja_escribiendo` | | |
+| CH-07 | Ninguna | `test_main_window_recepcion_respuesta_elimina_typing_y_actualiza_chat` | | |
+| CH-08 | Servidor | `test_primer_mensaje_con_id_vacio_historial_y_continuacion`, `test_ctr006_continuar_chat_con_su_conversacion_id` | | |
+
+## 4. Tipos de respuesta y citas
+
+| ID | Condición | Cobertura automática | Resultado | Observaciones |
+|---|---|---|:---:|---|
+| RS-01 | Servidor y LLM | `test_ctr001_respuesta_fundamentada_con_fuentes`, `test_chat_message_renderizado_fuentes` | | |
+| RS-02 | Servidor y LLM | `test_ctr001_aclaracion_por_pregunta_demasiado_corta` | | |
+| RS-03 | Servidor y LLM | `test_ctr001_sin_evidencia` | | |
+| RS-04 | Servidor y LLM | `test_ctr001_fuera_de_ambito` | | |
+| RS-05 | Necesita una cita a un documento obsoleto en el índice | `test_source_card_marca_documento_obsoleto` | | |
+| RS-06 | Parar Agentes o Backend | `test_agentes_caido`, `test_error_500_en_consulta`, `test_chat_message_badges_estados_asistente` | | |
+
+## 5. Valoración 👍 / 👎
+
+| ID | Condición | Cobertura automática | Resultado | Observaciones |
+|---|---|---|:---:|---|
+| VL-01 | Servidor; respuestas de 3 tipos | `test_respuesta_con_trace_id_tiene_botones`, `test_no_hay_botones_fuera_de_estado_respuesta`, `test_no_hay_botones_en_usuario_ni_en_typing` | | |
+| VL-02 | Servidor | `test_valoracion_correcta_queda_guardada_y_marcada`, `test_cuerpo_y_ruta_enviados` | | |
+| VL-03 | Servidor | `test_se_puede_cambiar_la_valoracion`, `test_repetir_el_mismo_valor_no_envia_nada` | | |
+| VL-04 | Servidor | `test_la_valoracion_sobrevive_al_cambiar_de_chat` | | |
+| VL-05 | Parar el Backend | `test_si_falla_vuelve_al_valor_anterior_y_muestra_texto`, `test_sin_conexion` | | |
+| VL-06 | Provocar el límite del Backend | `test_429_demasiadas_valoraciones` | | |
+| VL-07 | Invalidar el token | `test_sesion_caducada_cierra_sesion`, `test_401_y_403_son_sesion_caducada` | | |
+
+## 6. Sesión
+
+| ID | Condición | Cobertura automática | Resultado | Observaciones |
+|---|---|---|:---:|---|
+| SS-01 | Ninguna | `test_app_flujo_login_a_chat_y_logout` | | |
+| SS-02 | Respuesta lenta | `test_main_window_logout_bloqueado_si_ocupado` | | |
+| SS-03 | Invalidar el token | `test_sesion_caducada_avisa_y_cierra_sesion`, `test_error_401_en_consulta_indica_sesion_caducada`, `test_token_manipulado_da_sesion_caducada` | | |
+| SS-04 | Dos usuarios en el servidor | `test_chat_de_otro_usuario_no_se_puede_usar` | | |
+
+## Orden de ejecución recomendado
+
+1. **Sin servidor** (modo simulado, usuario `demo` / `demo1234`): LG-01 a LG-04, LG-07, WN-01 a WN-03, WN-06, CH-01 a CH-05.
+2. **Con servidor y LLM real**: LG-05, LG-08, WN-04, WN-05, CH-06 a CH-08, RS-01 a RS-05, VL-01 a VL-04, SS-01, SS-02, SS-04.
+3. **Casos que alteran el servidor o el usuario** (hacerlos al final): LG-06 (bloquea el login), VL-06 (límite de valoraciones), SS-03 y VL-07 (invalidar token), RS-06 y VL-05 (parar Backend o Agentes).
+
+Capturas de pantalla finales para el manual: login, historial, respuesta con citas, aclaración, sin evidencia, fuera de ámbito, valoración, sesión caducada y error de conexión.
+
+## Resumen
+
+| Resultado | Casos |
+|---|:---:|
+| OK | |
+| FALLO | |
+| N/A | |
+| Total | 39 |
+
+## Incidencias
+
+| Nº | Caso | Pantalla | Pasos | Esperado | Obtenido | Captura | Responsable |
+|---|---|---|---|---|---|---|---|
+| | | | | | | | |
