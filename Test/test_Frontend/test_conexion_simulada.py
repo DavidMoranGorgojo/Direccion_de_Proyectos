@@ -238,6 +238,56 @@ class TestCTR006LecturaHistorial(BaseFrontendTestCase):
         self.assertGreaterEqual(len(m_bot.sources), 1)
         self.assertEqual(m_bot.sources[0].chunk_id, "c45")
 
+    @staticmethod
+    def _chat(i: int) -> dict:
+        return {"conversacion_id": f"c-{i:04d}", "titulo": f"Chat {i}",
+                "created_at": "2026-01-15T10:00:00Z", "updated_at": "2026-01-15T10:00:00Z", "mensajes": []}
+
+    def test_ctr006_historial_paginado_recorre_todas_las_paginas(self):
+        """Con más chats que el límite de página, el Frontend pide limit/offset hasta cubrir `total`."""
+        todos = [self._chat(i) for i in range(450)]
+        peticiones = []
+
+        def servidor(method, path, body=None):
+            peticiones.append(path)
+            consulta = dict(p.split("=") for p in path.split("?", 1)[1].split("&"))
+            limit, offset = int(consulta["limit"]), int(consulta["offset"])
+            return 200, {"chats": todos[offset:offset + limit], "total": len(todos)}
+
+        with patch.object(api, "call", side_effect=servidor):
+            hist = api.fetch_history()
+
+        self.assertTrue(hist.ok)
+        self.assertEqual([c.id for c in hist.conversations], [c["conversacion_id"] for c in todos])
+        self.assertEqual(len(peticiones), 3)
+        self.assertTrue(all(p.startswith(f"{api.HISTORIAL_PATH}?limit={api.HISTORY_PAGE_SIZE}&offset=")
+                            for p in peticiones))
+
+    def test_ctr006_historial_servidor_sin_paginacion_hace_una_sola_peticion(self):
+        """Un servidor que ignora limit/offset y devuelve todo con total == len(chats) no provoca más llamadas."""
+        todos = [self._chat(i) for i in range(5)]
+        with patch.object(api, "call", return_value=(200, {"chats": todos, "total": len(todos)})) as llamada:
+            hist = api.fetch_history()
+        self.assertTrue(hist.ok)
+        self.assertEqual(len(hist.conversations), 5)
+        self.assertEqual(llamada.call_count, 1)
+
+    def test_ctr006_historial_total_incoherente_no_entra_en_bucle(self):
+        """Si el servidor devuelve siempre la misma página y un total enorme, se corta por el tope de páginas."""
+        pagina = [self._chat(i) for i in range(2)]
+        with patch.object(api, "call", return_value=(200, {"chats": pagina, "total": 10**9})) as llamada:
+            hist = api.fetch_history()
+        self.assertFalse(hist.ok)
+        self.assertEqual(llamada.call_count, api.HISTORY_MAX_PAGES)
+
+    def test_ctr006_historial_error_en_una_pagina_posterior_falla_sin_resultados_parciales(self):
+        respuestas = iter([(200, {"chats": [self._chat(i) for i in range(200)], "total": 400}), (401, None)])
+        with patch.object(api, "call", side_effect=lambda *a, **k: next(respuestas)):
+            hist = api.fetch_history()
+        self.assertFalse(hist.ok)
+        self.assertTrue(hist.session_expired)
+        self.assertEqual(hist.conversations, [])
+
     def test_ctr006_historial_vacio_por_entorno(self):
         """Con ARSOFT_MOCK_EMPTY_HISTORY=1 el simulador devuelve lista vacía."""
         with patch.object(api, "_MOCK_EMPTY_HISTORY", True):
