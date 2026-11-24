@@ -333,6 +333,64 @@ class TestClienteBackendAgentes(unittest.TestCase):
         self.assertEqual(agente.historial[1]["role"], "assistant")
         self.assertEqual(agente.historial[1]["content"], "Cada 60.000 km [chunk_ref_01].")
 
+    def test_16_integracion_automatica_restaurar_memoria_en_core(self):
+        """Verifica que consultar_asistente llama automáticamente a restaurar_memoria_desde_backend."""
+        from Agents.agente1.core import Agente1, consultar_asistente
+        from unittest.mock import Mock
+
+        chat = self.cliente.crear_chat("Sesión automática core")
+        cid = str(chat["id"])
+        self.cliente.guardar_mensaje(cid, "usuario", "¿Cuál es la presión nominal?")
+        self.cliente.guardar_mensaje(cid, "asistente", "La presión nominal es de 1.2 bar [c1].")
+
+        agente = Agente1(conversacion_id=cid, cliente_backend=self.cliente)
+        agente._consultar_llm = Mock(return_value='{"texto_busqueda": "presion", "intencion": "especificacion", "filtros": {"version": "V1.0", "componente": null, "tipo_documento": null, "codigos": []}}')
+        self.assertEqual(len(agente.historial), 0)
+
+        # Al ejecutar un turno, el agente debe restaurar automáticamente la memoria
+        consultar_asistente("¿Y en caliente?", agente)
+        self.assertTrue(getattr(agente, "_memoria_restaurada", False))
+
+    def test_17_integracion_automatica_registrar_turno_en_core(self):
+        """Verifica que consultar_asistente llama automáticamente a cliente_backend.registrar_turno."""
+        from Agents.agente1.core import Agente1, consultar_asistente
+        from unittest.mock import Mock, patch
+
+        agente = Agente1(conversacion_id="c-auto-reg", cliente_backend=self.cliente)
+        agente._consultar_llm = Mock(return_value='{"texto_busqueda": "test", "intencion": "especificacion", "filtros": {"version": "V1.0", "componente": null, "tipo_documento": null, "codigos": []}}')
+
+        with patch.object(self.cliente, "registrar_turno", wraps=self.cliente.registrar_turno) as mock_reg:
+            consultar_asistente("¿Test automático?", agente)
+            mock_reg.assert_called_once()
+            args = mock_reg.call_args[0][0]
+            self.assertEqual(args["conversacion_id"], "c-auto-reg")
+            self.assertIn("trace_id", args)
+
+    def test_18_integracion_automatica_service_restaurar_y_registrar(self):
+        """Verifica que Agents.service.get_session restaura memoria y query registra el turno."""
+        try:
+            import fastapi
+        except ImportError:
+            self.skipTest("fastapi no instalado en este entorno local de pruebas")
+        from Agents.service import get_session, query, Query
+        from unittest.mock import patch, Mock
+
+        chat = self.cliente.crear_chat("Sesión automática service")
+        cid = str(chat["id"])
+        self.cliente.guardar_mensaje(cid, "usuario", "Pregunta previa")
+        self.cliente.guardar_mensaje(cid, "asistente", "Respuesta previa [c1].")
+
+        with patch("Agents.agente1.cliente_backend.ClienteBackendAgentes", return_value=self.cliente):
+            session = get_session(cid)
+            self.assertIsNotNone(session.agent.cliente_backend)
+            self.assertEqual(len(session.agent.historial), 2)
+
+            with patch.object(session.agent, "_consultar_llm", return_value='{"texto_busqueda": "test", "intencion": "especificacion", "filtros": {"version": null, "componente": null, "tipo_documento": null, "codigos": []}}'):
+                with patch.object(self.cliente, "registrar_turno", wraps=self.cliente.registrar_turno) as mock_reg:
+                    resp = query(Query(conversacion_id=cid, pregunta="Consulta desde service"))
+                    self.assertIn("trace_id", resp)
+                    self.assertTrue(mock_reg.called)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -365,7 +365,7 @@ Respuesta:
 # 4. AGENTE 1: CLIENTE LLM Y ORQUESTACIÓN (A1-02, A1-03, A1-04)
 # ============================================================================
 class Agente1:
-    def __init__(self, base_url: str = OLLAMA_URL, modelo: str = MODELO_LLM, max_turnos: int = 6, conversacion_id: str = "c-0001", timeout_s: Optional[float] = None):
+    def __init__(self, base_url: str = OLLAMA_URL, modelo: str = MODELO_LLM, max_turnos: int = 6, conversacion_id: str = "c-0001", timeout_s: Optional[float] = None, cliente_backend: Optional[Any] = None):
         self.modelo = modelo
         self.base_url = base_url
         self.max_turnos = max_turnos
@@ -380,6 +380,13 @@ class Agente1:
         self.consulta_pendiente = False
         self._query_pendiente = None
         self._deadline_llm = None
+        self.cliente_backend = cliente_backend
+        if self.cliente_backend is None and (os.environ.get("ARSOFT_BACKEND_URL") or os.environ.get("ARSOFT_SERVICE_TOKEN")):
+            try:
+                from .cliente_backend import ClienteBackendAgentes
+                self.cliente_backend = ClienteBackendAgentes()
+            except Exception:
+                pass
 
     def reset(self):
         """Limpia el historial de la conversación para evitar mezclar sesiones."""
@@ -1441,6 +1448,17 @@ def _ejecutar_turno(pregunta: str, agente: Agente1, agente2, nueva_consulta: boo
     version_pedida = None
     resultado = {"estado": "error", "mensaje": "No se pudo procesar la consulta."}
     evidencias = []
+
+    # CTR-007: Si el agente dispone de cliente de backend y no tiene historial local,
+    # restaurar automáticamente desde el Backend
+    if getattr(agente, "cliente_backend", None) is not None:
+        if not agente.historial and not getattr(agente, "_memoria_restaurada", False):
+            agente._memoria_restaurada = True
+            try:
+                agente.restaurar_memoria_desde_backend(agente.cliente_backend)
+            except Exception as exc:
+                logger.debug("CTR-007: No se pudo restaurar memoria desde Backend: %s", exc)
+
     try:
         with agente.presupuesto_llm():
             resultado = agente.procesar_consulta(pregunta, nueva_consulta=nueva_consulta)
@@ -1490,11 +1508,19 @@ def _ejecutar_turno(pregunta: str, agente: Agente1, agente2, nueva_consulta: boo
     respuesta = {"trace_id": trace, "estado": estado, "texto": final["texto"],
                  "fuentes": fuentes, "codigo_error": codigo}
     # Lista cerrada: no se guardan pregunta, prompt, respuesta, configuración ni excepciones.
-    registrar_turno_auditoria({"trace_id": trace, "conversacion_id": agente.conversacion_id,
+    datos_auditoria = {"trace_id": trace, "conversacion_id": agente.conversacion_id,
                               "estado": estado, "codigo_error": codigo,
                               "estado_agente2": respuesta_a2["estado"] if respuesta_a2 is not None else None,
                               "fuentes": [f["chunk_id"] for f in fuentes],
-                              "latencia_ms": int((time.monotonic() - inicio) * 1000)})
+                              "latencia_ms": int((time.monotonic() - inicio) * 1000)}
+    registrar_turno_auditoria(datos_auditoria)
+
+    # CTR-003: Sincronización automática con Backend (POST /registros) si el agente está conectado
+    if getattr(agente, "cliente_backend", None) is not None:
+        try:
+            agente.cliente_backend.registrar_turno(datos_auditoria)
+        except Exception as exc:
+            logger.debug("CTR-003: No se pudo registrar turno en Backend: %s", exc)
     return {"resultado_agente1": resultado, "respuesta_agente2": respuesta_a2,
             "decision": final["estado"], "respuesta_final": final, "respuesta_ctr001": respuesta}
 

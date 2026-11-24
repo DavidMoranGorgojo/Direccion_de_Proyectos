@@ -32,6 +32,7 @@ import uuid
 import time
 import logging
 from pathlib import Path
+from urllib.parse import urlparse
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple
 
@@ -61,6 +62,28 @@ class ClienteBackendAgentes:
     # Ruta oficial fijada en el contrato CTR-003
     RUTA_REGISTROS = "/registros"
     RUTA_CHATS = "/chats"
+
+    _fallos_por_host: Dict[str, float] = {}
+    _cooldown_fallo_s: float = 3.0
+
+    def _esta_disponible(self) -> bool:
+        parsed = urlparse(self.base_url)
+        host = parsed.hostname or "127.0.0.1"
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        clave = f"{host}:{port}"
+        ahora = time.monotonic()
+        ultimo_fallo = ClienteBackendAgentes._fallos_por_host.get(clave, 0.0)
+        if ahora - ultimo_fallo < ClienteBackendAgentes._cooldown_fallo_s:
+            return False
+        if host in ("localhost", "127.0.0.1"):
+            import socket
+            try:
+                with socket.create_connection((host, port), timeout=0.05):
+                    return True
+            except Exception:
+                ClienteBackendAgentes._fallos_por_host[clave] = time.monotonic()
+                return False
+        return True
 
     def __init__(
         self,
@@ -96,17 +119,23 @@ class ClienteBackendAgentes:
     def _post_http(self, ruta: str, datos: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
         """Realiza una petición HTTP POST usando requests o urllib como fallback."""
         url = f"{self.base_url}{ruta}"
+        if not self._esta_disponible():
+            raise ConnectionError(f"Backend no alcanzable en {url}")
         payload_bytes = json.dumps(datos, ensure_ascii=False).encode("utf-8")
 
         if HAS_REQUESTS:
             try:
                 res = requests.post(url, json=datos, headers=self._headers(), timeout=self.timeout)
+                parsed = urlparse(self.base_url)
+                ClienteBackendAgentes._fallos_por_host.pop(f"{parsed.hostname or '127.0.0.1'}:{parsed.port or 80}", None)
                 try:
                     cuerpo = res.json()
                 except Exception:
                     cuerpo = {"raw": res.text}
                 return res.status_code, cuerpo
             except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+                parsed = urlparse(self.base_url)
+                ClienteBackendAgentes._fallos_por_host[f"{parsed.hostname or '127.0.0.1'}:{parsed.port or 80}"] = time.monotonic()
                 raise ConnectionError(f"Backend no alcanzable en {url}: {e}")
         else:
             req = urllib.request.Request(url, data=payload_bytes, headers=self._headers(), method="POST")
@@ -123,6 +152,7 @@ class ClienteBackendAgentes:
                     cuerpo = {"error": str(e)}
                 return status_code, cuerpo
             except urllib.error.URLError as e:
+                ClienteBackendAgentes._ultimo_fallo_conexion = time.monotonic()
                 raise ConnectionError(f"Backend no alcanzable en {url}: {e}")
 
     def _get_http(self, ruta: str, params: Optional[Dict[str, Any]] = None) -> Tuple[int, Dict[str, Any]]:
@@ -133,16 +163,22 @@ class ClienteBackendAgentes:
             if query_parts:
                 query_str = "?" + "&".join(query_parts)
         url = f"{self.base_url}{ruta}{query_str}"
+        if not self._esta_disponible():
+            raise ConnectionError(f"Backend no alcanzable en {url}")
 
         if HAS_REQUESTS:
             try:
                 res = requests.get(url, headers=self._headers(), timeout=self.timeout)
+                parsed = urlparse(self.base_url)
+                ClienteBackendAgentes._fallos_por_host.pop(f"{parsed.hostname or '127.0.0.1'}:{parsed.port or 80}", None)
                 try:
                     cuerpo = res.json()
                 except Exception:
                     cuerpo = {"raw": res.text}
                 return res.status_code, cuerpo
             except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+                parsed = urlparse(self.base_url)
+                ClienteBackendAgentes._fallos_por_host[f"{parsed.hostname or '127.0.0.1'}:{parsed.port or 80}"] = time.monotonic()
                 raise ConnectionError(f"Backend no alcanzable en {url}: {e}")
         else:
             req = urllib.request.Request(url, headers=self._headers(), method="GET")

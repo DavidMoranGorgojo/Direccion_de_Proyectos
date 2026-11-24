@@ -32,6 +32,7 @@ pruebas_procesamiento_datos/manuales_entrada/
 salida_ingesta/
 .pytest_cache/
 agente1_registros.jsonl
+offline_registros_pendientes.jsonl
 
 # Artefactos locales de ejecución y revisión; no son datos de evaluación.
 .coverage

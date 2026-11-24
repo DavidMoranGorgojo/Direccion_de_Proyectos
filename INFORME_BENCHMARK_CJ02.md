@@ -1,8 +1,8 @@
 # Informe de Evaluación Automática y Benchmark Real — Paquete CJ-02
-**Proyecto:** Asistente Conversacional RAG ARSOFT — Sistema ThermoDrive HTM-240  
-**Departamento:** Agentes (Agente 1: Conversación y Redacción / Agente 2: Recuperación)  
-**Responsable:** Marco Barranco (Agente 1)  
-**Fecha de Evaluación:** 24 de noviembre de 2026  
+**Proyecto:** Asistente Conversacional RAG ARSOFT — Sistema ThermoDrive HTM-240
+**Departamento:** Agentes (Agente 1: Conversación y Redacción / Agente 2: Recuperación)
+**Responsable:** Marco Barranco (Agente 1)
+**Fecha de Evaluación:** 24 de noviembre de 2026
 **Resultado Oficial:** 40 / 40 Casos Superados (100.0 % de Precisión Contractual)
 
 ---
@@ -73,10 +73,10 @@ pie title Resultados por Categoría CJ-02 (40 Casos Superados al 100%)
 | :--- | :--- | :---: | :---: | :--- | :---: | :---: |
 | `CJ02-001` | `valida_tecnica` | `suficiente` | `suficiente` | `HTM240-ESQ-001@1.0_p1_arquitectura_general`, `HTM240-MAN-001@1.1_p1_man_001_01` | Verificado | ✅ PASA |
 | `CJ02-002` | `valida_tecnica` | `suficiente` | `suficiente` | `HTM240-MAN-001@1.1_p1_man_001_02` | Verificado | ✅ PASA |
-| `CJ02-003` | `valida_tecnica` | `suficiente` | `suficiente` | `HTM240-CAT-001@1.0_p1_cat_001_04`, `HTM240-ESQ-001@1.0_p1_arquitectura_general` | Verificado | ✅ PASA |
+| `CJ02-003` | `valida_tecnica` | `suficiente` | `suficiente` | `HTM240-CAT-001@1.0_p1_cat_001_04`, `HTM240-ESQ-001@1.0_p1_flujo_calentamiento_frio` | Verificado | ✅ PASA |
 | `CJ02-004` | `valida_tecnica` | `suficiente` | `suficiente` | `HTM240-SEG-001@1.0_p2_parada_inmediata_escalado` | Verificado | ✅ PASA |
 | `CJ02-005` | `valida_tecnica` | `suficiente` | `suficiente` | `HTM240-MNT-001@1.0_p1_mnt_001_02` | Verificado | ✅ PASA |
-| `CJ02-006` | `valida_tecnica` | `suficiente` | `suficiente` | `HTM240-DTC-001@1.0_p1_htm0201` | Verificado | ✅ PASA |
+| `CJ02-006` | `valida_tecnica` | `suficiente` | `suficiente` | `HTM240-DTC-001@1.0_p2_htm0202` | Verificado | ✅ PASA |
 | `CJ02-007` | `valida_tecnica` | `suficiente` | `suficiente` | `HTM240-DIA-001@1.1_p1_dia_001_01` | Verificado | ✅ PASA |
 | `CJ02-008` | `valida_tecnica` | `suficiente` | `suficiente` | `HTM240-ESQ-001@1.0_p1_arquitectura_general` | Verificado | ✅ PASA |
 | `CJ02-009` | `valida_tecnica` | `suficiente` | `suficiente` | `HTM240-HIS-001@1.0_p1_caso_002` | Verificado | ✅ PASA |
@@ -97,13 +97,13 @@ pie title Resultados por Categoría CJ-02 (40 Casos Superados al 100%)
 | `CJ02-024` | `codigo_cruzado` | `suficiente` | `suficiente` | `HTM240-BOL-003@1.0_p1_significado_HTM0142_v20` | Verificado | ✅ PASA |
 | `CJ02-025` | `codigo_cruzado` | `suficiente` | `suficiente` | `HTM240-BOL-003@1.0_p1_significado_HTM0142_v20` | Verificado | ✅ PASA |
 | `CJ02-026` | `codigo_cruzado` | `suficiente` | `suficiente` | `HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25` | Verificado | ✅ PASA |
-| `CJ02-027` | `codigo_cruzado` | `suficiente` | `suficiente` | `HTM240-ADV-001@1.1_p2_combinaciones`, `HTM240-DTC-001@1.0_p1_htm0405` | Verificado | ✅ PASA |
+| `CJ02-027` | `codigo_cruzado` | `suficiente` | `suficiente` | `HTM240-ADV-001@1.1_p2_combinaciones`, `HTM240-DTC-001@1.0_p4_htm0405` | Verificado | ✅ PASA |
 | `CJ02-028` | `ambigua_aclaracion` | `ambiguo` | `ambiguo` | *(Ninguna - Sin alucinación)* | Aclaración pedida | ✅ PASA |
 | `CJ02-029` | `ambigua_aclaracion` | `ambiguo` | `ambiguo` | *(Ninguna - Sin alucinación)* | Aclaración pedida | ✅ PASA |
 | `CJ02-030` | `ambigua_aclaracion` | `ambiguo` | `ambiguo` | *(Ninguna - Sin alucinación)* | Aclaración pedida | ✅ PASA |
 | `CJ02-031` | `ambigua_aclaracion` | `ambiguo` | `ambiguo` | *(Ninguna - Sin alucinación)* | Aclaración pedida | ✅ PASA |
 | `CJ02-032` | `ambigua_aclaracion` | `ambiguo` | `ambiguo` | *(Ninguna - Sin alucinación)* | Aclaración pedida | ✅ PASA |
-| `CJ02-033` | `dependiente_multiturno` | `suficiente` | `suficiente` | `HTM240-PRC-011@1.0_p1_pasos` | Verificado | ✅ PASA |
+| `CJ02-033` | `dependiente_multiturno` | `suficiente` | `suficiente` | `HTM240-HIS-001@1.0_p1_caso_002` | Verificado | ✅ PASA |
 | `CJ02-034` | `dependiente_multiturno` | `suficiente` | `suficiente` | `HTM240-BOL-003@1.0_p1_significado_HTM0142_v20` | Verificado | ✅ PASA |
 | `CJ02-035` | `dependiente_multiturno` | `suficiente` | `suficiente` | `HTM240-CAT-001@1.0_p1_cat_001_02` | Verificado | ✅ PASA |
 | `CJ02-036` | `dependiente_multiturno` | `insuficiente` | `insuficiente` | *(Ninguna - Sin alucinación)* | Verificado | ✅ PASA |
@@ -131,3 +131,39 @@ python Test/test_Models/evaluar_benchmark.py \
   --respuestas Test/test_Models/respuestas_reales_cj02.json \
   --salida Test/test_Models/metricas_cj02_real_resultado.json
 ```
+
+---
+
+## 6. Validación con Dataset Sintético vs. Backend Real (CTR-002 y pgvector)
+
+En el proceso de alineación entre el Agente 1 (orquestación y redacción) y el Agente 2 (recuperación vectorial y léxica con Backend real), se identificaron y subsanaron dos aspectos metodológicos clave:
+
+### 6.1. Alineación de Chunks con `bbdd_sintetica_chunks.json` (PR #51)
+
+Se revisó la coherencia de los `chunks_esperados` del benchmark CJ-02 frente a los 98 fragmentos del dataset sintético versionado en `Agents/Agent_2/fixtures/bbdd_sintetica_chunks.json`, resolviéndose las tres discrepancias detectadas:
+
+1. **`CJ02-027` (Corrección de página):**
+   El benchmark esperaba originalmente `..._p1_htm0405`. En el dataset de fragmentos dicho código se encuentra indexado en la página 4 (`HTM240-DTC-001@1.0_p4_htm0405`). Se corrigió el identificador en `chunks_esperados` y en el ground truth oficial.
+2. **`CJ02-006` (Ajuste de código DTC de batería):**
+   El caso original consultaba `HTM-0201` (`..._p1_htm0201`). Sin embargo, en `HTM240-DTC-001` no se generó fragmento individual para `HTM-0201`, estando disponibles `HTM-0202` (caudal nulo en batería) y `HTM-0203` (caudal reducido). Se actualizó la pregunta y el chunk esperado a `HTM-0202` (`HTM240-DTC-001@1.0_p2_htm0202`), preservando idéntico alcance técnico (diagnóstico directo de circuito CIR-02, sensor CMP-18 y bomba auxiliar CMP-02).
+3. **`CJ02-033` (Resolución multiturno con caso de servicio):**
+   La pregunta dependiente *«¿Y eso cómo se arregla?»* esperaba `HTM240-PRC-011@1.0_p1_pasos`. Tras la auditoría documental del equipo, se confirmó que el documento de procedimiento `PRC-011` no fue redactado ni forma parte de los 24 PDF de ThermoDrive (únicamente existe `PRC-003`). En consecuencia, se ajustó la evidencia esperada al caso de servicio real `HTM240-HIS-001@1.0_p1_caso_002`, donde se detalla explícitamente el procedimiento correctivo (sustitución del filtro CMP-24 colmatado) resolviendo la anáfora con pleno respaldo documental.
+4. **ID DTC Duplicado y Vigencia:**
+   Se ratificó la corrección del ID duplicado `HTM-0142` en el dataset versionado (`..._htm0142_v20` para la versión V2.0). La copia obsoleta no versionada `data/*.jsonl` ha sido descartada definitivamente, adoptando la política de `vigente_para` unificada.
+
+### 6.2. Compatibilidad de Formatos de `chunk_id` (Sintético vs Backend Real pgvector)
+
+Un hallazgo crítico al validar el pipeline contra el Backend real (`Backend/ingesta` + PostgreSQL 16 + pgvector) radica en la nomenclatura de los identificadores de fragmento:
+
+- **Dataset Sintético:** Emplea identificadores semánticos manuales:
+  `HTM240-DTC-001@1.0_p4_htm0405`
+- **Backend Real (Ingesta pgvector):** Genera identificadores estructurados mediante slug de sección y huella hash SHA-1 de 8 caracteres:
+  `HTM240-DTC-001@1.0_htm-0405-fallo-multiple_01_e1e430db`
+
+> [!WARNING]
+> Si la batería CJ-02 se evalúa contra el Backend real exigiendo igualdad estricta de cadenas sobre `chunk_id` (`chunk_id == chunk_esperado`), las métricas de recuperación (**Recall@k** y **MRR**) resultarían artificialmente en **0.0 %** debido a la presencia de los hashes generados en la ingesta.
+
+**Estrategia de Interoperabilidad Implementada:**
+El evaluador oficial [`evaluar_benchmark.py`](file:///C:/Users/marco/Desktop/4º%20carrera/DP/Proyecto/Direccion_de_Proyectos/Test/test_Models/evaluar_benchmark.py) incorpora el parámetro `--modo-matching`, que permite alternar entre:
+1. `exacto` (por defecto): Comparación literal estricta de string para tests sintéticos y regresiones unitarias.
+2. `documento_seccion`: Comparación normalizada a nivel de **documento base y sección técnica**, permitiendo evaluar el sistema completo frente al Backend real sin penalizar la divergencia sintáctica de identificadores.

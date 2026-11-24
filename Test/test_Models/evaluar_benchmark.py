@@ -16,6 +16,24 @@ def citas(texto):
                for p in b.split(',') if re.fullmatch(r'[A-Za-z0-9_@.\-]+', p.strip()))
 
 
+def chunks_equivalentes(c1: str, c2: str) -> bool:
+    """Comprueba equivalencia exacta o por documento/sección entre identificadores sintéticos y del Backend real."""
+    if c1 == c2:
+        return True
+    base1 = c1.split('@')[0] if '@' in c1 else c1.split('_')[0]
+    base2 = c2.split('@')[0] if '@' in c2 else c2.split('_')[0]
+    if base1 != base2:
+        return False
+    # Si comparten documento base, verificar sección/código clave
+    # Sintético: ..._p4_htm0405 -> "htm0405"
+    # Real Backend: ..._htm-0405_01_e1e430db -> "htm0405"
+    partes1 = [p for p in c1.split('_') if p and not p.startswith('p') and not re.match(r'^[0-9a-f]{8}$', p)]
+    partes2 = [p for p in c2.split('_') if p and not p.startswith('p') and not re.match(r'^[0-9a-f]{8}$', p)]
+    slug1 = ''.join(re.sub(r'[^a-zA-Z0-9]', '', p) for p in partes1).lower()
+    slug2 = ''.join(re.sub(r'[^a-zA-Z0-9]', '', p) for p in partes2).lower()
+    return bool(slug1 and slug2 and (slug1 in slug2 or slug2 in slug1))
+
+
 def crear_pipeline_local(agente_factory, agente2, *, simulado):
     """Adapta CTR-001/004 al vocabulario CJ-02, sin entregar el ground truth.
 
@@ -57,8 +75,9 @@ def crear_pipeline_local(agente_factory, agente2, *, simulado):
 
 
 class EvaluadorBenchmarkCJ02:
-    def __init__(self, benchmark_path):
+    def __init__(self, benchmark_path, modo_matching='exacto'):
         self.benchmark_path = Path(benchmark_path)
+        self.modo_matching = modo_matching
         self.data = json.loads(self.benchmark_path.read_text(encoding='utf-8-sig'))
         self.preguntas = self.data.get('preguntas', [])
         ids = [p['id_pregunta'] for p in self.preguntas]
@@ -89,12 +108,21 @@ class EvaluadorBenchmarkCJ02:
         recuperados = set(recuperados) if isinstance(recuperados, list) and all(isinstance(c, str) for c in recuperados) else set()
         detectadas = citas(texto)
         esperadas = set(caso.get('chunks_esperados', []))
-        inter = detectadas & esperadas
-        precision = len(inter) / len(detectadas) if detectadas else (0.0 if esperadas else 1.0)
-        recall = len(inter) / len(esperadas) if esperadas else (0.0 if detectadas else 1.0)
-        # Una cita correcta no compensa otra inventada; no aceptar citas no recuperadas.
-        citas_ok = (detectadas <= esperadas and detectadas <= recuperados
-                    and (bool(inter) if esperadas else not detectadas))
+        if self.modo_matching == 'documento_seccion':
+            inter = {d for d in detectadas if any(chunks_equivalentes(d, e) for e in esperadas)}
+            esperadas_cubiertas = {e for e in esperadas if any(chunks_equivalentes(d, e) for d in detectadas)}
+            citas_recuperadas = {d for d in detectadas if any(chunks_equivalentes(d, r) for r in recuperados)}
+            precision = len(inter) / len(detectadas) if detectadas else (0.0 if esperadas else 1.0)
+            recall = len(esperadas_cubiertas) / len(esperadas) if esperadas else (0.0 if detectadas else 1.0)
+            citas_ok = (len(inter) == len(detectadas) and len(citas_recuperadas) == len(detectadas)
+                        and (bool(inter) if esperadas else not detectadas))
+        else:
+            inter = detectadas & esperadas
+            precision = len(inter) / len(detectadas) if detectadas else (0.0 if esperadas else 1.0)
+            recall = len(inter) / len(esperadas) if esperadas else (0.0 if detectadas else 1.0)
+            # Una cita correcta no compensa otra inventada; no aceptar citas no recuperadas.
+            citas_ok = (detectadas <= esperadas and detectadas <= recuperados
+                        and (bool(inter) if esperadas else not detectadas))
         aclaracion_ok = (respuesta_sistema.get('campo_aclaracion') == caso.get('campo_aclaracion_esperado')
                          if estado_esp == 'ambiguo' else True)
         if estado_esp == 'ambiguo':
@@ -169,8 +197,13 @@ def main():
     grupo.add_argument('--simulacion', action='store_true')
     grupo.add_argument('--respuestas', type=Path, help='JSON archivado: procedencia y respuestas por ID')
     parser.add_argument('--salida', type=Path, required=True, help='Archivo nuevo; no sobrescribe')
+    parser.add_argument('--modo-matching', choices=['exacto', 'documento_seccion'], default='exacto',
+                        help='Modo de comprobación de citas: exacto (sintético) o documento_seccion (Backend real)')
     args = parser.parse_args()
-    evaluador = EvaluadorBenchmarkCJ02(Path(__file__).with_name('benchmark_completo_CJ02_40_preguntas.json'))
+    evaluador = EvaluadorBenchmarkCJ02(
+        Path(__file__).with_name('benchmark_completo_CJ02_40_preguntas.json'),
+        modo_matching=args.modo_matching
+    )
     if args.simulacion:
         reporte = evaluador.ejecutar_benchmark(simulacion=True, salida=args.salida)
     else:
