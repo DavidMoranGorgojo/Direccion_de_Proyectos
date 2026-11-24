@@ -1,5 +1,5 @@
 -- Esquema «conocimiento» del diseño «Base de datos del backend» (ARSOFT-DIS, 2026-10-16, §4).
--- PostgreSQL ejecuta este script al crear el contenedor (docker-entrypoint-initdb.d).
+-- PostgreSQL ejecuta este script al inicializar por primera vez el directorio de datos.
 -- El esquema «aplicacion» (usuarios, chats, mensajes y registros) va en otro script.
 
 CREATE EXTENSION IF NOT EXISTS vector;

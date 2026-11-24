@@ -43,24 +43,9 @@ PYTHONPATH=src python -m ingesta --entrada /ruta/ThermoDrive_HTM240_Alumnos_PDF 
 
 `--crear-esquema` aplica `Backend/db/init/01_conocimiento.sql` (no hace falta si la base de datos ya lo ejecutó al arrancar). Otras opciones: `--indice-version v1.0`, `--no-activar`, `--incluir-sustituidos`. Por defecto los documentos sustituidos (`MNT-001 v1.0` y `PRC-003 v1.0`) no se indexan y aparecen en `excluidos` del informe. La versión activa nunca se recarga: para reindexar se usa una versión nueva.
 
-Para probar sin la infraestructura del departamento basta un pgvector suelto:
+## Ejecución con Apptainer
 
-```bash
-docker run -d --name pgvector-prueba -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=thermodrive -p 5433:5432 pgvector/pgvector:pg16
-export DATABASE_URL=postgresql://postgres:postgres@localhost:5433/thermodrive
-```
-
-## Ejecución en Docker
-
-```bash
-docker build -t backend-ingesta Backend/ingesta
-docker run --rm --network <red-del-proyecto> \
-  -e DATABASE_URL=postgresql://usuario:clave@backend-db:5432/bd \
-  -v /ruta/data/manuales:/data/manuales:ro -v ingesta_salida:/data/salida -v hf_cache:/cache/huggingface \
-  backend-ingesta
-```
-
-El servicio `backend-ingesta` del `compose.yaml` del backend debe montar `data/manuales` en solo lectura y un volumen para la caché del modelo.
+La [guía de Apptainer](../../apptainer/README.md) describe el arranque de PostgreSQL + pgvector y la ingesta. Para una carga puntual, usa ARSOFT_MANUALES_DIR con el script apptainer/run-ingesta.sh cuando la instancia arsoft-db esté en ejecución. Si lanzas la ingesta desde Python en el host, configura DATABASE_URL hacia una base PostgreSQL de pruebas con pgvector.
 
 ## Salidas
 
