@@ -24,8 +24,8 @@ Esta lista de verificación detalla el protocolo paso a paso para realizar prueb
 
 | ID | Caso de Prueba | Pasos a Ejecutar | Comportamiento Esperado | Estado |
 |---|---|---|---|:---:|
-| **LG-01** | Renderizado inicial | Abrir la aplicación sin sesión activa. | Aparece centrada la ventana de Login con el logo de ARSOFT, campos de «Usuario» y «Contraseña», botón «Iniciar sesión» y foco en el campo de usuario. | [ ] |
-| **LG-02** | Validación campos vacíos | Pulsar «Iniciar sesión» con campos vacíos. | Los campos se marcan con borde de advertencia/error y se muestra el mensaje: *"Faltan datos o el formato es incorrecto."*. No se envía petición de red. | [ ] |
+| **LG-01** | Renderizado inicial | Abrir la aplicación sin sesión activa. | Aparece centrada la ventana de Login con el logo de ARSOFT, campos de «Usuario» y «Contraseña», botón «Entrar» y foco en el campo de usuario. | [ ] |
+| **LG-02** | Validación campos vacíos | Pulsar «Entrar» con campos vacíos. | Se muestra el mensaje: *"Introduce tu usuario y tu contraseña."*. No se envía petición de red. | [ ] |
 | **LG-03** | Alternancia visibilidad contraseña | Escribir contraseña y hacer clic en el icono del ojo. | Los caracteres alternan entre modo oculto (puntos/asteriscos) y texto visible legible. El icono cambia de estado. | [ ] |
 | **LG-04** | Limpieza dinámica de errores | Estando visible un mensaje de error, escribir una letra en cualquier campo. | El mensaje de error desaparece inmediatamente y los bordes recuperan su estilo neutral. | [ ] |
 | **LG-05** | Credenciales incorrectas (HTTP 401) | Introducir usuario y contraseña inexistentes (ej. `usuario1` / `mala`). | Se muestra el mensaje: *"Usuario o contraseña incorrectos."*. El campo contraseña se vacía y mantiene el foco. | [ ] |
@@ -40,7 +40,7 @@ Esta lista de verificación detalla el protocolo paso a paso para realizar prueb
 | ID | Caso de Prueba | Pasos a Ejecutar | Comportamiento Esperado | Estado |
 |---|---|---|---|:---:|
 | **WN-01** | Renderizado de cabecera | Iniciar sesión y observar la cabecera superior. | Se visualiza el identificador del usuario activo, el logo de la aplicación y el botón «Cerrar sesión». | [ ] |
-| **WN-02** | Indicador de modo de servicio | Observar la etiqueta informativa debajo de la cabecera. | En modo simulado muestra la advertencia en amarillo: *"⚠ Modo simulado: sin backend conectado"*. En modo conectado desaparece o muestra el estado de las conversaciones. | [ ] |
+| **WN-02** | Indicador de modo de servicio | Observar la etiqueta informativa debajo de la cabecera. | En modo simulado muestra la advertencia en amarillo (abajo a la izquierda): *"⚠ Modo simulado: sin backend conectado. Configura ARSOFT_API_URL en .env para usar el asistente real."*. En modo conectado desaparece o muestra el estado de las conversaciones. | [ ] |
 | **WN-03** | Historial vacío inicial | Iniciar sesión con un usuario nuevo sin chats previos. | En la lista lateral se informa que no hay conversaciones y el área central muestra el estado vacío: *"¿En qué puedo ayudarte?"* con icono de bienvenida. | [ ] |
 | **WN-04** | Carga de historial existente | Iniciar sesión con un usuario con chats guardados. | Se listan las conversaciones previas ordenadas por fecha de actualización descendente con sus títulos respectivos. Se autoselecciona la más reciente. | [ ] |
 | **WN-05** | Cambio de conversación | Hacer clic en otra conversación de la lista lateral. | El panel de chat se vacía y renderiza de inmediato el historial completo del chat seleccionado (preguntas, respuestas y fuentes asociadas). | [ ] |

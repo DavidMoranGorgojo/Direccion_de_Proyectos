@@ -19,8 +19,8 @@ Los pasos y el comportamiento esperado de cada caso están en el checklist; aqu�
 
 ## Cómo rellenarla
 
-- **Resultado**: `OK`, `FALLO` o `N/A` (con motivo en Observaciones). No marcar `OK` sin haberlo visto en pantalla.
-- **Cobertura automática**: indica qué test de `Test/test_Frontend` ya cubre la lógica del caso. **No sustituye** la prueba manual: los tests no miran el aspecto real de la ventana ni usan el servidor real. Algunos tests de interfaz usan un sustituto de Qt.
+- **Resultado**: `OK`, `FALLO` o `N/A` (con motivo en Observaciones). `OK*` = comprobado el 24-11 arrancando la interfaz real (PySide6, sin pantalla, modo simulado) y mirando las capturas: **pendiente de confirmar a ojo y, cuando haya servidor, con el servidor real**. Un `OK` sin asterisco solo se marca tras verlo en pantalla.
+- **Cobertura automática**: indica qué test de `Test/test_Frontend` ya cubre la lógica del caso. **No sustituye** la prueba manual: los tests no miran el aspecto real de la ventana ni usan el servidor real. Los tests de ventanas y componentes usan un sustituto de Qt (no dibujan nada): por eso los casos visuales se han comprobado además arrancando la interfaz real sin pantalla.
 - **Condición**: lo que hace falta preparar antes. Agrupa los casos para ejecutarlos por tandas (ver el orden recomendado más abajo).
 - Cada `FALLO` lleva su incidencia en la tabla final (pantalla, pasos, esperado, obtenido, captura).
 
@@ -28,23 +28,23 @@ Los pasos y el comportamiento esperado de cada caso están en el checklist; aqu�
 
 | ID | Condición | Cobertura automática | Resultado | Observaciones |
 |---|---|---|:---:|---|
-| LG-01 | Ninguna | `test_login_renderizado_inicial` | | |
-| LG-02 | Ninguna | `test_login_validacion_campos_vacios_muestra_error` | | |
-| LG-03 | Ninguna | `test_login_toggle_visibilidad_contrasena` | | |
-| LG-04 | Ninguna | `test_login_limpieza_error_al_escribir` | | |
+| LG-01 | Ninguna | `test_login_renderizado_inicial` | OK* | OK (24-11, simulado, Qt sin pantalla): logo, usuario, contraseña, botón «Entrar», foco en usuario. El checklist decía «Iniciar sesión»: corregido en el checklist. |
+| LG-02 | Ninguna | `test_login_validacion_campos_vacios_muestra_error` | OK* | OK (simulado, Qt sin pantalla): mensaje «Introduce tu usuario y tu contraseña.». El checklist citaba otro texto: corregido. Borde de error no comprobado a ojo. |
+| LG-03 | Ninguna | `test_login_toggle_visibilidad_contrasena` | OK* | OK (simulado, Qt sin pantalla): alterna oculto/visible y el botón cambia Mostrar/Ocultar. |
+| LG-04 | Ninguna | `test_login_limpieza_error_al_escribir` | OK* | OK (simulado, Qt sin pantalla). |
 | LG-05 | Servidor | `test_login_credenciales_incorrectas`, `test_error_401_en_login_credenciales_invalidas` | | |
 | LG-06 | Servidor; bloquea el usuario unos minutos | `test_login_429_tras_demasiados_intentos`, `test_error_429_en_login_simulado` | | |
 | LG-07 | URL con puerto inactivo | `test_backend_caido_da_error_de_conexion` | | |
-| LG-08 | Servidor y usuario válido | `test_app_flujo_login_a_chat_y_logout`, `test_login_resultado_exitoso_emite_senal_y_limpia_clave` | | |
+| LG-08 | Servidor y usuario válido | `test_app_flujo_login_a_chat_y_logout`, `test_login_resultado_exitoso_emite_senal_y_limpia_clave` | OK* | OK solo en simulado (demo/demo1234). Falta con servidor real. |
 
 ## 2. Ventana principal y navegación
 
 | ID | Condición | Cobertura automática | Resultado | Observaciones |
 |---|---|---|:---:|---|
-| WN-01 | Sesión iniciada | `test_main_window_renderizado_elementos_cabecera` | | |
-| WN-02 | Probar en modo simulado y en real | `test_modo`, `test_modo_automatico` (solo la lógica del modo) | | |
+| WN-01 | Sesión iniciada | `test_main_window_renderizado_elementos_cabecera` | OK* | OK (simulado, Qt sin pantalla): «👤 demo», logo y «Cerrar sesión». |
+| WN-02 | Probar en modo simulado y en real | `test_modo`, `test_modo_automatico` (solo la lógica del modo) | OK* | OK en simulado (aviso amarillo abajo a la izquierda). Falta ver el modo real. |
 | WN-03 | Usuario sin chats | `test_ctr006_historial_vacio_por_entorno`, `test_main_window_estado_vacio_al_abrir_chat_sin_mensajes` | | |
-| WN-04 | Usuario con chats | `test_main_window_ordenacion_conversaciones_por_fecha`, `test_ctr006_lectura_historial_por_defecto` | | |
+| WN-04 | Usuario con chats | `test_main_window_ordenacion_conversaciones_por_fecha`, `test_ctr006_lectura_historial_por_defecto` | OK* | OK solo en simulado: lista «Temperatura del motor» (15/01/2026) y los chats nuevos por fecha, el más reciente primero. Falta con servidor real. |
 | WN-05 | Usuario con 2 o más chats | `test_main_window_seleccion_conversacion_actualiza_interfaz` | | |
 | WN-06 | Ninguna | `test_main_window_nuevo_chat_crea_uno_si_el_actual_tiene_mensajes`, `test_main_window_nuevo_chat_reutiliza_vacio_existente` | | |
 
@@ -52,13 +52,13 @@ Los pasos y el comportamiento esperado de cada caso están en el checklist; aqu�
 
 | ID | Condición | Cobertura automática | Resultado | Observaciones |
 |---|---|---|:---:|---|
-| CH-01 | Ninguna | `test_main_window_filtro_enter_y_shift_enter` | | |
-| CH-02 | Ninguna | `test_main_window_filtro_enter_y_shift_enter` | | |
-| CH-03 | Ninguna | `test_main_window_envio_ignora_texto_vacio` | | |
-| CH-04 | Chat nuevo | `test_main_window_envio_mensaje_valido_y_generacion_titulo`, `test_main_window_envio_mensaje_largo_recorta_titulo_con_puntos_suspensivos` | | |
-| CH-05 | Ninguna | `test_chat_message_burbuja_usuario`, `test_pregunta_se_conserva_exacta` | | |
+| CH-01 | Ninguna | `test_main_window_filtro_enter_y_shift_enter` | OK* | OK (simulado, Qt sin pantalla): Enter envía y vacía el campo. |
+| CH-02 | Ninguna | `test_main_window_filtro_enter_y_shift_enter` | OK* | OK (simulado, Qt sin pantalla): Shift+Enter inserta salto de línea sin enviar. |
+| CH-03 | Ninguna | `test_main_window_envio_ignora_texto_vacio` | OK* | OK (simulado, Qt sin pantalla). |
+| CH-04 | Chat nuevo | `test_main_window_envio_mensaje_valido_y_generacion_titulo`, `test_main_window_envio_mensaje_largo_recorta_titulo_con_puntos_suspensivos` | OK* | OK (simulado, Qt sin pantalla): título de 40 caracteres + «…». |
+| CH-05 | Ninguna | `test_chat_message_burbuja_usuario`, `test_pregunta_se_conserva_exacta` | OK* | OK (simulado, Qt sin pantalla): burbuja a la derecha con el texto exacto. |
 | CH-06 | Respuesta lenta para verlo | `test_chat_message_burbuja_escribiendo` | | |
-| CH-07 | Ninguna | `test_main_window_recepcion_respuesta_elimina_typing_y_actualiza_chat` | | |
+| CH-07 | Ninguna | `test_main_window_recepcion_respuesta_elimina_typing_y_actualiza_chat` | OK* | OK (simulado, Qt sin pantalla): se retira «escribiendo», se añade la respuesta, el campo recupera el foco. |
 | CH-08 | Servidor | `test_primer_mensaje_con_id_vacio_historial_y_continuacion`, `test_ctr006_continuar_chat_con_su_conversacion_id` | | |
 
 ## 4. Tipos de respuesta y citas
@@ -66,9 +66,9 @@ Los pasos y el comportamiento esperado de cada caso están en el checklist; aqu�
 | ID | Condición | Cobertura automática | Resultado | Observaciones |
 |---|---|---|:---:|---|
 | RS-01 | Servidor y LLM | `test_ctr001_respuesta_fundamentada_con_fuentes`, `test_chat_message_renderizado_fuentes` | | |
-| RS-02 | Servidor y LLM | `test_ctr001_aclaracion_por_pregunta_demasiado_corta` | | |
-| RS-03 | Servidor y LLM | `test_ctr001_sin_evidencia` | | |
-| RS-04 | Servidor y LLM | `test_ctr001_fuera_de_ambito` | | |
+| RS-02 | Servidor y LLM | `test_ctr001_aclaracion_por_pregunta_demasiado_corta` | OK* | OK solo en simulado: badge «Necesito más datos», sin fuentes. |
+| RS-03 | Servidor y LLM | `test_ctr001_sin_evidencia` | OK* | OK solo en simulado: badge «Sin evidencia en la documentación», sin fuentes. |
+| RS-04 | Servidor y LLM | `test_ctr001_fuera_de_ambito` | OK* | OK solo en simulado: badge «Fuera de ámbito» con el texto esperado. |
 | RS-05 | Necesita una cita a un documento obsoleto en el índice | `test_source_card_marca_documento_obsoleto` | | |
 | RS-06 | Parar Agentes o Backend | `test_agentes_caido`, `test_error_500_en_consulta`, `test_chat_message_badges_estados_asistente` | | |
 
