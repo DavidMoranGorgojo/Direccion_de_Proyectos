@@ -420,7 +420,8 @@ class TestFrontendContraBackendReal(unittest.TestCase):
         with patch.object(api, "CONSULTA_PATH", "/agentes/consulta"):
             resp = api.send_message("", PREGUNTA_OK)
             self.assertEqual(resp.estado, STATUS_ERROR)
-            self.assertEqual(resp.texto, GENERIC_ERROR)
+            # El Backend no publica /agentes/consulta (404) y el Frontend muestra el mensaje de los 404.
+            self.assertEqual(resp.texto, api.CONVERSATION_NOT_FOUND)
 
     def test_historial_aislado_entre_usuarios(self):
         self.entrar("usuario1")
@@ -431,8 +432,8 @@ class TestFrontendContraBackendReal(unittest.TestCase):
         self.assertEqual(api.fetch_history().conversations, [])
         ajena = api.send_message(resp.conversacion_id, "Quiero leer ese chat")
 
-        self.assertEqual(ajena.estado, STATUS_ERROR)  # 404 conversacion_no_encontrada → genérico
-        self.assertEqual(ajena.texto, GENERIC_ERROR)
+        self.assertEqual(ajena.estado, STATUS_ERROR)  # 404 conversacion_no_encontrada
+        self.assertEqual(ajena.texto, api.CONVERSATION_NOT_FOUND)
         self.assertEqual(self.recibidas, [], "Un chat ajeno no debe llegar a Agentes")
 
     def test_historial_401_sin_token_token_falso_o_usuario_desactivado(self):
@@ -532,18 +533,18 @@ class TestFrontendContraBackendReal(unittest.TestCase):
         self.assertIn("consultas", cuerpo)
 
     def test_500_no_controlado_del_backend_no_rompe_el_frontend(self):
-        """Un error inesperado en el Backend devuelve 500 en texto plano (no JSON)."""
+        """Un error inesperado en el Backend devuelve 500 con el cuerpo JSON de error_interno."""
         self.entrar()
         self.db.fallo = RuntimeError("fallo inesperado")
 
         status, cuerpo = api.call("GET", api.HISTORIAL_PATH)
         self.assertEqual(status, 500)
-        self.assertIsNone(cuerpo, "«Internal Server Error» no es JSON")
+        self.assertEqual((cuerpo or {}).get("codigo_error"), "error_interno", cuerpo)
 
         hist = api.fetch_history()
         self.assertFalse(hist.ok)
         self.assertFalse(hist.session_expired)
-        self.assertEqual(hist.error, "No se ha podido recuperar el historial.")
+        self.assertEqual(hist.error, api.HISTORY_SERVER_ERROR)
 
         resp = api.send_message("", PREGUNTA_OK)
         self.assertEqual((resp.estado, resp.texto), (STATUS_ERROR, GENERIC_ERROR))
@@ -551,7 +552,7 @@ class TestFrontendContraBackendReal(unittest.TestCase):
         session.clear()
         login = auth.login("usuario1", "usuario123")
         self.assertFalse(login.ok)
-        self.assertEqual(login.error, "El servicio no está disponible. Inténtalo más tarde.")
+        self.assertEqual(login.error, auth.SERVER_ERROR)  # 500 → mensaje de error del servidor
 
     def test_503_base_de_datos_caida_en_historial(self):
         self.entrar()
@@ -559,7 +560,7 @@ class TestFrontendContraBackendReal(unittest.TestCase):
         hist = api.fetch_history()
         self.assertFalse(hist.ok)
         self.assertFalse(hist.session_expired)
-        self.assertEqual(hist.error, "No se ha podido recuperar el historial.")
+        self.assertEqual(hist.error, api.HISTORY_SERVER_ERROR)
 
     def test_servidor_apagado_da_error_de_conexion(self):
         with socket.socket() as sock:  # puerto libre en el que no escucha nadie
