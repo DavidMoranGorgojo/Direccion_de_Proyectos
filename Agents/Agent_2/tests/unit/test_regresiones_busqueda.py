@@ -54,6 +54,10 @@ class TestRegresionesBusqueda(unittest.TestCase):
         self.assertNotIn("componente", validos)
         self.assertEqual(descartados.get("componente"), "culata")
 
+        validos_vacio, descartados_vacio = adapt_explicit_filters({"codigos": []})
+        self.assertEqual(validos_vacio, {})
+        self.assertEqual(descartados_vacio, {})
+
     def test_regresion_5_ambiguedad_componente_con_codigo(self):
         """Si el usuario nombra CMP-02 en V1.1 no debe marcarse ambiguo de componente."""
         from Agents.Agent_2.src.services.vigencia import classify_state

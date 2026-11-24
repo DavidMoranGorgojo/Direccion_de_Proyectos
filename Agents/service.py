@@ -26,6 +26,18 @@ except ImportError:
     recuperar_evidencias = None
 
 USE_REAL_AGENT2 = os.getenv("USE_REAL_AGENT2", "0").lower() in ("1", "true", "yes")
+FALLBACK_EXTRACTIVO = os.getenv("ARSOFT_FALLBACK_EXTRACTIVO", "1").lower() in ("1", "true", "yes")
+
+
+def _crear_agente(cid: str) -> Agente1:
+    """Construye un Agente1 con fallback extractivo configurable y memoria restaurada."""
+    agent = Agente1(conversacion_id=cid, fallback_extractivo=FALLBACK_EXTRACTIVO)
+    # CTR-007: Restauración automática de memoria desde Backend si existen turnos previos
+    with suppress(Exception):
+        from .agente1.cliente_backend import ClienteBackendAgentes
+        agent.cliente_backend = ClienteBackendAgentes()
+        agent.restaurar_memoria_desde_backend(agent.cliente_backend)
+    return agent
 
 SESSION_TTL_SECONDS = 1800
 MAX_SESSIONS = 1024
@@ -98,12 +110,7 @@ def get_session(cid: str) -> Session:
                 if available_id is None:
                     raise HTTPException(503, "Capacidad de conversaciones ocupada.")
                 sessions.pop(available_id)
-            agent = Agente1(conversacion_id=cid)
-            # CTR-007: Restauración automática de memoria desde Backend si existen turnos previos
-            with suppress(Exception):
-                from .agente1.cliente_backend import ClienteBackendAgentes
-                agent.cliente_backend = ClienteBackendAgentes()
-                agent.restaurar_memoria_desde_backend(agent.cliente_backend)
+            agent = _crear_agente(cid)
             current = Session(agent)
             sessions[cid] = current
         current.requests += 1
@@ -128,11 +135,7 @@ def query(data: Query):
         with current.lock:
             with lock:
                 if current.discard_after_request:
-                    current.agent = Agente1(conversacion_id=cid)
-                    with suppress(Exception):
-                        from .agente1.cliente_backend import ClienteBackendAgentes
-                        current.agent.cliente_backend = ClienteBackendAgentes()
-                        current.agent.restaurar_memoria_desde_backend(current.agent.cliente_backend)
+                    current.agent = _crear_agente(cid)
                     current.discard_after_request = False
 
             # Separación estricta entre servicio real y simulador (B11):

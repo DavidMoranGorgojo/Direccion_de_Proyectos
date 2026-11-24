@@ -1152,13 +1152,22 @@ def verificar_citas(texto_respuesta: str, evidencias_validas: List[Dict[str, Any
     }
 
 
+_RE_LISTA_PREFIJO = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s+")
+_RE_CITA_BLOQUE = re.compile(r"\[([A-Za-z0-9_@.\-]+(?:\s*,\s*[A-Za-z0-9_@.\-]+)*)\]")
+
+
+def _dividir_oraciones(texto: str) -> List[str]:
+    """Divide un bloque de texto en oraciones no vacías preservando su orden."""
+    return [o.strip() for o in re.split(r"(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡])|\n+", texto) if o.strip()]
+
+
 def verificar_respaldo_extractivo(texto: str, evidencias: list) -> bool:
-    """Regla conservadora, no verificación semántica: cada afirmación debe ser
-    una oración literal de una de las evidencias que cita. Una paráfrasis no
-    comprobable se rechaza; se permiten únicamente los encabezados del prompt.
+    """Regla conservadora, no verificación semántica: cada afirmación debe estar
+    respaldada literalmente por oraciones de las evidencias que cita. Una paráfrasis
+    no comprobable se rechaza; se permiten únicamente los encabezados del prompt.
     """
     def normalizar(fragmento):
-        fragmento = fragmento.replace("[DOCUMENTO SUSTITUIDO]", "")
+        fragmento = fragmento.replace("[DOCUMENTO SUSTITUIDO]", "").replace("[DOCUMENTO OBSOLETO]", "")
         sin_tildes = unicodedata.normalize("NFKD", fragmento.casefold())
         sin_tildes = "".join(c for c in sin_tildes if not unicodedata.combining(c)).replace("−", "-")
         return " ".join(re.findall(r"[+-]?\d+(?:[.,]\d+)*|[^\W_]+|[°%≤≥<>±=/×*^+\-]", sin_tildes))
@@ -1166,17 +1175,19 @@ def verificar_respaldo_extractivo(texto: str, evidencias: list) -> bool:
     encabezados = {normalizar(h) for h in ("Causas y Diagnóstico", "Criticidad y Seguridad",
                                          "Procedimiento técnico", "Fuentes consultadas")}
     texto = "\n".join(linea for linea in texto.splitlines() if normalizar(linea.strip("*#: ")) not in encabezados)
-    por_id = {e["chunk_id"]: {normalizar(oracion) for oracion in re.split(
-        r"(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡])|\n+", e["texto"])} for e in evidencias}
+    por_id = {e["chunk_id"]: {normalizar(oracion) for oracion in _dividir_oraciones(e["texto"])} for e in evidencias}
     posicion = 0
     afirmaciones = 0
-    for cita in re.finditer(r"\[([^\]]+)\]", texto):
-        afirmacion = normalizar(texto[posicion:cita.start()])
+    for cita in _RE_CITA_BLOQUE.finditer(texto):
+        crudo = texto[posicion:cita.start()]
         ids = [c.strip() for c in cita.group(1).split(",")]
         if any(cid not in por_id for cid in ids):
             return False
-        if afirmacion:
-            if not all(afirmacion in por_id[cid] for cid in ids):
+        sub_oraciones = [o for o in _dividir_oraciones(crudo) if normalizar(o)]
+        for oracion in sub_oraciones:
+            norm_exacta = normalizar(oracion)
+            norm_sin_vineta = normalizar(_RE_LISTA_PREFIJO.sub("", oracion))
+            if not all(norm_exacta in por_id[cid] or (norm_sin_vineta and norm_sin_vineta in por_id[cid]) for cid in ids):
                 return False
             afirmaciones += 1
         posicion = cita.end()
@@ -1199,7 +1210,7 @@ def redaccion_extractiva(pregunta: str, evidencias: list, max_oraciones: int = 3
         return None
     mejor = None
     for orden_ev, ev in enumerate(evidencias):
-        oraciones = [o.strip() for o in re.split(r"(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡])|\n+", ev["texto"]) if o.strip()]
+        oraciones = _dividir_oraciones(ev["texto"])
         puntos = [len(q & _tokens_relevantes(o)) for o in oraciones]
         total = sum(puntos)
         if total and (mejor is None or total > mejor[0]):
@@ -1216,6 +1227,25 @@ def redaccion_extractiva(pregunta: str, evidencias: list, max_oraciones: int = 3
     return "\n".join(f"{oraciones[k]} [{cid}]" for k in sorted(elegidas))
 
 
+def _respuesta_fallback_extractiva(pregunta: str, evidencias: list, agente: Agente1,
+                                   aviso_obsoleto: Optional[str] = None, reintentos: int = 1) -> Optional[dict]:
+    """Intenta construir respuesta extractiva verificada si está habilitada en el agente."""
+    if not getattr(agente, "fallback_extractivo", False):
+        return None
+    texto_ext = redaccion_extractiva(pregunta, evidencias)
+    if not texto_ext:
+        return None
+    check_ext = verificar_citas(texto_ext, evidencias)
+    check_ext["respaldo_extractivo"] = verificar_respaldo_extractivo(texto_ext, evidencias)
+    check_ext["valido"] = check_ext["valido"] and check_ext["respaldo_extractivo"]
+    if not check_ext["valido"]:
+        return None
+    logger.info("Respuesta generada por fallback extractivo determinista.")
+    texto_final = f"{aviso_obsoleto}\n\n{texto_ext}" if aviso_obsoleto else texto_ext
+    return {"estado": "respuesta", "texto": texto_final, "fuentes": check_ext["citas_validas"],
+            "verificacion": {**check_ext, "modo": "extractivo"}, "reintentos": reintentos}
+
+
 def redactar_respuesta_con_verificacion(pregunta: str, evidencias: list, agente: Agente1,
                                         aviso_obsoleto: Optional[str] = None) -> dict:
     if not isinstance(evidencias, list) or any(not evidencia_valida(e) for e in evidencias):
@@ -1225,6 +1255,9 @@ def redactar_respuesta_con_verificacion(pregunta: str, evidencias: list, agente:
             return _redactar_respuesta_con_verificacion(pregunta, evidencias, agente, aviso_obsoleto)
     except Exception as exc:
         logger.error("Fallo del modelo redactor (%s).", type(exc).__name__)
+        res_ext = _respuesta_fallback_extractiva(pregunta, evidencias, agente, aviso_obsoleto, reintentos=1)
+        if res_ext is not None:
+            return res_ext
         return {"estado": "error", "texto": "Error de comunicación con el modelo redactor.", "fuentes": []}
 
 
@@ -1268,6 +1301,9 @@ def _redactar_respuesta_con_verificacion(
     kw_llm = {"modelo": agente.modelo_redactor, "rol": "potente"}
     respuesta_1 = agente._consultar_llm(mensajes_base, **kw_llm)
     if not respuesta_1:
+        res_ext = _respuesta_fallback_extractiva(pregunta, evidencias, agente, aviso_obsoleto, reintentos=0)
+        if res_ext is not None:
+            return res_ext
         return {
             "estado": "error",
             "texto": "Error de comunicación con el modelo redactor.",
@@ -1318,17 +1354,9 @@ def _redactar_respuesta_con_verificacion(
             }
 
     # Fallback opcional: oraciones literales de las evidencias (verificables por construcción).
-    if getattr(agente, "fallback_extractivo", False):
-        texto_ext = redaccion_extractiva(pregunta, evidencias)
-        if texto_ext:
-            check_ext = verificar_citas(texto_ext, evidencias)
-            check_ext["respaldo_extractivo"] = verificar_respaldo_extractivo(texto_ext, evidencias)
-            check_ext["valido"] = check_ext["valido"] and check_ext["respaldo_extractivo"]
-            if check_ext["valido"]:
-                logger.info("Respuesta generada por fallback extractivo determinista.")
-                texto_final = f"{aviso_obsoleto}\n\n{texto_ext}" if aviso_obsoleto else texto_ext
-                return {"estado": "respuesta", "texto": texto_final, "fuentes": check_ext["citas_validas"],
-                        "verificacion": {**check_ext, "modo": "extractivo"}, "reintentos": 1}
+    res_ext = _respuesta_fallback_extractiva(pregunta, evidencias, agente, aviso_obsoleto, reintentos=1)
+    if res_ext is not None:
+        return res_ext
 
     # Si volvió a fallar en el reintento: Error de verificación estricto
     logger.error("Verificación de citas falló tras reintento. Abortando respuesta por seguridad.")

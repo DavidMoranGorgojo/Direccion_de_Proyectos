@@ -167,8 +167,9 @@ class FrontendContraBackendReal(unittest.TestCase):
         cls.env.stop()
 
     def setUp(self):
-        from Backend.api.app import sesiones
+        from Backend.api.app import limite_consultas, sesiones
         sesiones._fallos.clear()
+        limite_consultas.reiniciar()
         from Backend.api.app.links import connect
         with connect() as conn:                      # cada prueba parte sin chats
             conn.execute("DELETE FROM aplicacion.chat")

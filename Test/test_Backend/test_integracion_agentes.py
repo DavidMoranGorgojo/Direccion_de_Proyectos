@@ -87,7 +87,7 @@ class RerankerFalso:
         return [puntuacion(q, p) for q, p in pares]
 
 
-def llm_falso(agente, mensajes):
+def llm_falso(agente, mensajes, **kwargs):
     """LLM del Agente 1: genera la consulta (CTR-004) o redacta copiando la evidencia citada."""
     todo = "\n".join(m["content"] for m in mensajes)
     if "EVIDENCIA [" in todo:  # redacción: copia literal de la primera evidencia, con su cita
@@ -195,13 +195,6 @@ class FrontendBackendAgentes(unittest.TestCase):
             from Agents.Agent_2.src.services.pipeline import Agent2Pipeline
 
             def agente2(query_json):  # el Agente 2 real, contra el Backend real
-                # FALLO CONOCIDO (CTR-004, Agentes): el Agente 1 siempre envía filtros.codigos como lista y el
-                # Agente 2 rechaza una lista vacía como "filtro explícito no admitido" (filter_inference.py), así
-                # que toda consulta acaba en entrada_invalida. Hasta que Agentes lo corrija, aquí se quita el
-                # filtro cuando va vacío; con códigos reales se mantiene.
-                filtros = query_json.get("filtros") or {}
-                if filtros.get("codigos") == []:
-                    query_json = {**query_json, "filtros": {k: v for k, v in filtros.items() if k != "codigos"}}
                 cliente = BackendAPIClient(cls.backend_url, "BAAI/bge-m3", token=TOKEN_SERVICIO, timeout=10)
                 return Agent2Pipeline(backend_client=cliente, embedding_client=BgeM3Client(cls.modelo_bge),
                                       reranker_model=RerankerFalso(), require_reranker=True

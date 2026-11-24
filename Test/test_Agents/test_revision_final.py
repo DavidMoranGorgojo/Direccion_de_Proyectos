@@ -319,6 +319,33 @@ class RedaccionExtractivaFallback(unittest.TestCase):
         self.assertEqual(res['verificacion']['modo'], 'extractivo')
         self.assertEqual(res['fuentes'], ['c_1'])
 
+    def test_varias_oraciones_del_mismo_chunk_con_una_cita_pasan_verificador(self):
+        ev = self._ev()
+        texto = '- Termostato electrónico CMP-08. Apertura inicial a 92 °C. [c_1]'
+        self.assertTrue(core.verificar_respaldo_extractivo(texto, [ev]))
+
+    def test_etiqueta_documento_obsoleto_no_rompe_verificador_extractivo(self):
+        ev = evidencia('obs_1')
+        ev['texto'] = '[DOCUMENTO OBSOLETO] Filtro referencia OBS-240 descatalogado.'
+        texto = core.redaccion_extractiva('filtro descatalogado', [ev])
+        self.assertTrue(core.verificar_citas(texto, [ev])['valido'])
+        self.assertTrue(core.verificar_respaldo_extractivo(texto, [ev]))
+
+    def test_fallback_extractivo_ante_timeout_en_reintento(self):
+        obj = agente('Texto libre sin cita.')
+        obj.fallback_extractivo = True
+
+        def _fail_on_retry(*_args, **_kwargs):
+            if obj._consultar_llm.call_count >= 2:
+                raise TimeoutError('presupuesto agotado')
+            return 'Texto libre sin cita.'
+
+        with patch.object(obj, '_consultar_llm', side_effect=_fail_on_retry):
+            res = core.redactar_respuesta_con_verificacion('temperatura termostato', [self._ev()], obj)
+        self.assertEqual(res['estado'], 'respuesta')
+        self.assertEqual(res['verificacion']['modo'], 'extractivo')
+        self.assertEqual(res['fuentes'], ['c_1'])
+
     def test_distinta_edicion_pdf_con_version_vehiculo_comun_no_pide_aclaracion(self):
         ev1 = evidencia('c_1', version='1.0')
         ev1['metadata']['versiones'] = ['V1.0', 'V1.1', 'V2.0']

@@ -98,11 +98,15 @@ def adapt_explicit_filters(filtros: Any) -> tuple[dict[str, Any], dict[str, Any]
 
     # 4. Codigos
     if "codigos" in filtros and filtros["codigos"] is not None:
-        norm_c = normalize_codes(filtros["codigos"])
-        if norm_c:
-            validos["codigos"] = norm_c
+        raw_c = filtros["codigos"]
+        if isinstance(raw_c, (list, tuple)) and len(raw_c) == 0:
+            pass  # Lista vacía de Agente 1 equivale a sin restricción de códigos.
         else:
-            descartados["codigos"] = filtros["codigos"]
+            norm_c = normalize_codes(raw_c)
+            if norm_c:
+                validos["codigos"] = norm_c
+            else:
+                descartados["codigos"] = raw_c
 
     # 5. Incluir obsoletos
     if "incluir_obsoletos" in filtros and filtros["incluir_obsoletos"] is not None:
