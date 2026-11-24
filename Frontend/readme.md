@@ -15,7 +15,7 @@ Interfaz gráfica de escritorio para el asistente conversacional técnico sobre 
 | `ui/` | Archivos XML de diseño de Qt Designer (`login_window.ui`, `main_window.ui`). |
 | `views/` | Controladores de ventanas: pantalla de login (`login_window.py`) y pantalla principal de chat (`main_window.py`). |
 | `assets/` | Estilos CSS/QSS (`style.qss`), iconos vectoriales SVG e imágenes corporativas. |
-| `apptainer/` | Definición del contenedor del Frontend (`frontend.def`). Empaquetado en la sección 6. |
+| `apptainer/` | Definición del contenedor del Frontend (`frontend.def`). Empaquetado en la sección 7. |
 | `main.py` | Punto de entrada de la aplicación que gestiona el ciclo de vida login → chat → logout. |
 
 ---
@@ -164,7 +164,7 @@ python -m unittest discover -s Test/test_Frontend -p "test_*.py"
 
 ---
 
-## 4. Cierre de rutas y conformidad formal de Frontend
+## 5. Cierre de rutas y conformidad formal de Frontend
 
 **Rutas definitivas acordadas con Backend:**
 
@@ -178,7 +178,7 @@ python -m unittest discover -s Test/test_Frontend -p "test_*.py"
 
 **Sesión y alcance:** el token es Bearer JWT y dura 480 minutos por defecto. La sesión se cierra localmente en Frontend; no se añade logout de servidor ni renovación del token. Ante HTTP 401/403, Frontend trata la sesión como caducada y vuelve al Login. El límite de intentos de login es de 5 fallos en 5 minutos; Backend responde HTTP 429.
 
-## 5. Contratos con Backend y Agentes (estado confirmado)
+## 6. Contratos con Backend y Agentes (estado confirmado)
 
 Valores por defecto de `config.py`; si cambian, basta con modificarlos en `.env`.
 
@@ -186,7 +186,7 @@ Valores por defecto de `config.py`; si cambian, basta con modificarlos en `.env`
 |---|---|---|
 | CTR-005 Login | `POST /auth/login` (`ARSOFT_LOGIN_PATH`) | Confirmada. Cuerpo `{"usuario", "contrasena"}`; devuelve `token`. |
 | CTR-001 Consulta | `POST /consulta` (`ARSOFT_CONSULTA_PATH`) | Confirmada. `/agentes/consulta` es la ruta interna Backend → Agentes; el Frontend no la usa. |
-| CTR-006 Historial | `GET /chats` (`ARSOFT_HISTORIAL_PATH`), `PATCH /chats/{id}`, `DELETE /chats/{id}` | Confirmadas. Frontend lista, renombra y elimina chats propios. |
+| CTR-006 Historial | `GET /chats` (`ARSOFT_HISTORIAL_PATH`), `PATCH /chats/{id}`, `DELETE /chats/{id}` | Confirmadas. Frontend lista, renombra y elimina chats propios. `GET /chats` va paginado (`limit` máximo 200 y `offset`): el Frontend pide páginas de 200 hasta cubrir `total` (número de chats del usuario). |
 | CTR-001 Valoración | `POST /valoracion` (`ARSOFT_VALORACION_PATH`) | Confirmada en Backend. Cuerpo `{"trace_id", "util"}` (`util` es `true` o `false`); devuelve `{"trace_id", "util"}`. |
 
 - **`conversacion_id`:** la primera pregunta de un chat nuevo lleva `conversacion_id` vacío; el Backend genera el ID y lo devuelve en la respuesta, y el Frontend lo reutiliza (`Conversation.server_id`). Un chat cargado del historial se continúa con su propio `conversacion_id`. El UUID local de `Conversation.id` solo identifica el chat en la interfaz.
@@ -226,7 +226,7 @@ Valores por defecto de `config.py`; si cambian, basta con modificarlos en `.env`
   | Historial | 429 | «Demasiadas peticiones. Espera un momento y reintenta.» |
   | Historial | 5xx | «No se pudo cargar el historial. Inténtalo más tarde.» |
 
-Quedan fuera de este cierre la renovación del token y los endpoints adicionales de sesión (`logout` y validación con `/auth/me`); el cierre de sesión de Frontend es local. El renombrado y borrado de chats se realizan sobre las rutas CTR-006 indicadas en la sección 4.
+Quedan fuera de este cierre la renovación del token y los endpoints adicionales de sesión (`logout` y validación con `/auth/me`); el cierre de sesión de Frontend es local. El renombrado y borrado de chats se realizan sobre las rutas CTR-006 indicadas en la sección 5.
 
 ### 5.1 Cierre de versión estable — 24-11-2026
 
@@ -241,7 +241,7 @@ Queda congelado para CTR-001 el acuerdo de integración siguiente:
 
 ---
 
-## 6. Empaquetado y arranque con Apptainer
+## 7. Empaquetado y arranque con Apptainer
 
 La imagen se define en `Frontend/apptainer/frontend.def` (Python con PySide6 y las librerías de Qt/XCB). No incluye `__pycache__`, `.vscode` ni `.env`, y su fase `%test` falla la construcción si Qt o la configuración no cargan.
 

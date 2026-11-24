@@ -11,7 +11,7 @@ Contratos que implementa este módulo:
            El Backend expone POST /consulta y devuelve conversacion_id. Errores HTTP del propio Backend:
            401/403 sesión caducada, 404 conversación no encontrada, 422 entrada inválida, 429 demasiadas
            consultas; el resto (5xx, JSON no válido) se muestra como error genérico.
-  CTR-006  Historial:  GET /chats; PATCH /chats/{id} {"titulo"}; DELETE /chats/{id}
+  CTR-006  Historial:  GET /chats?limit&offset (paginado); PATCH /chats/{id} {"titulo"}; DELETE /chats/{id}
            Cada usuario solo puede operar sobre sus propias conversaciones.
   CTR-001  Valoración: POST /valoracion {"trace_id", "util"} -> 200 {"trace_id", "util"}
            Errores: 401/403 sesión caducada, 404 respuesta no encontrada, 422 entrada inválida,
@@ -173,22 +173,39 @@ class HistoryResult:
     session_expired: bool = False
 
 
+HISTORY_PAGE_SIZE = 200  # máximo de `limit` que acepta GET /chats (el Backend pagina de 50 en 50 por defecto)
+HISTORY_MAX_PAGES = 50   # tope de seguridad: evita un bucle si el servidor devuelve `total` incoherente
+
+
 def fetch_history() -> HistoryResult:
-    try:
-        status, data = call("GET", HISTORIAL_PATH)
-    except ConnectionFailed:
-        return HistoryResult(False, error="No se ha podido contactar con el servidor.")
-    if status in (401, 403):
-        return HistoryResult(False, error=SESSION_EXPIRED, session_expired=True)
-    if status == 429:
-        return HistoryResult(False, error=HISTORY_TOO_MANY)
-    if status >= 500:
-        return HistoryResult(False, error=HISTORY_SERVER_ERROR)
-    if status == 200 and data is not None and isinstance(data.get("chats"), list):
+    """GET /chats paginado: pide páginas de HISTORY_PAGE_SIZE hasta cubrir `total` (CTR-006).
+
+    `total` es el número de chats del usuario (no el de la página). Un servidor sin paginación
+    ignora limit/offset y devuelve todo de una vez: entonces total == len(chats) y se para."""
+    conversations: list[Conversation] = []
+    offset = 0
+    for _ in range(HISTORY_MAX_PAGES):
         try:
-            return HistoryResult(True, [Conversation.from_dict(c) for c in data["chats"]])
+            status, data = call("GET", f"{HISTORIAL_PATH}?limit={HISTORY_PAGE_SIZE}&offset={offset}")
+        except ConnectionFailed:
+            return HistoryResult(False, error="No se ha podido contactar con el servidor.")
+        if status in (401, 403):
+            return HistoryResult(False, error=SESSION_EXPIRED, session_expired=True)
+        if status == 429:
+            return HistoryResult(False, error=HISTORY_TOO_MANY)
+        if status >= 500:
+            return HistoryResult(False, error=HISTORY_SERVER_ERROR)
+        if not (status == 200 and data is not None and isinstance(data.get("chats"), list)):
+            break
+        try:
+            page = [Conversation.from_dict(c) for c in data["chats"]]
         except (KeyError, TypeError, ValueError):
-            pass
+            break
+        conversations.extend(page)
+        offset += len(page)
+        total = data.get("total")
+        if not page or not isinstance(total, int) or offset >= total:
+            return HistoryResult(True, conversations)
     return HistoryResult(False, error="No se ha podido recuperar el historial.")
 
 
@@ -371,7 +388,7 @@ def _mock_call(method: str, path: str, body: dict | None) -> tuple[int, dict | N
         if not body or not body.get("trace_id") or not isinstance(body.get("util"), bool):
             return 422, {"codigo_error": "entrada_invalida", "mensaje": "Valoración no válida."}
         return 200, {"trace_id": body["trace_id"], "util": body["util"]}
-    if method == "GET" and path == HISTORIAL_PATH:
+    if method == "GET" and path.split("?", 1)[0] == HISTORIAL_PATH:
         chats = [] if _MOCK_EMPTY_HISTORY else deepcopy(_MOCK_CHATS)
         return 200, {"chats": chats, "total": len(chats)}
     history_item_prefix = f"{HISTORIAL_PATH.rstrip('/')}/"
