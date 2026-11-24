@@ -59,16 +59,18 @@ CREATE TABLE IF NOT EXISTS aplicacion.registro_consulta (
 );
 CREATE INDEX IF NOT EXISTS registro_por_fecha ON aplicacion.registro_consulta (creado_en DESC);
 CREATE INDEX IF NOT EXISTS registro_por_usuario ON aplicacion.registro_consulta (usuario_id, creado_en DESC);
+-- CTR-001 · POST /valoracion busca la respuesta por usuario y trace_id.
+CREATE INDEX IF NOT EXISTS registro_por_trace ON aplicacion.registro_consulta (usuario_id, trace_id);
 
--- Valoración de utilidad de una respuesta (CTR-003 §5.3: la gestiona Backend y se une al registro por trace_id).
--- Una por turno y usuario: si el usuario vuelve a valorar, se sobrescribe. Se conserva aunque se borre el chat.
+-- CTR-001 · Valoración de la utilidad de una respuesta. Una por usuario y respuesta (trace_id): valorar
+-- de nuevo la misma respuesta actualiza la fila. No hay clave foránea a registro_consulta porque su
+-- trace_id no es único; la pertenencia se comprueba contra el registro al guardar.
 CREATE TABLE IF NOT EXISTS aplicacion.valoracion (
-    trace_id        TEXT        NOT NULL CHECK (trace_id <> '' AND length(trace_id) <= 128),
+    id              BIGSERIAL   PRIMARY KEY,
+    trace_id        TEXT        NOT NULL CHECK (trace_id <> ''),
     usuario_id      BIGINT      NOT NULL REFERENCES aplicacion.usuario (id) ON DELETE CASCADE,
     util            BOOLEAN     NOT NULL,
-    comentario      TEXT        CHECK (length(comentario) <= 1000),
     creado_en       TIMESTAMPTZ NOT NULL DEFAULT now(),
     actualizado_en  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    PRIMARY KEY (trace_id, usuario_id)
+    UNIQUE (usuario_id, trace_id)
 );
-CREATE INDEX IF NOT EXISTS valoracion_por_fecha ON aplicacion.valoracion (actualizado_en DESC);

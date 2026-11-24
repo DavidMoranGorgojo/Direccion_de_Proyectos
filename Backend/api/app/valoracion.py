@@ -1,89 +1,63 @@
-"""Valoración de utilidad de una respuesta (POST /valoracion).
+"""CTR-001 · Valoración de la utilidad de una respuesta.
 
-CTR-003 §5.3 deja la valoración en manos del Backend: llega desde el Frontend y se une al registro
-del turno por su trace_id. Ningún contrato fija todavía el formato (punto abierto de CTR-003), así
-que se usa el mismo que el campo «feedback» del Agente 1: {"util": bool, "comentario": texto | null}.
+  POST /valoracion {"trace_id": str, "util": bool}  ->  200 {"trace_id", "util"}
 
-  POST /valoracion  {"trace_id": "t-9f3a21", "util": true, "comentario": "Me ha servido"}
-
-- Exige la sesión del usuario (CTR-005). Solo se puede valorar un turno propio: el trace_id tiene
-  que estar en el registro de consultas de ese usuario; si no, 404 consulta_no_encontrada.
-- Una valoración por turno y usuario. La primera devuelve 201; si se vuelve a enviar, se
-  sobrescribe y devuelve 200 (idempotente, como POST /registros de CTR-003).
-- El registro (GET /consultas y /consultas/mias) devuelve la valoración de cada turno.
+Exige sesión (CTR-005). Solo se valoran respuestas del propio usuario con estado "respuesta" que consten
+en el registro de consultas (CTR-003). Un trace_id inexistente, ajeno o de una respuesta que no es
+"respuesta" da el mismo 404 `respuesta_no_encontrada`, para no revelar si existe. Valorar otra vez la
+misma respuesta actualiza la valoración. Errores: 401 sesion_caducada, 403 acceso_denegado, 404, 422
+entrada_invalida, 429 demasiadas_valoraciones (con Retry-After), 500 error_interno, 503
+servicio_no_disponible.
 """
 
-from datetime import timezone
+import logging
 from typing import Annotated
 
 import psycopg
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, StrictBool, field_validator
+from pydantic import BaseModel, Field, StrictBool
 
+from . import limite_consultas
 from .links import connect
 from .sesiones import NO_DISPONIBLE, usuario_actual
 
-router = APIRouter(tags=["Valoración de respuestas (CTR-003)"])
-
-MAX_COMENTARIO = 1000
-NO_ENCONTRADA = {"codigo_error": "consulta_no_encontrada", "mensaje": "La consulta no existe."}
+log = logging.getLogger("arsoft.backend")
+router = APIRouter(prefix="/valoracion", tags=["Valoración (CTR-001)"])
+RESPUESTA_NO_ENCONTRADA = {"codigo_error": "respuesta_no_encontrada", "mensaje": "La respuesta no existe."}
+DEMASIADAS = {"codigo_error": "demasiadas_valoraciones",
+              "mensaje": "Demasiadas valoraciones seguidas. Espera un momento."}
 
 
 class Valoracion(BaseModel):
     trace_id: str = Field(min_length=1, max_length=128)
-    util: StrictBool
-    comentario: str | None = Field(default=None, max_length=MAX_COMENTARIO)
-
-    @field_validator("trace_id", mode="before")
-    @classmethod
-    def _sin_espacios(cls, valor):
-        return valor.strip() if isinstance(valor, str) else valor
-
-    @field_validator("comentario")
-    @classmethod
-    def _vacio_es_nulo(cls, valor: str | None) -> str | None:
-        valor = (valor or "").strip()
-        return valor or None
+    util: StrictBool  # solo true/false: 1, "true" o null no valen
 
 
-class ValoracionGuardada(BaseModel):
-    trace_id: str
-    util: bool
-    comentario: str | None
-    actualizado_en: str
-
-
-def guardar_valoracion(conn, *, usuario_id: int, datos: Valoracion) -> tuple[dict, bool] | None:
-    """Guarda la valoración. Devuelve (fila, es_nueva), o None si el turno no es del usuario."""
-    propio = conn.execute("""
-        SELECT 1 FROM aplicacion.registro_consulta
-        WHERE trace_id=%s AND usuario_id=%s AND tipo='consulta' LIMIT 1
-    """, (datos.trace_id, usuario_id)).fetchone()
-    if not propio:
-        return None
+def guardar(conn, usuario_id: int, trace_id: str, util: bool) -> bool | None:
+    """Inserta o actualiza la valoración si la respuesta es del usuario. None si no hay tal respuesta."""
     fila = conn.execute("""
-        INSERT INTO aplicacion.valoracion (trace_id, usuario_id, util, comentario)
-        VALUES (%s, %s, %s, %s)
-        ON CONFLICT (trace_id, usuario_id) DO UPDATE
-            SET util = EXCLUDED.util, comentario = EXCLUDED.comentario, actualizado_en = now()
-        RETURNING trace_id, util, comentario, actualizado_en, (xmax = 0) AS nueva
-    """, (datos.trace_id, usuario_id, datos.util, datos.comentario)).fetchone()
-    return fila, fila.pop("nueva")
+        INSERT INTO aplicacion.valoracion (trace_id, usuario_id, util)
+        SELECT %(t)s, %(u)s, %(util)s
+        WHERE EXISTS (SELECT 1 FROM aplicacion.registro_consulta
+                      WHERE trace_id = %(t)s AND usuario_id = %(u)s AND tipo = 'consulta' AND estado = 'respuesta')
+        ON CONFLICT (usuario_id, trace_id) DO UPDATE SET util = EXCLUDED.util, actualizado_en = now()
+        RETURNING util
+    """, {"t": trace_id, "u": usuario_id, "util": util}).fetchone()
+    return fila["util"] if fila else None
 
 
-@router.post("/valoracion", response_model=ValoracionGuardada, status_code=201,
-             responses={200: {"description": "Valoración actualizada (ya existía)"},
-                        404: {"description": "El trace_id no es de una consulta del usuario"}})
+@router.post("")
 def valorar(datos: Valoracion, usuario: Annotated[dict, Depends(usuario_actual)]):
+    espera = limite_consultas.admitir(usuario["id"], "valoracion")
+    if espera:
+        raise HTTPException(429, headers={"Retry-After": str(espera)}, detail=DEMASIADAS)
     try:
         with connect() as conn:
-            resultado = guardar_valoracion(conn, usuario_id=usuario["id"], datos=datos)
+            util = guardar(conn, usuario["id"], datos.trace_id, datos.util)
     except psycopg.Error:
+        # También cubre una tabla sin migrar (UndefinedTable): el cliente ve 503, el motivo queda en el log.
+        log.exception("No se pudo guardar la valoración")
         raise HTTPException(503, detail=NO_DISPONIBLE)
-    if resultado is None:
-        raise HTTPException(404, detail=NO_ENCONTRADA)
-    fila, nueva = resultado
-    fecha = fila["actualizado_en"].astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
-    cuerpo = ValoracionGuardada(**{**fila, "actualizado_en": fecha}).model_dump()
-    return JSONResponse(cuerpo, status_code=201 if nueva else 200)
+    if util is None:
+        raise HTTPException(404, detail=RESPUESTA_NO_ENCONTRADA)
+    return {"trace_id": datos.trace_id, "util": util}

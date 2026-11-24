@@ -53,7 +53,7 @@ app.include_router(crear_router_vectorial(connect, service_access))  # POST /con
 app.include_router(sesiones)
 app.include_router(historial)
 app.include_router(registro)
-app.include_router(valoracion)  # POST /valoracion (CTR-003 §5.3)
+app.include_router(valoracion)  # POST /valoracion (CTR-001)
 
 
 class Pregunta(BaseModel):

@@ -5,7 +5,7 @@ ENV_FILE="${ARSOFT_LOCAL_ENV:-$HERE/.env.local}"
 IMAGES="${ARSOFT_IMAGES_DIR:-$HOME/arsoft-images}"
 STATE="${ARSOFT_STATE_DIR:-$HOME/arsoft-state}"
 [[ -f "$ENV_FILE" ]] || { echo "Falta $ENV_FILE. Copia .env.local.example y configura PostgreSQL." >&2; exit 2; }
-source "$ENV_FILE"
+source <(sed 's/\r$//' "$ENV_FILE")
 source "$HERE/database-url.sh"
 : "${ARSOFT_SERVICE_TOKEN:?Configura ARSOFT_SERVICE_TOKEN en el archivo local de entorno}"
 for name in postgres backend; do
@@ -38,6 +38,10 @@ for attempt in {1..40}; do
   sleep 2
 done
 
+# Apply idempotent user/chat schema for databases created before the second init script existed.
+APPTAINERENV_PGPASSWORD="$POSTGRES_PASSWORD" apptainer exec --cleanenv instance://arsoft-db \
+  psql -X -w -h 127.0.0.1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+  -f /docker-entrypoint-initdb.d/02_usuarios.sql >/dev/null
 if ! grep -q '^arsoft-api[[:space:]]' <<< "$instances"; then
   APPTAINERENV_ARSOFT_SERVICE_TOKEN="${ARSOFT_SERVICE_TOKEN:-}" \
   APPTAINERENV_ARSOFT_JWT_SECRET="${ARSOFT_JWT_SECRET:-}" \

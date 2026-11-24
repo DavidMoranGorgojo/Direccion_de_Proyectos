@@ -52,6 +52,7 @@ Las respuestas son **de ejemplo**, no las del asistente real; sirve para desarro
    | Una frase con `tiempo` o `receta` | Fuera de ámbito (`fuera_de_ambito`) |
    | Cualquier otra frase | Sin evidencia (`sin_evidencia`) |
    | Una frase con `simular_error`, `error_simulado` o `timeout` | Error 503 del motor de búsqueda (`error`) |
+   | Una frase con `servidor_caido`, `backend_caido` o `agentes_caido` | Servicio no disponible (`error`) |
    | Usuario `rate_limit` en el login | Error 429 (demasiados intentos) |
    | Contraseña incorrecta | Error 401 (credenciales inválidas) |
 
@@ -76,6 +77,7 @@ La ventana muestra el aviso *"Modo simulado: sin backend conectado"* mientras se
    ARSOFT_LOGIN_PATH=/auth/login
    ARSOFT_HISTORIAL_PATH=/chats
    ARSOFT_CONSULTA_PATH=/consulta
+   ARSOFT_VALORACION_PATH=/valoracion
    ARSOFT_TIMEOUT_S=60
    ```
 4. Ejecuta igual que antes: `python Frontend/main.py`. El inicio de sesión ya lo valida el Backend.
@@ -104,6 +106,7 @@ Toda la configuración se lee en `Frontend/config.py`. Cada valor se toma, por o
 | `ARSOFT_LOGIN_PATH` | `/auth/login` | Ruta de inicio de sesión (CTR-005). |
 | `ARSOFT_HISTORIAL_PATH` | `/chats` | Ruta del historial de conversaciones (CTR-006). |
 | `ARSOFT_CONSULTA_PATH` | `/consulta` | Ruta de consulta al asistente (CTR-001). Confirmada con Backend. |
+| `ARSOFT_VALORACION_PATH` | `/valoracion` | Ruta para valorar una respuesta con 👍 / 👎 (CTR-001). |
 | `ARSOFT_TIMEOUT_S` | `60` | Tiempo máximo de cada petición, en segundos. Un valor no válido usa 60. |
 | `ARSOFT_ALLOW_HTTP` | `0` | `1` permite `http://` hacia servidores no locales (solo pruebas). |
 | `ARSOFT_MOCK_EMPTY_HISTORY` | `0` | `1` hace que el simulador devuelva el historial vacío. |
@@ -164,7 +167,7 @@ python -m unittest discover -s Test/test_Frontend -p "test_*.py"
 Estado verificado de la integración tras la batería de pruebas contra el Backend real:
 
 1. **Rutas (Endpoints HTTP)**:
-   - **CTR-001 (Consulta)**: Ruta confirmada en el Backend como `POST /consulta` (en `Frontend/services/api.py` figura provisionalmente como `/agentes/consulta` a la espera de unificación de contrato).
+   - **CTR-001 (Consulta)**: Ruta confirmada en el Backend como `POST /consulta`. `/agentes/consulta` es únicamente la ruta interna Backend → Agentes.
    - **CTR-006 (Historial)**: Ruta confirmada como `GET /chats`. También existen en Backend `PATCH /chats/{id}` y `DELETE /chats/{id}`.
    - **CTR-005 (Login)**: Confirmado en `POST /auth/login`. Devuelve `token` (JWT), `usuario` y `expires_in`.
 
@@ -186,6 +189,7 @@ Valores por defecto de `config.py`; si cambian, basta con modificarlos en `.env`
 | CTR-005 Login | `POST /auth/login` (`ARSOFT_LOGIN_PATH`) | Confirmada. Cuerpo `{"usuario", "contrasena"}`; devuelve `token`. |
 | CTR-001 Consulta | `POST /consulta` (`ARSOFT_CONSULTA_PATH`) | Confirmada. `/agentes/consulta` es la ruta interna Backend → Agentes; el Frontend no la usa. |
 | CTR-006 Historial | `GET /chats` (`ARSOFT_HISTORIAL_PATH`) | Confirmada. Respuesta `{"chats": [...], "total": n}`. |
+| CTR-001 Valoración | `POST /valoracion` (`ARSOFT_VALORACION_PATH`) | Confirmada en Backend. Cuerpo `{"trace_id", "util"}` (`util` es `true` o `false`); devuelve `{"trace_id", "util"}`. |
 
 - **`conversacion_id`:** la primera pregunta de un chat nuevo lleva `conversacion_id` vacío; el Backend genera el ID y lo devuelve en la respuesta, y el Frontend lo reutiliza (`Conversation.server_id`). Un chat cargado del historial se continúa con su propio `conversacion_id`. El UUID local de `Conversation.id` solo identifica el chat en la interfaz.
 - **Agentes:** `Agente1` conserva ese identificador y su memoria entre turnos. La respuesta de CTR-001 trae `trace_id`, `estado`, `texto`, `fuentes` y `codigo_error`; los fallos controlados de Agentes llegan como HTTP 200 con `estado: "error"`.
@@ -203,7 +207,39 @@ Valores por defecto de `config.py`; si cambian, basta con modificarlos en `.env`
 
   Comprobado contra el Backend real en `Test/test_Frontend/test_conexion_real.py` (requiere `ARSOFT_TEST_DATABASE_URL`).
 
+- **Valoración de respuestas:** cada respuesta del asistente con estado `respuesta` y `trace_id` muestra los botones 👍 y 👎 (el Backend rechaza con 404 cualquier otro estado, así que en el resto no aparecen). Se puede cambiar la valoración pulsando el otro botón. La valoración se guarda **solo en memoria** mientras la aplicación está abierta: `GET /chats` no la devuelve, así que al recargar el historial los botones salen sin marcar. Si el envío falla, el botón vuelve a su valor anterior y aparece un texto discreto bajo la respuesta; si la sesión ha caducado se muestra el aviso y se vuelve al login.
+
+  | HTTP de `/valoracion` | Qué muestra el Frontend |
+  |---|---|
+  | 401 / 403 | «Tu sesión ha caducado…» y vuelta al login. |
+  | 404 | «Esta respuesta ya no se puede valorar.» |
+  | 429 | «Demasiadas valoraciones seguidas. Espera un momento.» |
+  | 422, 5xx, JSON no válido, sin conexión, tiempo agotado | «No se pudo enviar tu valoración. Inténtalo de nuevo.» |
+
+- **Errores de login e historial:**
+
+  | Pantalla | HTTP | Qué muestra el Frontend |
+  |---|---|---|
+  | Login | 401 | Mensaje del servidor o «Usuario o contraseña incorrectos». |
+  | Login | 403 | «No tienes permiso para entrar. Habla con el administrador.» |
+  | Login | 429 | «Demasiados intentos. Espera un momento antes de reintentar.» |
+  | Login | 5xx | «El servidor ha tenido un problema. Inténtalo más tarde.» |
+  | Historial | 401 / 403 | «Tu sesión ha caducado…» y vuelta al login. |
+  | Historial | 429 | «Demasiadas peticiones. Espera un momento y reintenta.» |
+  | Historial | 5xx | «No se pudo cargar el historial. Inténtalo más tarde.» |
+
 Pendiente de acordar entre departamentos: renovación del token y endpoints adicionales de sesión (logout, validación).
+
+### 5.1 Cierre de versión estable — 24-11-2026
+
+Queda congelado para CTR-001 el acuerdo de integración siguiente:
+
+- Frontend → Backend: `POST /consulta`.
+- Primer mensaje de un chat nuevo: `conversacion_id` vacío; Backend devuelve el identificador oficial.
+- Mensajes posteriores o chats cargados: se reutiliza el mismo `conversacion_id` en Backend y Agentes.
+- Sesión: `Authorization: Bearer <token>`; 401/403 se tratan como sesión caducada.
+- Respuestas admitidas: `respuesta`, `aclaracion`, `sin_evidencia`, `fuera_de_ambito` y `error`.
+- Timeout y servidor inaccesible se muestran como errores controlados y no bloquean la interfaz.
 
 ---
 

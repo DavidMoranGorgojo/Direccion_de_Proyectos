@@ -388,9 +388,8 @@ class TestFrontendContraBackendReal(unittest.TestCase):
         self.assertEqual(len(hist.conversations), 1)
         self.assertEqual(len(hist.conversations[0].messages), 4)
 
-    def test_discrepancia_ruta_provisional_agentes_consulta_da_404(self):
-        """Demuestra la discrepancia de contrato pendiente de confirmar:
-        la ruta provisional '/agentes/consulta' de Frontend devuelve 404 en el Backend real."""
+    def test_ruta_interna_de_agentes_no_es_publica(self):
+        """La ruta interna de Agentes no sustituye al endpoint público de CTR-001."""
         self.entrar()
         with patch.object(api, "CONSULTA_PATH", "/agentes/consulta"):
             resp = api.send_message("", PREGUNTA_OK)

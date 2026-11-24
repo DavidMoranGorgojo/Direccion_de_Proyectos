@@ -27,6 +27,7 @@ DEFAULTS = {
     "ARSOFT_LOGIN_PATH": "/auth/login",             # CTR-005
     "ARSOFT_HISTORIAL_PATH": "/chats",              # CTR-006
     "ARSOFT_CONSULTA_PATH": "/consulta",             # CTR-001: ruta confirmada con Backend
+    "ARSOFT_VALORACION_PATH": "/valoracion",         # CTR-001: valoración de una respuesta
     "ARSOFT_TIMEOUT_S": "60",
     "ARSOFT_ALLOW_HTTP": "0",
     "ARSOFT_MOCK_EMPTY_HISTORY": "0",
@@ -102,6 +103,7 @@ API_URL = _s["ARSOFT_API_URL"].strip().rstrip("/")
 LOGIN_PATH = _path(_s["ARSOFT_LOGIN_PATH"], DEFAULTS["ARSOFT_LOGIN_PATH"])
 HISTORIAL_PATH = _path(_s["ARSOFT_HISTORIAL_PATH"], DEFAULTS["ARSOFT_HISTORIAL_PATH"])
 CONSULTA_PATH = _path(_s["ARSOFT_CONSULTA_PATH"], DEFAULTS["ARSOFT_CONSULTA_PATH"])
+VALORACION_PATH = _path(_s["ARSOFT_VALORACION_PATH"], DEFAULTS["ARSOFT_VALORACION_PATH"])
 TIMEOUT_S = _timeout(_s["ARSOFT_TIMEOUT_S"])
 ALLOW_HTTP = _flag(_s["ARSOFT_ALLOW_HTTP"])
 MOCK_EMPTY_HISTORY = _flag(_s["ARSOFT_MOCK_EMPTY_HISTORY"])

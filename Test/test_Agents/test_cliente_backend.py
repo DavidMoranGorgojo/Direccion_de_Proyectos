@@ -253,6 +253,144 @@ class TestClienteBackendAgentes(unittest.TestCase):
         self.assertEqual(len(hist_3), 3)
         self.assertEqual(hist_3[-1]["contenido"], "Mensaje 5")
 
+    def test_11_login_exitoso_y_almacenamiento_token(self):
+        """Verifica que login autentica contra CTR-005 y almacena el JWT en el cliente."""
+        resp = self.cliente.login("admin", "admin123")
+        self.assertEqual(resp["estado"], "autenticado")
+        self.assertIn("simulated-jwt-token-admin", self.cliente.token_auth)
+        self.assertEqual(self.cliente._headers()["Authorization"], f"Bearer {self.cliente.token_auth}")
+
+    def test_12_login_credenciales_invalidas_lanza_error(self):
+        """Verifica que credenciales incorrectas lanzan PermissionError."""
+        with self.assertRaises(PermissionError):
+            self.cliente.login("admin", "password_incorrecta")
+
+    def test_13_obtener_consultas_mias_ctr003(self):
+        """Verifica la consulta de registros propios vía GET /consultas/mias (CTR-003)."""
+        reg = self.cliente.formatear_registro_ctr003(
+            trace_id="t-mias-01",
+            conversacion_id="c-mias",
+            pregunta_original="¿Presión aceite?",
+            pregunta_limpia="presion aceite",
+            entidades={},
+            clasificacion="valida",
+            query={},
+            estado_agente2="suficiente",
+            chunks_usados=["c-01"],
+            scores=[0.9],
+            estado_respuesta="respuesta",
+            respuesta="1.5 bar",
+            citas_verificadas=True,
+            latencia_ms=45
+        )
+        self.cliente.registrar_turno(reg)
+        consultas = self.cliente.obtener_consultas_mias()
+        self.assertGreaterEqual(len(consultas), 1)
+        self.assertEqual(consultas[0]["trace_id"], "t-mias-01")
+
+    def test_14_obtener_todas_consultas_admin_ctr003(self):
+        """Verifica la consulta global de registros para admin vía GET /consultas (CTR-003)."""
+        reg = self.cliente.formatear_registro_ctr003(
+            trace_id="t-admin-01",
+            conversacion_id="c-admin",
+            pregunta_original="¿Bomba agua?",
+            pregunta_limpia="bomba agua",
+            entidades={},
+            clasificacion="valida",
+            query={},
+            estado_agente2="suficiente",
+            chunks_usados=["c-02"],
+            scores=[0.92],
+            estado_respuesta="respuesta",
+            respuesta="12V",
+            citas_verificadas=True,
+            latencia_ms=60
+        )
+        self.cliente.registrar_turno(reg)
+        todas = self.cliente.obtener_todas_consultas(estado="respuesta")
+        self.assertGreaterEqual(len(todas), 1)
+
+    def test_15_restaurar_memoria_agente1_desde_backend_ctr007(self):
+        """Verifica que Agente1 reconstruye su historial desde el Backend (CTR-007)."""
+        from Agents.agente1.core import Agente1
+
+        # Crear chat y mensajes en el simulador
+        chat = self.cliente.crear_chat("Sesión multiturno previa")
+        cid = str(chat["id"])
+        self.cliente.guardar_mensaje(cid, "usuario", "¿Cada cuántos km se cambia el refrigerante?")
+        self.cliente.guardar_mensaje(cid, "asistente", "Cada 60.000 km [chunk_ref_01].")
+
+        # Nuevo agente con ese conversacion_id
+        agente = Agente1(conversacion_id=cid)
+        self.assertEqual(len(agente.historial), 0)
+
+        # Restaurar memoria desde Backend
+        cargados = agente.restaurar_memoria_desde_backend(cliente_backend=self.cliente)
+        self.assertEqual(cargados, 2)
+        self.assertEqual(len(agente.historial), 2)
+        self.assertEqual(agente.historial[0]["role"], "user")
+        self.assertEqual(agente.historial[0]["content"], "¿Cada cuántos km se cambia el refrigerante?")
+        self.assertEqual(agente.historial[1]["role"], "assistant")
+        self.assertEqual(agente.historial[1]["content"], "Cada 60.000 km [chunk_ref_01].")
+
+    def test_16_integracion_automatica_restaurar_memoria_en_core(self):
+        """Verifica que consultar_asistente llama automáticamente a restaurar_memoria_desde_backend."""
+        from Agents.agente1.core import Agente1, consultar_asistente
+        from unittest.mock import Mock
+
+        chat = self.cliente.crear_chat("Sesión automática core")
+        cid = str(chat["id"])
+        self.cliente.guardar_mensaje(cid, "usuario", "¿Cuál es la presión nominal?")
+        self.cliente.guardar_mensaje(cid, "asistente", "La presión nominal es de 1.2 bar [c1].")
+
+        agente = Agente1(conversacion_id=cid, cliente_backend=self.cliente)
+        agente._consultar_llm = Mock(return_value='{"texto_busqueda": "presion", "intencion": "especificacion", "filtros": {"version": "V1.0", "componente": null, "tipo_documento": null, "codigos": []}}')
+        self.assertEqual(len(agente.historial), 0)
+
+        # Al ejecutar un turno, el agente debe restaurar automáticamente la memoria
+        consultar_asistente("¿Y en caliente?", agente)
+        self.assertTrue(getattr(agente, "_memoria_restaurada", False))
+
+    def test_17_integracion_automatica_registrar_turno_en_core(self):
+        """Verifica que consultar_asistente llama automáticamente a cliente_backend.registrar_turno."""
+        from Agents.agente1.core import Agente1, consultar_asistente
+        from unittest.mock import Mock, patch
+
+        agente = Agente1(conversacion_id="c-auto-reg", cliente_backend=self.cliente)
+        agente._consultar_llm = Mock(return_value='{"texto_busqueda": "test", "intencion": "especificacion", "filtros": {"version": "V1.0", "componente": null, "tipo_documento": null, "codigos": []}}')
+
+        with patch.object(self.cliente, "registrar_turno", wraps=self.cliente.registrar_turno) as mock_reg:
+            consultar_asistente("¿Test automático?", agente)
+            mock_reg.assert_called_once()
+            args = mock_reg.call_args[0][0]
+            self.assertEqual(args["conversacion_id"], "c-auto-reg")
+            self.assertIn("trace_id", args)
+
+    def test_18_integracion_automatica_service_restaurar_y_registrar(self):
+        """Verifica que Agents.service.get_session restaura memoria y query registra el turno."""
+        try:
+            import fastapi
+        except ImportError:
+            self.skipTest("fastapi no instalado en este entorno local de pruebas")
+        from Agents.service import get_session, query, Query
+        from unittest.mock import patch, Mock
+
+        chat = self.cliente.crear_chat("Sesión automática service")
+        cid = str(chat["id"])
+        self.cliente.guardar_mensaje(cid, "usuario", "Pregunta previa")
+        self.cliente.guardar_mensaje(cid, "asistente", "Respuesta previa [c1].")
+
+        with patch("Agents.agente1.cliente_backend.ClienteBackendAgentes", return_value=self.cliente):
+            session = get_session(cid)
+            self.assertIsNotNone(session.agent.cliente_backend)
+            self.assertEqual(len(session.agent.historial), 2)
+
+            with patch.object(session.agent, "_consultar_llm", return_value='{"texto_busqueda": "test", "intencion": "especificacion", "filtros": {"version": null, "componente": null, "tipo_documento": null, "codigos": []}}'):
+                with patch.object(self.cliente, "registrar_turno", wraps=self.cliente.registrar_turno) as mock_reg:
+                    resp = query(Query(conversacion_id=cid, pregunta="Consulta desde service"))
+                    self.assertIn("trace_id", resp)
+                    self.assertTrue(mock_reg.called)
+
 
 if __name__ == "__main__":
     unittest.main()

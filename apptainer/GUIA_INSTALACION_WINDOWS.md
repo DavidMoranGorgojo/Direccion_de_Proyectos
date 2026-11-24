@@ -2,7 +2,7 @@
 
 **Windows + WSL 2 + Ubuntu**
 
-Esta guía instala Apptainer en Ubuntu dentro de WSL 2 y abre el Frontend de ARSOFT en modo demo. No se inician Backend, base de datos ni Agentes.
+Esta guía cubre la instalación del entorno y dos formas de ejecutar ARSOFT: la pila completa desde el repositorio y el Frontend aislado en modo demo.
 
 ## Antes de empezar
 
@@ -41,26 +41,39 @@ apptainer version
 
 Si aparece un número de versión, Apptainer está instalado.
 
-## 3. Construir solo el Frontend
+## 3. Instalar y arrancar la pila completa
 
-Abre Ubuntu y ve a la carpeta raíz del repositorio. Por ejemplo:
+Abre Ubuntu y ve a la raíz del repositorio, es decir, la carpeta que contiene `apptainer/`. Si el repositorio está en una unidad de Windows, aparecerá bajo `/mnt/c`; adapta y entrecomilla la ruta si contiene espacios:
 
 ```bash
-cd ~/proyectos/Direccion_de_Proyectos
+cd "/mnt/c/Users/tu-usuario/ruta/al/repositorio"
 ```
 
-Cambia esa ruta por la ubicación donde tengas el proyecto. Construye únicamente la imagen del Frontend:
+Construye y arranca toda la aplicación con este comando:
 
 ```bash
-find . -type f -name "*.sh" -not -path "./.git/*" -print0 |
-  xargs -0 -r sed -i 's/\r$//'
-  
+bash apptainer/start-all.sh
+```
+
+En el primer uso, el comando crea la configuración local, construye las imágenes SIF que falten y levanta PostgreSQL con pgvector, Backend y Agentes. La construcción descarga dependencias, puede pedir la contraseña Linux para `sudo` y necesita varios GB libres. Después verifica el login, el historial y la conexión del Frontend con el Backend, y abre la ventana gráfica.
+
+Para la prueba básica, inicia sesión con `usuario1` y contraseña `usuario123`. Son credenciales de desarrollo local; no las uses en producción.
+
+Si no hay PDF en `data/manuales`, la ingesta se omite y la aplicación continúa con la prueba básica. Para probar respuestas de Agentes, Ollama y el modelo configurado deben estar disponibles; para probar el RAG también hacen falta los documentos. Cierra la ventana o pulsa `Ctrl+C` en la terminal para detener las instancias iniciadas por este comando. La base de datos, las imágenes y las cachés se conservan para el siguiente arranque.
+
+Para más opciones de configuración, consulta [README.md](README.md).
+
+## 4. Construir solo el Frontend (modo demo)
+
+Este flujo es opcional y solo comprueba la interfaz gráfica. Desde la raíz del repositorio, ejecuta:
+
+```bash
 bash apptainer/build-all.sh frontend
 ```
 
 La primera construcción puede tardar varios minutos.
 
-## 4. Abrir y comprobar la demo
+## 5. Abrir y comprobar la demo
 
 En la misma terminal de Ubuntu, fuerza el modo simulado y arranca la interfaz:
 
@@ -69,13 +82,13 @@ unset ARSOFT_API_URL
 bash apptainer/run-frontend.sh
 ```
 
-Debe aparecer la ventana gráfica del Frontend. El modo demo simula las respuestas localmente; no necesita API, Backend, base de datos, Agentes ni servicios externos. Esta guía comprueba que la aplicación abre correctamente.
+Debe aparecer la ventana gráfica del Frontend. El modo demo simula las respuestas localmente; no necesita API, Backend, base de datos, Agentes ni servicios externos.
 
 Para cerrarla, cierra la ventana o vuelve a la terminal y pulsa `Ctrl+C`.
 
 ## Si no aparece la ventana
 
-Comprueba que Windows tiene WSL actualizado. En PowerShell ejecuta `wsl --update`, reinicia Ubuntu y vuelve a lanzar el paso 4. El comando `echo $DISPLAY` dentro de Ubuntu debe mostrar una dirección.
+Comprueba que Windows tiene WSL actualizado. En PowerShell ejecuta `wsl --update`, reinicia Ubuntu y vuelve a lanzar el paso 5. El comando `echo $DISPLAY` dentro de Ubuntu debe mostrar una dirección.
 
 ## Enlaces oficiales
 

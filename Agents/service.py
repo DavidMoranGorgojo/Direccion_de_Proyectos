@@ -98,11 +98,22 @@ def get_session(cid: str) -> Session:
                 if available_id is None:
                     raise HTTPException(503, "Capacidad de conversaciones ocupada.")
                 sessions.pop(available_id)
-            current = Session(Agente1(conversacion_id=cid))
+            agent = Agente1(conversacion_id=cid)
+            # CTR-007: Restauración automática de memoria desde Backend si existen turnos previos
+            with suppress(Exception):
+                from .agente1.cliente_backend import ClienteBackendAgentes
+                agent.cliente_backend = ClienteBackendAgentes()
+                agent.restaurar_memoria_desde_backend(agent.cliente_backend)
+            current = Session(agent)
             sessions[cid] = current
         current.requests += 1
         sessions.move_to_end(cid)
         return current
+
+@app.get("/health")
+def liveness():
+    """Comprueba que el proceso HTTP de Agentes está operativo, sin probar modelos externos."""
+    return {"status": "ok"}
 
 
 @app.post("/agentes/consulta")
@@ -118,6 +129,10 @@ def query(data: Query):
             with lock:
                 if current.discard_after_request:
                     current.agent = Agente1(conversacion_id=cid)
+                    with suppress(Exception):
+                        from .agente1.cliente_backend import ClienteBackendAgentes
+                        current.agent.cliente_backend = ClienteBackendAgentes()
+                        current.agent.restaurar_memoria_desde_backend(current.agent.cliente_backend)
                     current.discard_after_request = False
 
             # Separación estricta entre servicio real y simulador (B11):
@@ -135,6 +150,18 @@ def query(data: Query):
                 agente2_impl = simulador_agente_2
 
             result = consultar_asistente(data.pregunta, current.agent, agente2=agente2_impl)
+
+            # CTR-003: Registro automático de consulta y trazabilidad en Backend
+            with suppress(Exception):
+                from .agente1.cliente_backend import ClienteBackendAgentes
+                ClienteBackendAgentes().registrar_turno({
+                    "trace_id": result.get("trace_id", uuid4().hex),
+                    "conversacion_id": cid,
+                    "pregunta": data.pregunta,
+                    "estado": result.get("estado"),
+                    "codigo_error": result.get("codigo_error", ""),
+                    "fuentes": [f.get("chunk_id") if isinstance(f, dict) else str(f) for f in result.get("fuentes", [])],
+                })
     finally:
         with lock:
             current.touched = time.monotonic()

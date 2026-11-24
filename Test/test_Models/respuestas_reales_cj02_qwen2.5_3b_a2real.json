@@ -1,0 +1,490 @@
+{
+  "modo": "real",
+  "procedencia": "Modo: Sistema Integrado A1 + A2 (98 chunks), Modelo: qwen2.5:3b, Redactor: qwen2.5:3b, Fecha: 2026-11-24T09:14:44.110839+00:00",
+  "respuestas": {
+    "CJ02-001": {
+      "trace_id": "t-525f4b",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-MAN-001@1.1_p1_man_001_01",
+        "HTM240-ESQ-001@1.0_p1_arquitectura_general",
+        "HTM240-OPE-001@1.0_p1_ope_001_01"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 2.66,
+      "fuentes_a1": []
+    },
+    "CJ02-002": {
+      "trace_id": "t-916b3d",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-MAN-001@1.1_p1_man_001_02",
+        "HTM240-CAT-001@1.0_p2_cat_001_05",
+        "HTM240-CAT-001@1.0_p1_cat_001_01"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 24.85,
+      "fuentes_a1": []
+    },
+    "CJ02-003": {
+      "trace_id": "t-000d76",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-CAT-001@1.0_p1_cat_001_04",
+        "HTM240-MAN-001@1.1_p3_man_001_06",
+        "HTM240-MAN-001@1.1_p2_man_001_05"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 20.18,
+      "fuentes_a1": []
+    },
+    "CJ02-004": {
+      "trace_id": "t-6550af",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-SEG-001@1.0_p2_parada_inmediata_escalado",
+        "HTM240-DIC-001@1.0_p1_terminos_p1",
+        "HTM240-HIS-001@1.0_p3_caso_011"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 2.41,
+      "fuentes_a1": []
+    },
+    "CJ02-005": {
+      "trace_id": "t-158410",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-HIS-001@1.0_p1_caso_002",
+        "HTM240-DTC-001@1.0_p2_htm0203",
+        "HTM240-MAN-001@1.1_p1_man_001_03"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 24.97,
+      "fuentes_a1": []
+    },
+    "CJ02-006": {
+      "trace_id": "t-4b2673",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-HIS-001@1.0_p1_caso_002",
+        "HTM240-HIS-001@1.0_p6_caso_023",
+        "HTM240-DIC-001@1.0_p1_terminos_p1"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 29.53,
+      "fuentes_a1": []
+    },
+    "CJ02-007": {
+      "trace_id": "t-6ec1cc",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-CAT-001@1.0_p1_cat_001_01",
+        "HTM240-CAT-001@1.0_p2_cat_001_05",
+        "HTM240-DTC-001@1.0_p1_htm0101"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 27.29,
+      "fuentes_a1": []
+    },
+    "CJ02-008": {
+      "trace_id": "t-88c717",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-MAN-001@1.1_p2_man_001_04",
+        "HTM240-DIA-001@1.1_p2_dia_001_03",
+        "HTM240-DTC-001@1.0_p3_htm0301"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 31.02,
+      "fuentes_a1": []
+    },
+    "CJ02-009": {
+      "trace_id": "t-74f6b4",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-DTC-001@1.0_p2_htm0202",
+        "HTM240-DTC-001@1.0_p5_htm0501",
+        "HTM240-DTC-001@1.0_p4_htm0405"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 25.26,
+      "fuentes_a1": []
+    },
+    "CJ02-010": {
+      "trace_id": "t-e951b7",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-MAN-001@1.1_p4_man_001_07",
+        "HTM240-DTC-001@1.0_p4_htm0406",
+        "HTM240-OPE-001@1.0_p1_ope_001_01"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 2.29,
+      "fuentes_a1": []
+    },
+    "CJ02-011": {
+      "trace_id": "t-bc4817",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10",
+        "HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k",
+        "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 27.3,
+      "fuentes_a1": []
+    },
+    "CJ02-012": {
+      "trace_id": "t-8cce28",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "componente",
+      "chunks_recuperados": [
+        "HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10",
+        "HTM240-CAT-001@1.0_p1_cat_001_02",
+        "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A"
+      ],
+      "respuesta_generada": "¿Qué componente necesitas consultar (1.0)?",
+      "latencia_s": 2.91,
+      "fuentes_a1": []
+    },
+    "CJ02-013": {
+      "trace_id": "t-8ca0e3",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "¿Qué versión necesitas consultar?",
+      "latencia_s": 2.89,
+      "fuentes_a1": []
+    },
+    "CJ02-014": {
+      "trace_id": "t-94525c",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "No se ha encontrado información en la documentación disponible.",
+      "latencia_s": 3.06,
+      "fuentes_a1": []
+    },
+    "CJ02-015": {
+      "trace_id": "t-d8d3d3",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-MAN-001@1.1_p1_man_001_03"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 13.67,
+      "fuentes_a1": []
+    },
+    "CJ02-016": {
+      "trace_id": "t-9918e2",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-CAT-001@1.0_p4_cat_001_11",
+        "HTM240-HIS-001@1.0_p4_caso_015",
+        "HTM240-CAT-001@1.0_p3_cat_001_10"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 9.96,
+      "fuentes_a1": []
+    },
+    "CJ02-017": {
+      "trace_id": "t-91a6b6",
+      "estado_agente2": "suficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-DTC-001@1.0_p5_htm0501"
+      ],
+      "respuesta_generada": "Severidad: Media. [HTM240-DTC-001@1.0_p5_htm0501]\nDescripción: se detectan cortes breves de alimentación hacia las bombas CMP-02 o CMP-03. [HTM240-DTC-001@1.0_p5_htm0501]\nPosibles causas: contactos oxidados del relé CMP-25; bobina dañada. [HTM240-DTC-001@1.0_p5_htm0501]\nSíntomas: fallo intermitente de bombas; testigos intermitentes TES-02, TES-06. [HTM240-DTC-001@1.0_p5_htm0501]\nProcedimiento: HTM240-DIA-001 > 4.9. [HTM240-DTC-001@1.0_p5_htm0501]\nRiesgo: Medio. [HTM240-DTC-001@1.0_p5_htm0501]",
+      "latencia_s": 15.44,
+      "fuentes_a1": [
+        "HTM240-DTC-001@1.0_p5_htm0501"
+      ]
+    },
+    "CJ02-018": {
+      "trace_id": "t-2d4174",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-CAT-001@1.0_p1_cat_001_02",
+        "HTM240-MAN-001@1.1_p1_man_001_03",
+        "HTM240-DTC-001@1.0_p2_htm0203"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 26.31,
+      "fuentes_a1": []
+    },
+    "CJ02-019": {
+      "trace_id": "t-f081cd",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k",
+        "HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k",
+        "HTM240-MNT-001@1.0_p1_mnt_001_02"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 3.31,
+      "fuentes_a1": []
+    },
+    "CJ02-020": {
+      "trace_id": "t-35c109",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "No se ha encontrado información en la documentación disponible.",
+      "latencia_s": 3.62,
+      "fuentes_a1": []
+    },
+    "CJ02-021": {
+      "trace_id": "t-8ed2f7",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A",
+        "HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10",
+        "HTM240-MAN-001@1.1_p4_man_001_08"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 26.51,
+      "fuentes_a1": []
+    },
+    "CJ02-022": {
+      "trace_id": "t-bd6874",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "¿Qué versión necesitas consultar?",
+      "latencia_s": 3.05,
+      "fuentes_a1": []
+    },
+    "CJ02-023": {
+      "trace_id": "t-fecc97",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k",
+        "HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k",
+        "HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 3.26,
+      "fuentes_a1": []
+    },
+    "CJ02-024": {
+      "trace_id": "t-ac6e53",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "No se ha encontrado información en la documentación disponible.",
+      "latencia_s": 3.3,
+      "fuentes_a1": []
+    },
+    "CJ02-025": {
+      "trace_id": "t-a72585",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-DTC-001@1.0_p1_htm0142"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 14.44,
+      "fuentes_a1": []
+    },
+    "CJ02-026": {
+      "trace_id": "t-4d2b1a",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25",
+        "HTM240-DTC-001@1.0_p5_htm0501",
+        "HTM240-HIS-001@1.0_p2_caso_005"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 28.39,
+      "fuentes_a1": []
+    },
+    "CJ02-027": {
+      "trace_id": "t-4e7601",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-DTC-001@1.0_p4_htm0405",
+        "HTM240-DIA-001@1.1_p4_dia_001_06",
+        "HTM240-MNT-001@1.0_p2_mnt_001_03"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 27.48,
+      "fuentes_a1": []
+    },
+    "CJ02-028": {
+      "trace_id": "t-4d5f32",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-DTC-001@1.0_p1_htm0142_v20",
+        "HTM240-BOL-003@1.0_p1_significado_HTM0142_v20",
+        "HTM240-HIS-001@1.0_p4_caso_015"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 2.81,
+      "fuentes_a1": []
+    },
+    "CJ02-029": {
+      "trace_id": "t-933708",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11",
+        "HTM240-ESQ-001@1.0_p1_arquitectura_general",
+        "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 2.77,
+      "fuentes_a1": []
+    },
+    "CJ02-030": {
+      "trace_id": "t-efc2de",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-HIS-001@1.0_p4_caso_013",
+        "HTM240-DIC-001@1.0_p1_terminos_p1",
+        "HTM240-DIC-001@1.0_p2_terminos_p2"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 2.07,
+      "fuentes_a1": []
+    },
+    "CJ02-031": {
+      "trace_id": "t-5fc713",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-HIS-001@1.0_p5_caso_019",
+        "HTM240-CAT-001@1.0_p3_cat_001_10",
+        "HTM240-CAT-001@1.0_p4_cat_001_11"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 2.39,
+      "fuentes_a1": []
+    },
+    "CJ02-032": {
+      "trace_id": "t-7313bf",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A",
+        "HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11",
+        "HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 2.47,
+      "fuentes_a1": []
+    },
+    "CJ02-033": {
+      "trace_id": "t-43dcc5",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales.",
+      "latencia_s": 0.24,
+      "fuentes_a1": []
+    },
+    "CJ02-034": {
+      "trace_id": "t-2677c9",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "componente",
+      "chunks_recuperados": [
+        "HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11",
+        "HTM240-MAN-001@1.1_p1_man_001_02",
+        "HTM240-CAT-001@1.0_p1_cat_001_02"
+      ],
+      "respuesta_generada": "¿Qué componente necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 2.5,
+      "fuentes_a1": []
+    },
+    "CJ02-035": {
+      "trace_id": "t-cb9c35",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-MAN-001@1.1_p1_man_001_02",
+        "HTM240-CAT-001@1.0_p3_cat_001_10",
+        "HTM240-DIC-001@1.0_p2_terminos_p2"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 2.16,
+      "fuentes_a1": []
+    },
+    "CJ02-036": {
+      "trace_id": "t-7a699e",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-OPE-001@1.0_p2_ope_001_03",
+        "HTM240-CAT-001@1.0_p1_cat_001_01",
+        "HTM240-CAT-001@1.0_p2_cat_001_05"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 6.77,
+      "fuentes_a1": []
+    },
+    "CJ02-037": {
+      "trace_id": "t-1812eb",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-HIS-001@1.0_p1_caso_001",
+        "HTM240-HIS-001@1.0_p6_caso_022",
+        "HTM240-HIS-001@1.0_p4_caso_012"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 2.75,
+      "fuentes_a1": []
+    },
+    "CJ02-038": {
+      "trace_id": "t-7e275d",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-ADV-001@1.1_p1_testigos",
+        "HTM240-ADV-001@1.1_p2_combinaciones",
+        "HTM240-ADV-001@1.1_p2_mensajes"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.1)?",
+      "latencia_s": 2.34,
+      "fuentes_a1": []
+    },
+    "CJ02-039": {
+      "trace_id": "t-b9970b",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales.",
+      "latencia_s": 0.25,
+      "fuentes_a1": []
+    },
+    "CJ02-040": {
+      "trace_id": "t-91fbc1",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales.",
+      "latencia_s": 0.24,
+      "fuentes_a1": []
+    }
+  }
+}

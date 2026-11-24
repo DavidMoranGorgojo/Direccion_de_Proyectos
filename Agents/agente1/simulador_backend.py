@@ -43,7 +43,7 @@ class EstadoSimulador:
 
     def reset(self):
         self.registros: Dict[str, Dict[str, Any]] = {}
-        self.chats: Dict[int, Dict[str, Any]] = {}
+        self.chats: Dict[Any, Dict[str, Any]] = {}
         self.next_chat_id = 1
         self.next_msg_id = 1
         self.simular_503 = False
@@ -101,6 +101,45 @@ class ManejadorSimuladorBackend(BaseHTTPRequestHandler):
 
         parsed = urlparse(self.path)
         ruta = parsed.path
+
+        # ---------------------------------------------------------------------
+        # CTR-005: POST /auth/login
+        # ---------------------------------------------------------------------
+        if ruta == "/auth/login":
+            if not cuerpo or not isinstance(cuerpo, dict):
+                return self._responder_json(422, {
+                    "estado": "no_autenticado",
+                    "codigo_error": "datos_incompletos",
+                    "mensaje": "Faltan datos o el formato es incorrecto."
+                })
+            usuario = cuerpo.get("usuario")
+            contrasena = cuerpo.get("contrasena")
+            if not usuario or not contrasena:
+                return self._responder_json(422, {
+                    "estado": "no_autenticado",
+                    "codigo_error": "datos_incompletos",
+                    "mensaje": "Faltan datos o el formato es incorrecto."
+                })
+            if (usuario == "admin" and contrasena == "admin123") or (usuario == "usuario1" and contrasena == "usuario123") or contrasena == "valida":
+                token = f"simulated-jwt-token-{usuario}"
+                return self._responder_json(200, {
+                    "estado": "autenticado",
+                    "mensaje": "Inicio de sesión correcto.",
+                    "usuario": {
+                        "id": 1 if usuario == "admin" else 2,
+                        "nombre_usuario": usuario,
+                        "nombre": usuario.capitalize(),
+                        "rol": "admin" if usuario == "admin" else "usuario"
+                    },
+                    "token": token,
+                    "token_type": "bearer",
+                    "expires_in": 28800
+                })
+            return self._responder_json(401, {
+                "estado": "no_autenticado",
+                "codigo_error": "credenciales_invalidas",
+                "mensaje": "Usuario o contraseña incorrectos."
+            })
 
         # ---------------------------------------------------------------------
         # CTR-003: POST /registros
@@ -190,25 +229,38 @@ class ManejadorSimuladorBackend(BaseHTTPRequestHandler):
         qs = parse_qs(parsed.query)
 
         # ---------------------------------------------------------------------
-        # CTR-003: GET /registros
+        # CTR-003: GET /registros y GET /consultas (mias y todas)
         # ---------------------------------------------------------------------
         if ruta == "/registros":
             return self._responder_json(200, list(ESTADO_GLOBAL.registros.values()))
 
+        if ruta == "/consultas/mias":
+            lista = list(ESTADO_GLOBAL.registros.values())
+            limit = int(qs.get("limit", [50])[0])
+            offset = int(qs.get("offset", [0])[0])
+            return self._responder_json(200, {"consultas": lista[offset:offset+limit]})
+
+        if ruta == "/consultas":
+            lista = list(ESTADO_GLOBAL.registros.values())
+            estado = qs.get("estado", [None])[0]
+            if estado:
+                lista = [r for r in lista if r.get("estado") == estado or r.get("estado_respuesta") == estado]
+            limit = int(qs.get("limit", [100])[0])
+            offset = int(qs.get("offset", [0])[0])
+            return self._responder_json(200, {"consultas": lista[offset:offset+limit]})
+
         # ---------------------------------------------------------------------
-        # CTR-006: GET /chats/{id}
+        # CTR-006 / CTR-007: GET /chats/{id}
         # ---------------------------------------------------------------------
         partes = ruta.strip("/").split("/")
         if len(partes) == 2 and partes[0] == "chats":
-            try:
-                chat_id = int(partes[1])
-            except ValueError:
-                return self._responder_json(400, {"error": "ID de chat debe ser numérico"})
+            raw_id = partes[1]
+            chat_id = int(raw_id) if raw_id.isdigit() else raw_id
 
-            if chat_id not in ESTADO_GLOBAL.chats:
-                return self._responder_json(404, {"error": f"Chat {chat_id} no encontrado"})
+            if chat_id not in ESTADO_GLOBAL.chats and raw_id not in ESTADO_GLOBAL.chats:
+                return self._responder_json(404, {"error": f"Chat {raw_id} no encontrado", "codigo_error": "conversacion_no_encontrada"})
 
-            chat = ESTADO_GLOBAL.chats[chat_id]
+            chat = ESTADO_GLOBAL.chats.get(chat_id) or ESTADO_GLOBAL.chats.get(raw_id)
             mensajes = chat["mensajes"]
             limit = qs.get("limit")
             if limit:
@@ -220,6 +272,7 @@ class ManejadorSimuladorBackend(BaseHTTPRequestHandler):
 
             return self._responder_json(200, {
                 "id": chat["id"],
+                "conversacion_id": str(chat["id"]),
                 "titulo": chat["titulo"],
                 "mensajes": mensajes
             })

@@ -12,6 +12,9 @@ Contratos que implementa este módulo:
            401/403 sesión caducada, 404 conversación no encontrada, 422 entrada inválida, 429 demasiadas
            consultas; el resto (5xx, JSON no válido) se muestra como error genérico.
   CTR-006  Historial:  GET /chats  ->  {"chats": [...], "total": n}
+  CTR-001  Valoración: POST /valoracion {"trace_id", "util"} -> 200 {"trace_id", "util"}
+           Errores: 401/403 sesión caducada, 404 respuesta no encontrada, 422 entrada inválida,
+           429 demasiadas valoraciones, 500/503 error del servicio.
   CTR-005  Login: ver services/auth.py
 
 Toda la configuración (URL, rutas, tiempo máximo y modo) se lee en config.py.
@@ -21,6 +24,7 @@ Fuera de entornos locales se exige HTTPS (ARSOFT_ALLOW_HTTP=1 lo desactiva, solo
 """
 from __future__ import annotations
 import json
+import socket
 import time
 from copy import deepcopy
 import urllib.error
@@ -42,14 +46,20 @@ from services import session
 MODO = config.MODO
 API_URL = config.API_URL
 TIMEOUT_S = config.TIMEOUT_S
-CONSULTA_PATH = config.CONSULTA_PATH          # CTR-001: Frontend -> Backend (el Backend reenvía a /agentes/consulta)
+CONSULTA_PATH = config.CONSULTA_PATH          # CTR-001: Frontend -> Backend
 LOGIN_PATH = config.LOGIN_PATH                # CTR-005
 HISTORIAL_PATH = config.HISTORIAL_PATH        # CTR-006
+VALORACION_PATH = config.VALORACION_PATH      # CTR-001: valoración de una respuesta
 SESSION_EXPIRED = "Tu sesión ha caducado. Cierra sesión y vuelve a entrar."
 TOO_MANY_REQUESTS = "Demasiadas consultas seguidas. Espera un momento antes de volver a intentarlo."
 CONVERSATION_NOT_FOUND = "Esta conversación ya no está disponible. Empieza un chat nuevo."
 INVALID_INPUT = "La consulta no se ha podido enviar: faltan datos o el formato es incorrecto."
 MISSING_URL = "Modo real sin servidor configurado: define ARSOFT_API_URL en el archivo .env."
+RATING_FAILED = "No se pudo enviar tu valoración. Inténtalo de nuevo."
+RATING_TOO_MANY = "Demasiadas valoraciones seguidas. Espera un momento."
+RATING_NOT_FOUND = "Esta respuesta ya no se puede valorar."
+HISTORY_TOO_MANY = "Demasiadas peticiones. Espera un momento y reintenta."
+HISTORY_SERVER_ERROR = "No se pudo cargar el historial. Inténtalo más tarde."
 
 
 def is_mock() -> bool:
@@ -63,6 +73,10 @@ def is_mock() -> bool:
 # ------------------------------------------------------------------- HTTP común
 class ConnectionFailed(Exception):
     """No se obtuvo respuesta HTTP (sin conexión, tiempo agotado o conexión no segura)."""
+
+    def __init__(self, message: str = "", code: str = "servicio_no_disponible"):
+        super().__init__(message)
+        self.code = code
 
 
 class ConfigError(ConnectionFailed):
@@ -103,8 +117,10 @@ def call(method: str, path: str, body: dict | None = None) -> tuple[int, dict | 
             status, raw = r.status, r.read()
     except urllib.error.HTTPError as e:
         status, raw = e.code, e.read()
-    except (urllib.error.URLError, TimeoutError, OSError) as e:
-        raise ConnectionFailed(str(e)) from e
+    except (socket.timeout, TimeoutError) as e:
+        raise ConnectionFailed(str(e), "tiempo_agotado") from e
+    except (urllib.error.URLError, OSError) as e:
+        raise ConnectionFailed(str(e), "servicio_no_disponible") from e
     try:
         parsed = json.loads(raw.decode("utf-8"))
     except (ValueError, UnicodeDecodeError):
@@ -119,8 +135,8 @@ def send_message(conversation_id: str, pregunta: str) -> Response:
                             {"conversacion_id": conversation_id, "pregunta": pregunta})
     except ConfigError as e:                   # falta la URL o no es segura: el usuario debe saberlo
         return Response.error(str(e), "configuracion")
-    except ConnectionFailed:
-        return Response.error()
+    except ConnectionFailed as e:
+        return Response.error(codigo=e.code)
     if status in (401, 403):
         return Response.error(SESSION_EXPIRED, "sesion_caducada")
     if status == 429:
@@ -162,6 +178,10 @@ def fetch_history() -> HistoryResult:
         return HistoryResult(False, error="No se ha podido contactar con el servidor.")
     if status in (401, 403):
         return HistoryResult(False, error=SESSION_EXPIRED, session_expired=True)
+    if status == 429:
+        return HistoryResult(False, error=HISTORY_TOO_MANY)
+    if status >= 500:
+        return HistoryResult(False, error=HISTORY_SERVER_ERROR)
     if status == 200 and data is not None and isinstance(data.get("chats"), list):
         try:
             return HistoryResult(True, [Conversation.from_dict(c) for c in data["chats"]])
@@ -175,6 +195,51 @@ class HistoryWorker(QThread):
 
     def run(self) -> None:
         self.done.emit(fetch_history())
+
+
+# ----------------------------------------------------------- valoración (CTR-001)
+@dataclass
+class RatingResult:
+    ok: bool
+    trace_id: str = ""
+    util: bool = False
+    error: str = ""
+    session_expired: bool = False
+
+
+def send_rating(trace_id: str, util: bool) -> RatingResult:
+    """POST /valoracion {"trace_id", "util"}. El Backend solo admite respuestas con estado "respuesta"
+    del propio usuario; valorar de nuevo la misma respuesta cambia la valoración."""
+    def fail(msg: str, expired: bool = False) -> RatingResult:
+        return RatingResult(False, trace_id, util, msg, expired)
+
+    try:
+        status, data = call("POST", VALORACION_PATH, {"trace_id": trace_id, "util": util})
+    except ConfigError as e:
+        return fail(str(e))
+    except ConnectionFailed:
+        return fail(RATING_FAILED)
+    if status in (401, 403):
+        return fail(SESSION_EXPIRED, True)
+    if status == 404:
+        return fail(RATING_NOT_FOUND)
+    if status == 429:
+        return fail(RATING_TOO_MANY)
+    if status == 200 and data is not None and isinstance(data.get("util"), bool):
+        return RatingResult(True, trace_id, data["util"])
+    return fail(RATING_FAILED)                 # 422, 5xx, JSON no válido…: mensaje genérico
+
+
+class RatingWorker(QThread):
+    """Envía la valoración fuera del hilo de la interfaz."""
+    done = Signal(object)  # RatingResult
+
+    def __init__(self, trace_id: str, util: bool):
+        super().__init__()
+        self._args = (trace_id, util)
+
+    def run(self) -> None:
+        self.done.emit(send_rating(*self._args))
 
 
 # ---------------------------------------------------------------- modo simulado
@@ -235,6 +300,10 @@ def _mock_call(method: str, path: str, body: dict | None) -> tuple[int, dict | N
             "mensaje": "Usuario o contraseña incorrectos.",
             "codigo_error": "credenciales_invalidas",
         }
+    if method == "POST" and path == VALORACION_PATH:
+        if not body or not body.get("trace_id") or not isinstance(body.get("util"), bool):
+            return 422, {"codigo_error": "entrada_invalida", "mensaje": "Valoración no válida."}
+        return 200, {"trace_id": body["trace_id"], "util": body["util"]}
     if method == "GET" and path == HISTORIAL_PATH:
         chats = [] if _MOCK_EMPTY_HISTORY else deepcopy(_MOCK_CHATS)
         return 200, {"chats": chats, "total": len(chats)}
@@ -254,6 +323,8 @@ def _mock_call(method: str, path: str, body: dict | None) -> tuple[int, dict | N
 def _mock_response(pregunta: str) -> Response:
     time.sleep(1.2)
     text = pregunta.lower()
+    if any(marker in text for marker in ("servidor_caido", "backend_caido", "agentes_caido")):
+        return Response.error(codigo="servicio_no_disponible")
     if any(marker in text for marker in ("error_simulado", "simular_error", "timeout")):
         return Response.error(
             "Error 503: Motor de búsqueda vectorial BGE-M3 no disponible (timeout > 5s).",

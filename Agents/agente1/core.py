@@ -49,7 +49,10 @@ INTENCIONES_VALIDAS = {
     "diagnostico", "procedimiento", "especificacion", "normativa", "mantenimiento", "otro"
 }
 TIPOS_DOC_VALIDOS = {
-    "manual", "ficha_tecnica", "procedimiento", "normativa", "otro", None
+    "manual", "ficha_tecnica", "procedimiento", "normativa", "otro",
+    "boletin", "catalogo", "codigo_averia", "mantenimiento", "diagnostico",
+    "advertencia", "seguridad", "operacion", "casos_servicio", "esquemas",
+    "diccionario", None
 }
 
 MAPA_SINONIMOS_INTENCION = {
@@ -79,21 +82,37 @@ def normalizar_intencion(v: Any) -> str:
     raise ValueError(f"Intención '{v}' inválida. Debe ser una de {INTENCIONES_VALIDAS}.")
 
 def normalizar_tipo_documento(v: Any) -> Optional[str]:
-    """Mapea tipos de documento variantes al conjunto permitido en CTR-004."""
+    """Mapea tipos de documento variantes al conjunto compatible con Agente 2 (CTR-004)."""
     if not v:
         return None
     v_clean = str(v).strip().lower()
+    if v_clean in {"otro", "none", "null", "general", "cualquiera", "todos"}:
+        return None
     if v_clean in TIPOS_DOC_VALIDOS:
         return v_clean
-    if "manual" in v_clean or "guia" in v_clean:
-        return "manual"
-    if "ficha" in v_clean or "dato" in v_clean:
+    if "boletin" in v_clean or "boletín" in v_clean:
+        return "boletin"
+    if "diccionario" in v_clean or "glosario" in v_clean:
+        return "diccionario"
+    if "catalogo" in v_clean or "catálogo" in v_clean or "ficha" in v_clean or "dato" in v_clean:
         return "ficha_tecnica"
+    if "historial" in v_clean or "caso" in v_clean:
+        return "casos_servicio"
+    if "dtc" in v_clean or "averia" in v_clean or "avería" in v_clean:
+        return "codigo_averia"
+    if "manten" in v_clean or "preventivo" in v_clean:
+        return "mantenimiento"
+    if "esquema" in v_clean or "arquitectura" in v_clean:
+        return "esquemas"
+    if "advertencia" in v_clean or "testigo" in v_clean:
+        return "advertencia"
+    if "manual" in v_clean or "guia" in v_clean or "guía" in v_clean:
+        return "manual"
     if "paso" in v_clean or "proced" in v_clean:
         return "procedimiento"
-    if "norma" in v_clean or "ley" in v_clean:
-        return "normativa"
-    return "otro"
+    if "norma" in v_clean or "ley" in v_clean or "seguridad" in v_clean or "epi" in v_clean:
+        return "seguridad"
+    return None
 
 try:
     from pydantic import BaseModel, Field, field_validator
@@ -365,8 +384,10 @@ Respuesta:
 # 4. AGENTE 1: CLIENTE LLM Y ORQUESTACIÓN (A1-02, A1-03, A1-04)
 # ============================================================================
 class Agente1:
-    def __init__(self, base_url: str = OLLAMA_URL, modelo: str = MODELO_LLM, max_turnos: int = 6, conversacion_id: str = "c-0001", timeout_s: Optional[float] = None):
+    def __init__(self, base_url: str = OLLAMA_URL, modelo: str = MODELO_LLM, max_turnos: int = 6, conversacion_id: str = "c-0001", timeout_s: Optional[float] = None, cliente_backend: Optional[Any] = None, modelo_redactor: Optional[str] = None, fallback_extractivo: bool = False):
         self.modelo = modelo
+        self.modelo_redactor = modelo_redactor or os.environ.get("OLLAMA_MODEL_REDACTOR") or self.modelo
+        self.fallback_extractivo = bool(fallback_extractivo or os.environ.get("AGENTE1_FALLBACK_EXTRACTIVO", "0").lower() in ("1", "true", "yes"))
         self.base_url = base_url
         self.max_turnos = max_turnos
         self.conversacion_id = conversacion_id
@@ -380,6 +401,13 @@ class Agente1:
         self.consulta_pendiente = False
         self._query_pendiente = None
         self._deadline_llm = None
+        self.cliente_backend = cliente_backend
+        if self.cliente_backend is None and (os.environ.get("ARSOFT_BACKEND_URL") or os.environ.get("ARSOFT_SERVICE_TOKEN")):
+            try:
+                from .cliente_backend import ClienteBackendAgentes
+                self.cliente_backend = ClienteBackendAgentes()
+            except Exception:
+                pass
 
     def reset(self):
         """Limpia el historial de la conversación para evitar mezclar sesiones."""
@@ -392,6 +420,36 @@ class Agente1:
         self.aclaraciones_consecutivas = 0
         self.consulta_pendiente = False
         self._query_pendiente = None
+
+    def restaurar_memoria_desde_backend(self, cliente_backend: Optional[Any] = None, limit: int = 6) -> int:
+        """CTR-007: Carga el historial previo desde el Backend (GET /chats/{cid}) para reconstruir el contexto."""
+        if cliente_backend is None:
+            try:
+                from .cliente_backend import ClienteBackendAgentes
+                cliente_backend = ClienteBackendAgentes()
+            except Exception as e:
+                logger.warning(f"No se pudo instanciar ClienteBackendAgentes para CTR-007: {e}")
+                return 0
+        try:
+            mensajes = cliente_backend.obtener_historial(self.conversacion_id, limit=limit)
+        except Exception as e:
+            logger.warning(f"Error al obtener historial CTR-007 desde backend: {e}")
+            return 0
+        if not mensajes:
+            return 0
+        self.historial.clear()
+        cargados = 0
+        for m in mensajes:
+            rol = m.get("role") or m.get("rol")
+            contenido = m.get("contenido")
+            if rol in ("user", "assistant", "usuario", "asistente") and contenido:
+                rol_norm = "user" if rol in ("user", "usuario") else "assistant"
+                self.historial.append({"role": rol_norm, "content": contenido})
+                cargados += 1
+        if len(self.historial) > self.max_turnos * 2:
+            self.historial = self.historial[-self.max_turnos * 2:]
+        logger.info(f"CTR-007: Restaurados {cargados} mensajes de historial para conversación {self.conversacion_id}")
+        return cargados
 
     def pedir_aclaracion(self, entrada: str, mensaje: str) -> dict:
         """Dos repreguntas como máximo; después se abstiene y termina la consulta."""
@@ -1020,6 +1078,39 @@ def verificar_respaldo_extractivo(texto: str, evidencias: list) -> bool:
     return afirmaciones > 0 and not normalizar(texto[posicion:])
 
 
+def _tokens_relevantes(texto: str) -> set:
+    palabras = re.findall(r"[a-záéíóúüñ0-9]+", texto.lower())
+    paradas = {"el", "la", "los", "las", "un", "una", "de", "del", "en", "para", "por", "con",
+               "que", "cual", "como", "cual", "es", "son", "se", "un", "al", "y", "o"}
+    return {p for p in palabras if p not in paradas and len(p) > 2}
+
+
+def redaccion_extractiva(pregunta: str, evidencias: list, max_oraciones: int = 3) -> Optional[str]:
+    """Respuesta determinista sin LLM: oraciones literales del chunk que mejor solapa con la
+    pregunta (las que coinciden primero, el resto del chunk como contexto), cada una con su
+    [chunk_id]. Verificable por construcción; si nada solapa, no responde."""
+    q = _tokens_relevantes(pregunta)
+    if not q:
+        return None
+    mejor = None
+    for orden_ev, ev in enumerate(evidencias):
+        oraciones = [o.strip() for o in re.split(r"(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡])|\n+", ev["texto"]) if o.strip()]
+        puntos = [len(q & _tokens_relevantes(o)) for o in oraciones]
+        total = sum(puntos)
+        if total and (mejor is None or total > mejor[0]):
+            mejor = (total, ev["chunk_id"], oraciones, puntos)
+    if mejor is None:
+        return None
+    _, cid, oraciones, puntos = mejor
+    elegidas = [k for k in sorted(range(len(oraciones)), key=lambda k: (-puntos[k], k)) if puntos[k] > 0][:max_oraciones]
+    for k in range(len(oraciones)):
+        if len(elegidas) >= max_oraciones:
+            break
+        if k not in elegidas:
+            elegidas.append(k)
+    return "\n".join(f"{oraciones[k]} [{cid}]" for k in sorted(elegidas))
+
+
 def redactar_respuesta_con_verificacion(pregunta: str, evidencias: list, agente: Agente1,
                                         aviso_obsoleto: Optional[str] = None) -> dict:
     if not isinstance(evidencias, list) or any(not evidencia_valida(e) for e in evidencias):
@@ -1069,7 +1160,8 @@ def _redactar_respuesta_con_verificacion(
     ]
 
     # INTENTO 1
-    respuesta_1 = agente._consultar_llm(mensajes_base)
+    kw_llm = {"modelo": agente.modelo_redactor} if getattr(agente, "modelo_redactor", agente.modelo) != agente.modelo else {}
+    respuesta_1 = agente._consultar_llm(mensajes_base, **kw_llm)
     if not respuesta_1:
         return {
             "estado": "error",
@@ -1105,7 +1197,7 @@ def _redactar_respuesta_con_verificacion(
         }
     ]
 
-    respuesta_2 = agente._consultar_llm(mensajes_reintento)
+    respuesta_2 = agente._consultar_llm(mensajes_reintento, **kw_llm)
     if respuesta_2:
         check_2 = verificar_citas(respuesta_2, evidencias)
         check_2["respaldo_extractivo"] = verificar_respaldo_extractivo(respuesta_2, evidencias)
@@ -1119,6 +1211,19 @@ def _redactar_respuesta_con_verificacion(
                 "verificacion": check_2,
                 "reintentos": 1
             }
+
+    # Fallback opcional: oraciones literales de las evidencias (verificables por construcción).
+    if getattr(agente, "fallback_extractivo", False):
+        texto_ext = redaccion_extractiva(pregunta, evidencias)
+        if texto_ext:
+            check_ext = verificar_citas(texto_ext, evidencias)
+            check_ext["respaldo_extractivo"] = verificar_respaldo_extractivo(texto_ext, evidencias)
+            check_ext["valido"] = check_ext["valido"] and check_ext["respaldo_extractivo"]
+            if check_ext["valido"]:
+                logger.info("Respuesta generada por fallback extractivo determinista.")
+                texto_final = f"{aviso_obsoleto}\n\n{texto_ext}" if aviso_obsoleto else texto_ext
+                return {"estado": "respuesta", "texto": texto_final, "fuentes": check_ext["citas_validas"],
+                        "verificacion": {**check_ext, "modo": "extractivo"}, "reintentos": 1}
 
     # Si volvió a fallar en el reintento: Error de verificación estricto
     logger.error("Verificación de citas falló tras reintento. Abortando respuesta por seguridad.")
@@ -1395,8 +1500,10 @@ def resolver_evidencias(pregunta: str, respuesta_a2: dict, agente: Agente1, *, v
     if estado == "solo_obsoleto" and vigentes:
         return {"estado": "error", "texto": "Estado de obsolescencia incoherente en Agente 2.", "fuentes": []}
     seleccion = vigentes or evidencias
+    listas_versiones = [set(e["metadata"].get("versiones") or []) for e in seleccion]
+    comparten_version_vehiculo = all(listas_versiones) and bool(set.intersection(*listas_versiones))
     versiones = {e["metadata"]["version"] for e in seleccion if e["metadata"].get("version")}
-    if not version and len(versiones) > 1 and len({e["texto"] for e in seleccion}) > 1:
+    if not version and not comparten_version_vehiculo and len(versiones) > 1 and len({e["texto"] for e in seleccion}) > 1:
         return {"estado": "aclaracion", "texto": "¿Qué versión necesitas consultar (" + ", ".join(sorted(versiones)) + ")?",
                 "fuentes": [], "campo_aclaracion": "version"}
     aviso = None if vigentes else "AVISO: La documentación disponible es OBSOLETA / SUSTITUIDA."
@@ -1411,6 +1518,17 @@ def _ejecutar_turno(pregunta: str, agente: Agente1, agente2, nueva_consulta: boo
     version_pedida = None
     resultado = {"estado": "error", "mensaje": "No se pudo procesar la consulta."}
     evidencias = []
+
+    # CTR-007: Si el agente dispone de cliente de backend y no tiene historial local,
+    # restaurar automáticamente desde el Backend
+    if getattr(agente, "cliente_backend", None) is not None:
+        if not agente.historial and not getattr(agente, "_memoria_restaurada", False):
+            agente._memoria_restaurada = True
+            try:
+                agente.restaurar_memoria_desde_backend(agente.cliente_backend)
+            except Exception as exc:
+                logger.debug("CTR-007: No se pudo restaurar memoria desde Backend: %s", exc)
+
     try:
         with agente.presupuesto_llm():
             resultado = agente.procesar_consulta(pregunta, nueva_consulta=nueva_consulta)
@@ -1460,11 +1578,19 @@ def _ejecutar_turno(pregunta: str, agente: Agente1, agente2, nueva_consulta: boo
     respuesta = {"trace_id": trace, "estado": estado, "texto": final["texto"],
                  "fuentes": fuentes, "codigo_error": codigo}
     # Lista cerrada: no se guardan pregunta, prompt, respuesta, configuración ni excepciones.
-    registrar_turno_auditoria({"trace_id": trace, "conversacion_id": agente.conversacion_id,
+    datos_auditoria = {"trace_id": trace, "conversacion_id": agente.conversacion_id,
                               "estado": estado, "codigo_error": codigo,
                               "estado_agente2": respuesta_a2["estado"] if respuesta_a2 is not None else None,
                               "fuentes": [f["chunk_id"] for f in fuentes],
-                              "latencia_ms": int((time.monotonic() - inicio) * 1000)})
+                              "latencia_ms": int((time.monotonic() - inicio) * 1000)}
+    registrar_turno_auditoria(datos_auditoria)
+
+    # CTR-003: Sincronización automática con Backend (POST /registros) si el agente está conectado
+    if getattr(agente, "cliente_backend", None) is not None:
+        try:
+            agente.cliente_backend.registrar_turno(datos_auditoria)
+        except Exception as exc:
+            logger.debug("CTR-003: No se pudo registrar turno en Backend: %s", exc)
     return {"resultado_agente1": resultado, "respuesta_agente2": respuesta_a2,
             "decision": final["estado"], "respuesta_final": final, "respuesta_ctr001": respuesta}
 

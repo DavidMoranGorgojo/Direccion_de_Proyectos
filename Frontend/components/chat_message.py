@@ -1,10 +1,11 @@
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout,
+                               QWidget)
 
 from components.source_card import SourceCard
 from models.message import Message
 from models.dates import parse
-from models.response import (STATUS_CLARIFY, STATUS_ERROR, STATUS_NO_EVIDENCE,
+from models.response import (STATUS_CLARIFY, STATUS_ERROR, STATUS_NO_EVIDENCE, STATUS_OK,
                              STATUS_OUT_OF_SCOPE)
 
 BADGES = {
@@ -26,8 +27,11 @@ def _badge(text: str, kind: str) -> QLabel:
 class ChatMessage(QWidget):
     """Una fila del chat: burbuja del usuario (derecha) o del asistente (izquierda)."""
 
+    rating_requested = Signal(bool)           # True = útil (👍), False = no útil (👎)
+
     def __init__(self, message: Message | None = None, text: str | None = None, parent=None):
         super().__init__(parent)
+        self.btn_up = self.btn_down = self.rating_error = None   # solo existen en respuestas valorables
         self.bubble = QFrame()
         col = QVBoxLayout(self.bubble)
         col.setContentsMargins(16, 12, 16, 10)
@@ -58,6 +62,8 @@ class ChatMessage(QWidget):
                 col.addWidget(title)
                 for s in message.sources:
                     col.addWidget(SourceCard(s))
+            if message.status == STATUS_OK and message.trace_id:   # el Backend solo valora "respuesta"
+                col.addLayout(self._build_rating(message.rating))
 
         if message is not None and message.timestamp:
             d = parse(message.timestamp)
@@ -75,6 +81,52 @@ class ChatMessage(QWidget):
         else:
             row.addWidget(self.bubble)
             row.addStretch()
+
+    # ------------------------------------------------------------ valoración
+    def _build_rating(self, current: bool | None) -> QHBoxLayout:
+        box = QHBoxLayout()
+        box.setSpacing(6)
+        self.btn_up = self._rate_button("👍", "Respuesta útil", True)
+        self.btn_down = self._rate_button("👎", "Respuesta no útil", False)
+        self.rating_error = QLabel()
+        self.rating_error.setObjectName("ratingError")
+        self.rating_error.setWordWrap(True)
+        self.rating_error.hide()
+        box.addWidget(self.btn_up)
+        box.addWidget(self.btn_down)
+        box.addWidget(self.rating_error)
+        self.set_rating(current)
+        return box
+
+    def _rate_button(self, icon: str, tip: str, util: bool) -> QPushButton:
+        b = QPushButton(icon)
+        b.setObjectName("btnRate")
+        b.setToolTip(tip)
+        b.setCheckable(True)                       # el botón elegido queda marcado (:checked)
+        b.clicked.connect(lambda _=False, u=util: self.rating_requested.emit(u))
+        return b
+
+    def set_rating(self, util: bool | None) -> None:
+        """Marca el botón elegido (None = ninguno)."""
+        if self.btn_up is None:
+            return
+        for btn, value in ((self.btn_up, True), (self.btn_down, False)):
+            btn.setChecked(util is value)
+
+    def set_rating_enabled(self, enabled: bool) -> None:
+        if self.btn_up is not None:
+            self.btn_up.setEnabled(enabled)
+            self.btn_down.setEnabled(enabled)
+
+    def show_rating_error(self, text: str) -> None:
+        if self.rating_error is not None:
+            self.rating_error.setText(text)
+            self.rating_error.show()
+
+    def clear_rating_error(self) -> None:
+        if self.rating_error is not None:
+            self.rating_error.setText("")
+            self.rating_error.hide()
 
     def _add_text(self, layout, text: str, markdown: bool) -> None:
         self.label = QLabel(text)
