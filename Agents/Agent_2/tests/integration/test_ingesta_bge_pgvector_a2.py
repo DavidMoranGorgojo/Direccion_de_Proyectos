@@ -23,9 +23,9 @@ Es opcional: se salta si falta cualquiera de estas piezas.
 
 Ejemplo (Linux/macOS)::
 
-    docker run -d --name pgvector-prueba -e POSTGRES_PASSWORD=postgres \\
-        -e POSTGRES_DB=thermodrive_test -p 5433:5432 pgvector/pgvector:pg16
-    export ARSOFT_TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5433/thermodrive_test
+    # PostgreSQL de pruebas con pgvector, iniciado como instancia de Apptainer.
+    # Debe ser una base aislada de la base de desarrollo.
+    export ARSOFT_TEST_DATABASE_URL=postgresql://usuario:clave@localhost:5432/thermodrive_test
     export ARSOFT_TEST_MANUALES=/ruta/ThermoDrive_HTM240_Alumnos_PDF
     PYTHONPATH=".:shared:Backend/api:Backend/ingesta/src" \\
         python -m pytest Agents/Agent_2/tests/integration -q -rs

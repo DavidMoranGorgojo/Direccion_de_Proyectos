@@ -1,6 +1,6 @@
 -- Esquema «aplicacion»: usuarios (CTR-005), chats y mensajes (CTR-006) y registro de consultas (CTR-003).
--- PostgreSQL ejecuta este script al crear el contenedor (docker-entrypoint-initdb.d), después de
--- 01_conocimiento.sql. No depende del esquema «conocimiento» ni de pgvector.
+-- PostgreSQL ejecuta este script al inicializar por primera vez el directorio de datos,
+-- después de 01_conocimiento.sql. No depende del esquema «conocimiento» ni de pgvector.
 -- Los usuarios de prueba no se crean aquí: ver Backend/readme.md (python -m app.usuarios_prueba).
 
 CREATE SCHEMA IF NOT EXISTS aplicacion;
