@@ -30,8 +30,7 @@ from unittest.mock import patch
 DB = os.getenv("ARSOFT_TEST_DATABASE_URL")
 RAIZ = Path(__file__).resolve().parents[2]
 TOKEN_SERVICIO = "arsoft-integracion-token"
-SQL_CONOCIMIENTO = (RAIZ / "Backend" / "db" / "init" / "01_conocimiento.sql").read_text(encoding="utf-8")
-SQL_USUARIOS = (RAIZ / "Backend" / "db" / "init" / "02_usuarios.sql").read_text(encoding="utf-8")
+SQL_ESQUEMA = (RAIZ / "Backend" / "db" / "init" / "01_conocimiento.sql").read_text(encoding="utf-8")
 CATALOGOS = RAIZ / "Agents" / "Agent_2" / "fixtures" / "catalogos"
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -116,8 +115,7 @@ CHUNKS = [
 def sembrar(conn) -> None:
     conn.execute("DROP SCHEMA IF EXISTS conocimiento CASCADE")
     conn.execute("DROP SCHEMA IF EXISTS aplicacion CASCADE")
-    conn.execute(SQL_CONOCIMIENTO)
-    conn.execute(SQL_USUARIOS)
+    conn.execute(SQL_ESQUEMA)
     conn.execute("""INSERT INTO conocimiento.indice_version (version, modelo_embeddings, dimensiones,
         prefijo_passage, tokenizador, n_chunks, activo) VALUES ('v-integracion', 'BAAI/bge-m3', 1024,
         'passage: ', 'bm25', %s, true)""", (len(CHUNKS),))
