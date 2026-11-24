@@ -12,7 +12,7 @@ From: python@sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e
 %post
     python -m pip install --no-cache-dir \
         --index-url https://download.pytorch.org/whl/cpu \
-        torch==2.5.1
+        torch==2.6.0
 
     python -m pip install --no-cache-dir \
         -r /opt/arsoft/ingesta/requirements.txt
