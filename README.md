@@ -25,8 +25,33 @@ Repositorio de ARSOFT: asistente técnico conversacional sobre la documentación
 |---|---|
 | `Frontend/` | Aplicación de escritorio PySide6 (login, chat, historial). Ver [`Frontend/readme.md`](Frontend/readme.md). |
 | `Backend/` | FastAPI (login, historial, consulta, registro), PostgreSQL con pgvector e ingesta. Ver [`Backend/readme.md`](Backend/readme.md). |
-| `Agents/` | Agentes (RAG con Ollama) y su adaptador HTTP. |
+| `Agents/` | Agentes (RAG con Ollama) y su adaptador HTTP. Ver [`Agents/README.md`](Agents/README.md). |
 | `apptainer/` | Imágenes, scripts de arranque y empaquetado. Ver [`apptainer/README.md`](apptainer/README.md). |
+
+## Cómo arrancar los Agentes (Agente 1 y Agente 2)
+
+El módulo `Agents/` contiene el Asistente Técnico completo:
+- **Servicio HTTP conjunto (FastAPI en puerto 8001):**
+  ```bash
+  # Modo rápido con simulador de Agente 2:
+  uvicorn Agents.service:app --host 0.0.0.0 --port 8001
+
+  # Modo real conectado a Backend y Agente 2 (recuperación vectorial y reranker):
+  USE_REAL_AGENT2=1 ARSOFT_SERVICE_TOKEN="tu-token-secreto" uvicorn Agents.service:app --host 0.0.0.0 --port 8001
+  ```
+- **Modo interactivo en consola (Agente 1 paso a paso):**
+  ```bash
+  python -m Agents.agente1.core
+  ```
+- **Pruebas de Agentes (Pytest):**
+  ```bash
+  pytest Test/test_Agents -v
+  ```
+- **Benchmark Oficial CJ-02 (40 Preguntas):**
+  ```bash
+  python scripts/ejecutar_benchmark_cj02_real.py
+  ```
+  Detalles completos de configuración y variables de entorno en [`Agents/README.md`](Agents/README.md) y [`INFORME_BENCHMARK_CJ02.md`](INFORME_BENCHMARK_CJ02.md).
 
 ## Modos del Frontend
 

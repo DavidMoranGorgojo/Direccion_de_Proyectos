@@ -32,6 +32,7 @@ import uuid
 import time
 import logging
 from pathlib import Path
+from urllib.parse import urlparse
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple
 
@@ -62,6 +63,28 @@ class ClienteBackendAgentes:
     RUTA_REGISTROS = "/registros"
     RUTA_CHATS = "/chats"
 
+    _fallos_por_host: Dict[str, float] = {}
+    _cooldown_fallo_s: float = 3.0
+
+    def _esta_disponible(self) -> bool:
+        parsed = urlparse(self.base_url)
+        host = parsed.hostname or "127.0.0.1"
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        clave = f"{host}:{port}"
+        ahora = time.monotonic()
+        ultimo_fallo = ClienteBackendAgentes._fallos_por_host.get(clave, 0.0)
+        if ahora - ultimo_fallo < ClienteBackendAgentes._cooldown_fallo_s:
+            return False
+        if host in ("localhost", "127.0.0.1"):
+            import socket
+            try:
+                with socket.create_connection((host, port), timeout=0.05):
+                    return True
+            except Exception:
+                ClienteBackendAgentes._fallos_por_host[clave] = time.monotonic()
+                return False
+        return True
+
     def __init__(
         self,
         base_url: Optional[str] = None,
@@ -73,7 +96,18 @@ class ClienteBackendAgentes:
         self.base_url = (base_url or os.environ.get("BACKEND_URL", "http://localhost:8000")).rstrip("/")
         self.ruta_offline = Path(ruta_offline or os.environ.get("AGENTE1_OFFLINE_LOG", "auditoria_offline.jsonl"))
         self.timeout = float(timeout)
-        self.token_auth = token_auth or os.environ.get("BACKEND_TOKEN")
+        self.token_auth = token_auth or os.environ.get("ARSOFT_SERVICE_TOKEN") or os.environ.get("BACKEND_TOKEN")
+
+    def login(self, usuario: str, contrasena: str) -> Dict[str, Any]:
+        """Autentica contra el endpoint CTR-005 (POST /auth/login) y almacena el JWT en self.token_auth."""
+        ruta = "/auth/login"
+        status_code, respuesta = self._post_http(ruta, {"usuario": usuario, "contrasena": contrasena})
+        if status_code == 200 and "token" in respuesta:
+            self.token_auth = respuesta["token"]
+            logger.info(f"Autenticación exitosa en Backend para usuario '{usuario}'")
+            return respuesta
+        logger.warning(f"Fallo en login de Backend (HTTP {status_code}): {respuesta}")
+        raise PermissionError(f"Error en login (HTTP {status_code}): {respuesta.get('mensaje', respuesta)}")
 
     def _headers(self) -> Dict[str, str]:
         """Encabezados HTTP estándar con autenticación Bearer opcional."""
@@ -85,17 +119,23 @@ class ClienteBackendAgentes:
     def _post_http(self, ruta: str, datos: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
         """Realiza una petición HTTP POST usando requests o urllib como fallback."""
         url = f"{self.base_url}{ruta}"
+        if not self._esta_disponible():
+            raise ConnectionError(f"Backend no alcanzable en {url}")
         payload_bytes = json.dumps(datos, ensure_ascii=False).encode("utf-8")
 
         if HAS_REQUESTS:
             try:
                 res = requests.post(url, json=datos, headers=self._headers(), timeout=self.timeout)
+                parsed = urlparse(self.base_url)
+                ClienteBackendAgentes._fallos_por_host.pop(f"{parsed.hostname or '127.0.0.1'}:{parsed.port or 80}", None)
                 try:
                     cuerpo = res.json()
                 except Exception:
                     cuerpo = {"raw": res.text}
                 return res.status_code, cuerpo
             except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+                parsed = urlparse(self.base_url)
+                ClienteBackendAgentes._fallos_por_host[f"{parsed.hostname or '127.0.0.1'}:{parsed.port or 80}"] = time.monotonic()
                 raise ConnectionError(f"Backend no alcanzable en {url}: {e}")
         else:
             req = urllib.request.Request(url, data=payload_bytes, headers=self._headers(), method="POST")
@@ -112,6 +152,7 @@ class ClienteBackendAgentes:
                     cuerpo = {"error": str(e)}
                 return status_code, cuerpo
             except urllib.error.URLError as e:
+                ClienteBackendAgentes._ultimo_fallo_conexion = time.monotonic()
                 raise ConnectionError(f"Backend no alcanzable en {url}: {e}")
 
     def _get_http(self, ruta: str, params: Optional[Dict[str, Any]] = None) -> Tuple[int, Dict[str, Any]]:
@@ -122,16 +163,22 @@ class ClienteBackendAgentes:
             if query_parts:
                 query_str = "?" + "&".join(query_parts)
         url = f"{self.base_url}{ruta}{query_str}"
+        if not self._esta_disponible():
+            raise ConnectionError(f"Backend no alcanzable en {url}")
 
         if HAS_REQUESTS:
             try:
                 res = requests.get(url, headers=self._headers(), timeout=self.timeout)
+                parsed = urlparse(self.base_url)
+                ClienteBackendAgentes._fallos_por_host.pop(f"{parsed.hostname or '127.0.0.1'}:{parsed.port or 80}", None)
                 try:
                     cuerpo = res.json()
                 except Exception:
                     cuerpo = {"raw": res.text}
                 return res.status_code, cuerpo
             except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+                parsed = urlparse(self.base_url)
+                ClienteBackendAgentes._fallos_por_host[f"{parsed.hostname or '127.0.0.1'}:{parsed.port or 80}"] = time.monotonic()
                 raise ConnectionError(f"Backend no alcanzable en {url}: {e}")
         else:
             req = urllib.request.Request(url, headers=self._headers(), method="GET")
@@ -307,6 +354,51 @@ class ClienteBackendAgentes:
             "pendientes": len(aun_pendientes)
         }
 
+    def obtener_consultas_mias(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        """CTR-003: Recupera el registro de consultas del usuario autenticado vía GET /consultas/mias."""
+        ruta = "/consultas/mias"
+        params = {"limit": limit, "offset": offset}
+        try:
+            status_code, respuesta = self._get_http(ruta, params=params)
+            if status_code == 200 and isinstance(respuesta, dict):
+                return respuesta.get("consultas", [])
+            logger.warning(f"Error al obtener consultas propias (HTTP {status_code}): {respuesta}")
+            return []
+        except ConnectionError as e:
+            logger.warning(f"Backend no alcanzable para obtener consultas propias: {e}")
+            return []
+
+    def obtener_todas_consultas(
+        self,
+        usuario_id: Optional[int] = None,
+        tipo: Optional[str] = None,
+        estado: Optional[str] = None,
+        desde: Optional[str] = None,
+        hasta: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0
+    ) -> List[Dict[str, Any]]:
+        """CTR-003: Consulta el registro completo de consultas (solo admin) vía GET /consultas."""
+        ruta = "/consultas"
+        params = {
+            "usuario_id": usuario_id,
+            "tipo": tipo,
+            "estado": estado,
+            "desde": desde,
+            "hasta": hasta,
+            "limit": limit,
+            "offset": offset
+        }
+        try:
+            status_code, respuesta = self._get_http(ruta, params=params)
+            if status_code == 200 and isinstance(respuesta, dict):
+                return respuesta.get("consultas", [])
+            logger.warning(f"Error al obtener registro global de consultas (HTTP {status_code}): {respuesta}")
+            return []
+        except ConnectionError as e:
+            logger.warning(f"Backend no alcanzable para obtener registro global: {e}")
+            return []
+
     # =========================================================================
     # 2. CTR-006 / CTR-007: HISTORIAL DE CHATS Y MENSAJES
     # =========================================================================
@@ -367,6 +459,9 @@ class ClienteBackendAgentes:
                 )
                 logger.info(f"Historial recuperado para chat {chat_id}: {len(mensajes)} mensajes")
                 return mensajes
+            if status_code == 404:
+                logger.info(f"Chat {chat_id} no encontrado en Backend (HTTP 404).")
+                return []
             logger.warning(f"Error al recuperar historial de chat {chat_id} (HTTP {status_code}): {respuesta}")
             return []
         except ConnectionError as e:
