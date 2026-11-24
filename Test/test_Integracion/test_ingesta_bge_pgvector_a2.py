@@ -161,3 +161,151 @@ def test_pipeline_a2_entrega_evidencias_que_acepta_el_agente1(indice, backend, b
     normalizada = core.normalizar_respuesta_agente2(respuesta)
     assert normalizada["estado"] == respuesta["estado"]
     assert normalizada.get("codigo_error") in (None, "")
+
+
+# --- Validación del cliente CTR-002 contra el Backend real ---------------------
+
+
+def _aplica(chunk, version):
+    """Regla de vigencia de CTR-002 (la misma que aplica el Backend)."""
+    if version in (chunk["vigente_para"] or []):
+        return True
+    return not chunk["obsoleto"] and version in (chunk["versiones"] or [])
+
+
+def _mas_frecuente(chunks, campo):
+    from collections import Counter
+
+    valores = Counter(c[campo] for c in chunks if c.get(campo))
+    return valores.most_common(1)[0][0]
+
+
+@pytest.mark.parametrize("token", ["", "token-incorrecto"])
+def test_bearer_de_servicio_obligatorio(indice, backend, token):
+    from Agents.Agent_2.src.clients.backend import BackendAPIClient, BackendRequestError
+
+    sin_permiso = BackendAPIClient(backend.base_url, MODELO, token=token, timeout=30, connect_timeout=3)
+    with pytest.raises(BackendRequestError) as error:
+        sin_permiso.search_vector([0.0] * 1024, k=1)
+    assert "401" in str(error.value)
+    with pytest.raises(BackendRequestError):
+        sin_permiso.search_lexical_candidates("HTM-0142", k=1)
+    # El token nunca aparece en los errores ni en la representación del cliente.
+    assert TOKEN not in str(error.value) and TOKEN not in repr(backend)
+
+
+def test_timeout_de_conexion_falla_rapido_sin_recortar_lectura(indice, backend):
+    import socket
+    import time
+
+    from Agents.Agent_2.src.clients.backend import BackendAPIClient, BackendRequestError
+
+    with socket.socket() as libre:
+        libre.bind(("127.0.0.1", 0))
+        puerto = libre.getsockname()[1]
+    caido = BackendAPIClient(f"http://127.0.0.1:{puerto}", MODELO, token=TOKEN, timeout=30, connect_timeout=1)
+    inicio = time.monotonic()
+    with pytest.raises(BackendRequestError) as error:
+        caido.search_vector([0.0] * 1024, k=1)
+    assert error.value.codigo_error == "servicio_no_disponible"
+    assert time.monotonic() - inicio < 10
+
+    impaciente = BackendAPIClient(backend.base_url, MODELO, token=TOKEN, timeout=0.0005, connect_timeout=3)
+    with pytest.raises(BackendRequestError) as error:
+        impaciente.search_vector([0.0] * 1024, k=50)
+    assert error.value.codigo_error == "tiempo_agotado"
+
+
+def test_prefijo_passage_de_la_ingesta_coincide_con_el_agente2(indice, bge):
+    """Mismo modelo y mismo ``passage:``: el vector del Agente 2 reproduce el del índice."""
+    import numpy as np
+
+    chunk = _muestra(indice["chunks"], 1)[0]
+    propio = np.asarray(bge.encode_passages([chunk["texto"]])[0], dtype=float)
+    indexado = np.asarray(chunk["embedding"], dtype=float)
+    coseno = propio @ indexado / (np.linalg.norm(propio) * np.linalg.norm(indexado))
+    assert coseno > 0.99, f"coseno {coseno:.4f}: el prefijo o el modelo no coinciden con la ingesta"
+
+
+def test_prefijo_query_mejora_o_iguala_la_recuperacion(indice, backend, bge):
+    from Agents.Agent_2.src.clients.bge_m3 import QUERY_PREFIX
+
+    chunk = _muestra(indice["chunks"], 1)[0]
+    pregunta = chunk["texto"][:200]
+    vector = bge.encode_query(pregunta)
+    # encode_query no duplica el prefijo si ya viene puesto.
+    import numpy as np
+
+    assert np.allclose(vector, bge.encode_query(QUERY_PREFIX + pregunta), atol=1e-5)
+    ids = [r["chunk_id"] for r in backend.search_vector(vector, k=5)["resultados"]]
+    assert chunk["chunk_id"] in ids
+
+
+@pytest.mark.parametrize("campo", ["version", "componente", "tipo_documento"])
+def test_filtros_se_aplican_en_vectorial_y_lexica(indice, backend, bge, campo):
+    chunks = indice["chunks"]
+    valor = "V1.0" if campo == "version" else _mas_frecuente(chunks, campo)
+    filtros = {campo: valor}
+    vector = bge.encode_query("procedimiento de verificación del circuito")
+
+    vectorial = backend.search_vector(vector, filtros=filtros, k=20)["resultados"]
+    lexica = backend.search_lexical_candidates("circuito", filtros=filtros, k=20).resultados
+    assert vectorial, f"sin resultados vectoriales con {filtros}"
+
+    por_id = {c["chunk_id"]: c for c in chunks}
+    ids = [r["chunk_id"] for r in vectorial] + [r.chunk_id for r in lexica]
+    for chunk_id in ids:
+        chunk = por_id[chunk_id]
+        if campo == "version":
+            assert _aplica(chunk, valor), f"{chunk_id} no aplica a {valor}"
+        else:
+            assert chunk[campo] == valor, f"{chunk_id}: {campo}={chunk[campo]!r} con filtro {valor!r}"
+
+
+def test_version_sustituida_solo_aplica_donde_sigue_vigente(indice, backend, bge):
+    sustituidos = [c for c in indice["chunks"] if c["obsoleto"]]
+    if not sustituidos:
+        # Hoy la ingesta excluye los PDF sustituidos («no se indexa»), así que
+        # vigente_para (PRC-003 v1.0 → V1.0) no llega a pgvector. Punto abierto
+        # con Backend; la prueba se activa sola si se empiezan a indexar.
+        pytest.skip("la ingesta no indexa documentos sustituidos")
+    chunk = sustituidos[0]
+    vector = bge.encode_query(chunk["texto"][:300])
+    for version in ("V1.0", "V1.1", "V2.0"):
+        ids = [r["chunk_id"] for r in backend.search_vector(vector, filtros={"version": version}, k=30)["resultados"]]
+        assert (chunk["chunk_id"] in ids) == (version in chunk["vigente_para"]), (version, chunk["vigente_para"])
+
+
+def test_filtro_inexistente_es_entrada_invalida(indice, backend):
+    from Agents.Agent_2.src.clients.backend import BackendRequestError
+
+    with pytest.raises(BackendRequestError) as error:
+        backend.search_vector([0.0] * 1024, filtros={"version": "V9.9"}, k=1)
+    assert error.value.codigo_error == "entrada_invalida"
+
+
+def test_relajacion_solo_quita_tipo_documento(indice, backend, bge):
+    """CTR-002 §4: sin resultados por el tipo documental se reintenta sin él."""
+    from Agents.Agent_2.src.services.pipeline import Agent2Pipeline
+
+    chunks = indice["chunks"]
+    pares = {(c["componente"], c["tipo_documento"]) for c in chunks if c["componente"]}
+    componentes = sorted({c for c, _ in pares})
+    tipos = sorted({t for _, t in pares})
+    vacio = next(((c, t) for c in componentes for t in tipos if (c, t) not in pares), None)
+    if vacio is None:
+        pytest.skip("todas las combinaciones componente/tipo tienen fragmentos")
+    componente, tipo = vacio
+
+    pipeline = Agent2Pipeline(backend_client=backend, embedding_client=bge, threshold=0.0)
+    respuesta = pipeline.procesar_consulta({
+        "texto_preprocesado": "¿cómo se revisa este componente?",
+        "filtros": {"componente": componente, "tipo_documento": tipo},
+    })
+
+    assert respuesta["estado"] != "error", respuesta.get("mensaje_error")
+    assert respuesta["metricas"].get("tipo_documento_ampliado") is True
+    por_id = {c["chunk_id"]: c for c in chunks}
+    # Versión y componente nunca se relajan (los vecinos también los cumplen).
+    for evidencia in respuesta["evidencias"]:
+        assert por_id[evidencia["chunk_id"]]["componente"] == componente
