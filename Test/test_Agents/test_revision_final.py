@@ -286,3 +286,55 @@ class RevisionFinal(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class RedaccionExtractivaFallback(unittest.TestCase):
+    """Fallback determinista: oraciones literales con cita, desactivado por defecto."""
+
+    def _ev(self):
+        ev = evidencia()
+        ev['texto'] = 'Termostato electrónico CMP-08. Apertura inicial a 92 °C. Conector de 4 vías.'
+        return ev
+
+    def test_redaccion_extractiva_pasa_verificadores(self):
+        ev = self._ev()
+        texto = core.redaccion_extractiva('¿A qué temperatura abre el termostato CMP-08?', [ev])
+        self.assertIn('92 °C', texto)
+        self.assertTrue(core.verificar_citas(texto, [ev])['valido'])
+        self.assertTrue(core.verificar_respaldo_extractivo(texto, [ev]))
+
+    def test_sin_solape_no_inventa(self):
+        self.assertIsNone(core.redaccion_extractiva('aceite de motor viscosidad', [self._ev()]))
+
+    def test_fallback_desactivado_mantiene_error_de_verificacion(self):
+        obj = agente('Texto libre sin cita.', 'Otro texto libre.')
+        res = core.redactar_respuesta_con_verificacion('temperatura termostato', [self._ev()], obj)
+        self.assertEqual(res['estado'], 'error_verificacion')
+
+    def test_fallback_activado_responde_con_citas_verificadas(self):
+        obj = agente('Texto libre sin cita.', 'Otro texto libre.')
+        obj.fallback_extractivo = True
+        res = core.redactar_respuesta_con_verificacion('temperatura termostato', [self._ev()], obj)
+        self.assertEqual(res['estado'], 'respuesta')
+        self.assertEqual(res['verificacion']['modo'], 'extractivo')
+        self.assertEqual(res['fuentes'], ['c_1'])
+
+    def test_distinta_edicion_pdf_con_version_vehiculo_comun_no_pide_aclaracion(self):
+        ev1 = evidencia('c_1', version='1.0')
+        ev1['metadata']['versiones'] = ['V1.0', 'V1.1', 'V2.0']
+        ev2 = evidencia('c_2', version='1.1')
+        ev2['texto'] = 'Segundo fragmento de prueba.'
+        ev2['metadata']['versiones'] = ['V1.0', 'V1.1', 'V2.0']
+        obj = agente(TEXTO)
+        res = core.resolver_evidencias('culata', {'estado': 'suficiente', 'evidencias': [ev1, ev2]}, obj)
+        self.assertEqual(res['estado'], 'respuesta')
+
+    def test_versiones_vehiculo_incompatibles_piden_aclaracion(self):
+        ev1 = evidencia('c_1', version='1.0')
+        ev1['metadata']['versiones'] = ['V1.0']
+        ev2 = evidencia('c_2', version='1.1')
+        ev2['texto'] = 'Segundo fragmento distinto.'
+        ev2['metadata']['versiones'] = ['V2.0']
+        obj = agente()
+        res = core.resolver_evidencias('culata', {'estado': 'suficiente', 'evidencias': [ev1, ev2]}, obj)
+        self.assertEqual(res['estado'], 'aclaracion')
