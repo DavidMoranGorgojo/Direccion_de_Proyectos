@@ -14,6 +14,7 @@ import math
 from unittest.mock import MagicMock
 import pytest
 
+from Agents.Agent_2.src.clients import reranker_loader
 from Agents.Agent_2.src.clients.backend import BackendAPIClient
 from Agents.Agent_2.src.clients.bge_m3 import BgeM3Client, get_bge_m3_client, QUERY_PREFIX
 from Agents.Agent_2.src.core import config
@@ -227,8 +228,10 @@ def test_f14_modelo_incompatible_debe_devolver_error():
 # F02: Carga, Reranker Real y Gestión de Errores
 # ---------------------------------------------------------------------------
 
-def test_f02_reranker_obligatorio_ausente_devuelve_error():
+def test_f02_reranker_obligatorio_ausente_devuelve_error(monkeypatch):
     """F02: Si require_reranker=True y el modelo no está disponible, reporta error estándar."""
+    cargar_reranker = MagicMock(side_effect=RuntimeError("Reranker no disponible"))
+    monkeypatch.setattr(reranker_loader, "get_reranker", cargar_reranker)
     backend_mock = MagicMock()
     backend_mock.model_embeddings = "BAAI/bge-m3"
     pipeline = Agent2Pipeline(
@@ -259,6 +262,7 @@ def test_f02_reranker_obligatorio_ausente_devuelve_error():
     )
 
     resp = pipeline.procesar_consulta({"texto_preprocesado": "consulta"})
+    cargar_reranker.assert_called_once_with()
     # No debe degradar silenciosamente a puntuaciones RRF como rerank_score
     # Sino reportar servicio_no_disponible si el reranker obligatorio no está
     assert resp["estado"] == "error"
