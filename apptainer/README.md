@@ -1,36 +1,30 @@
 # ARSOFT con Apptainer
 
-PostgreSQL y FastAPI se ejecutan como instancias de Apptainer en Ubuntu WSL2. El frontend PySide6 se puede abrir en Windows o desde WSLg. Ingesta se ejecuta bajo demanda y Agentes tiene un adaptador HTTP para Agente 1.
+PostgreSQL, Backend y Agentes se ejecutan como instancias de Apptainer en Ubuntu/WSL2. El comando de arranque también ejecuta la ingesta si encuentra PDF y abre el Frontend PySide6 mediante WSLg.
 
-## Arranque local
+## Arrancar todo junto (Ubuntu / WSL2)
 
-Desde PowerShell, abre Ubuntu en la raíz del repositorio.
+El comando único se ejecuta desde la raíz del repositorio, dentro de Ubuntu/WSL2 con Apptainer y WSLg:
 
-```powershell
-wsl -d Ubuntu --cd /ruta/al/repositorio/Direccion_de_Proyectos
-```
+~~~bash
+bash apptainer/start-all.sh
+~~~
 
-Usa un archivo privado para `AGENTES_URL`, `ARSOFT_SERVICE_TOKEN` y las credenciales de PostgreSQL. Los scripts construyen `DATABASE_URL` con esas credenciales. Usa el mismo token aleatorio en el archivo de entorno de Agentes. Si reutilizas `~/.config/arsoft/local.env`, conserva sus credenciales y añade el token antes de reiniciar el Backend. Puedes generar el token con `openssl rand -hex 32`.
+En el primer uso genera ~/.config/arsoft/local.env y agentes.env con permisos privados, construye las imágenes SIF que falten y arranca PostgreSQL con pgvector, Backend y Agentes. Después comprueba login e historial y abre el Frontend conectado al Backend. Cierra la ventana o pulsa Ctrl+C: el comando detiene las instancias que él mismo inició y conserva la base de datos, las imágenes y las cachés de modelos.
 
-```bash
-export ARSOFT_LOCAL_ENV="$HOME/.config/arsoft/local.env"
-bash apptainer/build-all.sh postgres backend agentes
-bash apptainer/start-local.sh
-```
+La ingesta es un proceso puntual. De forma automática indexa PDF nuevos en data/manuales; puedes indicar otra ruta al lanzar el mismo comando:
 
-Si `arsoft-api` sigue ejecutando la versión anterior, detenla antes del nuevo arranque con `apptainer instance stop arsoft-api`. PostgreSQL conserva sus datos en `~/arsoft-state/postgres`.
+~~~bash
+ARSOFT_MANUALES_DIR=/ruta/a/los/manuales bash apptainer/start-all.sh
+~~~
 
-En otra terminal, usa el archivo privado de Agentes basado en `.env.agentes.example` y ejecuta la imagen con Ollama disponible y el modelo configurado.
+Si no encuentra PDF, avisa y continúa con la prueba básica de login, historial e interfaz. Ollama debe estar levantado para generar respuestas; los PDF y los modelos de recuperación son necesarios para comprobar el RAG. El arranque no inventa respuestas ni corpus de prueba.
 
-```bash
-mkdir -p "$HOME/arsoft-state/agents/huggingface" "$HOME/arsoft-state/agents/state"
-chmod 700 "$HOME/arsoft-state/agents/state"
-apptainer run --cleanenv --env-file "$HOME/.config/arsoft/agentes.env" \
-  --bind "$HOME/arsoft-state/agents:/models" \
-  "$HOME/arsoft-images/agentes.sif" --serve
-```
+Las credenciales de usuario demo se crean en el entorno local (usuario1 / usuario123). Para no crearlas, configura ARSOFT_SEED_DEV_USERS=0 en local.env; las contraseñas son públicas y nunca deben usarse en producción. Los secretos del servicio se generan automáticamente en una instalación nueva; si editas los archivos de entorno, conserva el mismo ARSOFT_SERVICE_TOKEN en ambos.
 
-`/health` comprueba FastAPI, `/ready` comprueba las dependencias y `/docs` muestra las rutas. PySide6 usa la demo local con `ARSOFT_API_URL` vacía. El flujo conectado exige sesión (CTR-005): crea los usuarios de prueba con `apptainer exec instance://arsoft-api python -m app.usuarios_prueba --desarrollo` (solo en desarrollo) y entra con ellos (ver `Backend/readme.md`). Toda la base (esquemas `conocimiento` y `aplicacion`) la crea el esquema único `Backend/db/init/01_conocimiento.sql` al iniciar una base nueva; en una base ya creada, ejecútalo una vez con `psql` (es idempotente). Para detener los servicios, cierra Agentes con Ctrl+C y ejecuta `bash apptainer/stop-local.sh`.
+Para detener servicios que hayas arrancado manualmente: `bash apptainer/stop-local.sh`.
+
+Toda la base (esquemas `conocimiento` y `aplicacion`) la crea el esquema único `Backend/db/init/01_conocimiento.sql` al iniciar una base nueva; en una base ya creada, ejecútalo una vez con `psql` (es idempotente).
 
 ## Frontend e ingesta
 
@@ -41,6 +35,28 @@ ARSOFT_MANUALES_DIR=/ruta/a/los/manuales bash apptainer/run-ingesta.sh
 ```
 
 El comando de ingesta carga el índice en PostgreSQL. Añade `--sin-embeddings` para extraer solo fragmentos. Los resultados y la caché quedan en `~/arsoft-state`.
+
+## Paquete final del Frontend
+
+El paquete es un `.tar.gz` autosuficiente: solo necesita Apptainer y una sesión gráfica en la máquina de destino.
+
+```bash
+bash apptainer/package-frontend.sh             # usa ~/arsoft-images/frontend.sif si existe
+bash apptainer/package-frontend.sh --rebuild   # reconstruye la imagen antes (pide sudo)
+```
+
+Genera en `dist/` (fuera de git) `arsoft-frontend-<AAAAMMDD>-<commit>.tar.gz` y su `.sha256`. Dentro: `frontend.sif`, `run-frontend.sh`, `verificar.sh`, `SHA256SUMS` y `LEEME.txt`.
+
+En la máquina de destino (por ejemplo, una Ubuntu o WSL2 limpia con Apptainer instalado según [`GUIA_INSTALACION_WINDOWS.md`](GUIA_INSTALACION_WINDOWS.md)):
+
+```bash
+sha256sum -c arsoft-frontend-*.tar.gz.sha256
+tar -xzf arsoft-frontend-*.tar.gz && cd arsoft-frontend-*/
+bash verificar.sh        # Apptainer, DISPLAY, sumas, arranque sin ventana y limpieza de la imagen
+bash run-frontend.sh     # demo; con ARSOFT_API_URL=... abre el modo real
+```
+
+La imagen se construye desde `Frontend/apptainer/frontend.def` y no incluye `__pycache__`, `.vscode` ni `.env`. Su fase `%test` comprueba al construir que Qt y la configuración cargan.
 
 ## Agentes en Slurm
 

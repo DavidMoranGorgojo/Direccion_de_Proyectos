@@ -114,3 +114,10 @@ QPushButton#btnLogin:pressed { background: #0679d1; }
 QPushButton#btnLogin:disabled { background: #25324a; color: #7f8da3; }
 QLabel#labelMode { color: #e0a93b; font-size: 11px; background: transparent; padding-top: 10px; }
 QLabel#labelFooter { color: #5f6a7d; font-size: 11px; background: transparent; }
+
+/* valoración de respuestas (👍 / 👎) */
+QPushButton#btnRate { background: transparent; border: 1px solid #2a303b; border-radius: 8px; padding: 2px 10px; font-size: 14px; }
+QPushButton#btnRate:hover { background: #262c3a; }
+QPushButton#btnRate:checked { background: #12324a; border: 1px solid #0893fa; }
+QPushButton#btnRate:disabled { opacity: 0.6; }
+QLabel#ratingError { color: #ff8d97; font-size: 11px; }

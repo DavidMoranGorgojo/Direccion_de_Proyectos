@@ -7,18 +7,27 @@
 
 Los chats se crean y se rellenan desde POST /consulta (main.py): el conversacion_id de CTR-001 es la
 clave del chat. Cada usuario solo ve los suyos; un chat ajeno responde 404 para no revelar que existe.
+
+CTR-007 · Historial con Agentes. Agentes lee el historial de una conversación con el token de servicio
+(ARSOFT_SERVICE_TOKEN), igual que el resto de llamadas internas:
+  GET /chats/{conversacion_id}?limit=N   -> el chat con sus N últimos mensajes, en orden cronológico
+Es lo que usa Agents/agente1/cliente_backend.py (obtener_historial) para recuperar la memoria de una
+conversación cuando su sesión en Agentes ha caducado o se ha reiniciado. Backend es quien escribe el
+historial (en cada /consulta); Agentes solo lo lee.
 """
 
 from datetime import timezone
 from typing import Annotated
 
 import httpx
+from arsoft_http import valid_service_token
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi.security import HTTPAuthorizationCredentials
 from psycopg.types.json import Jsonb
 from pydantic import BaseModel, Field
 
 from .links import connect, service_headers
-from .sesiones import usuario_actual
+from .sesiones import bearer, usuario_actual
 
 router = APIRouter(prefix="/chats", tags=["Historial (CTR-006)"])
 TITULO_POR_DEFECTO = "Nuevo chat"
@@ -111,11 +120,29 @@ def listar(usuario: Annotated[dict, Depends(usuario_actual)],
     return {"chats": [_chat(c, mensajes[c["conversacion_id"]]) for c in chats], "total": total}
 
 
+def lector_historial(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
+) -> dict | None:
+    """Quién lee un chat: None si es Agentes con el token de servicio (CTR-007); si no, el usuario
+    de la sesión (CTR-006), que solo puede leer los suyos."""
+    if credentials is not None and valid_service_token(f"Bearer {credentials.credentials}"):
+        return None
+    return usuario_actual(credentials)
+
+
 @router.get("/{conversacion_id}")
-def ver(conversacion_id: str, usuario: Annotated[dict, Depends(usuario_actual)]):
+def ver(conversacion_id: str, lector: Annotated[dict | None, Depends(lector_historial)],
+        limit: int | None = Query(None, ge=1, le=500)):
     with connect() as conn:
-        chat = _chat_propio(conn, conversacion_id, usuario)
-        return _chat(chat, _mensajes(conn, [conversacion_id])[conversacion_id])
+        if lector is None:  # Agentes: cualquier conversación
+            chat = conn.execute("SELECT * FROM aplicacion.chat WHERE conversacion_id=%s",
+                                (conversacion_id,)).fetchone()
+            if not chat:
+                raise HTTPException(404, detail=CHAT_NO_ENCONTRADO)
+        else:
+            chat = _chat_propio(conn, conversacion_id, lector)
+        mensajes = _mensajes(conn, [conversacion_id])[conversacion_id]
+    return _chat(chat, mensajes[-limit:] if limit else mensajes)
 
 
 class Renombrar(BaseModel):

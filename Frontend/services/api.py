@@ -5,20 +5,26 @@ Contratos que implementa este módulo:
   CTR-001  Consulta al asistente. Cuerpo EXACTO (sin historial: la memoria de la conversación
            la lleva Agentes por conversacion_id):
                {"conversacion_id": "...", "pregunta": "texto tal y como se escribió"}
-           Respuesta (siempre los mismos campos; los errores controlados también son HTTP 200):
+           Respuesta (siempre los mismos campos; los errores controlados de Agentes también son HTTP 200):
                {"trace_id", "estado", "texto", "fuentes": [{"chunk_id", "documento", "seccion",
                 "pagina", "versiones", "obsoleto"}], "codigo_error"}
-           El Backend expone POST /consulta y devuelve conversacion_id.
+           El Backend expone POST /consulta y devuelve conversacion_id. Errores HTTP del propio Backend:
+           401/403 sesión caducada, 404 conversación no encontrada, 422 entrada inválida, 429 demasiadas
+           consultas; el resto (5xx, JSON no válido) se muestra como error genérico.
   CTR-006  Historial:  GET /chats  ->  {"chats": [...], "total": n}
+  CTR-001  Valoración: POST /valoracion {"trace_id", "util"} -> 200 {"trace_id", "util"}
+           Errores: 401/403 sesión caducada, 404 respuesta no encontrada, 422 entrada inválida,
+           429 demasiadas valoraciones, 500/503 error del servicio.
   CTR-005  Login: ver services/auth.py
 
-La URL base del Backend se lee de la variable de entorno ARSOFT_API_URL. Si no está definida se
-usa un MODO SIMULADO solo para desarrollar la interfaz. NO es el asistente real.
+Toda la configuración (URL, rutas, tiempo máximo y modo) se lee en config.py.
+Sin ARSOFT_API_URL (o con ARSOFT_MODO=simulado) se usa un MODO SIMULADO solo para desarrollar
+la interfaz. NO es el asistente real.
 Fuera de entornos locales se exige HTTPS (ARSOFT_ALLOW_HTTP=1 lo desactiva, solo para pruebas).
 """
 from __future__ import annotations
 import json
-import os
+import socket
 import time
 from copy import deepcopy
 import urllib.error
@@ -33,23 +39,48 @@ from models.conversation import Conversation
 from models.response import (Response, STATUS_CLARIFY, STATUS_NO_EVIDENCE, STATUS_OK,
                              STATUS_OUT_OF_SCOPE)
 from models.source import Source
+import config
 from services import session
 
-API_URL = os.environ.get("ARSOFT_API_URL", "").rstrip("/")
-TIMEOUT_S = 60
-CONSULTA_PATH = "/agentes/consulta"          # ruta Frontend -> Backend: pendiente de contrato
-LOGIN_PATH = "/auth/login"                   # CTR-005
-HISTORIAL_PATH = "/chats"                    # CTR-006
+# Valores tomados de config.py (no definir aquí: config.py es el único sitio).
+MODO = config.MODO
+API_URL = config.API_URL
+TIMEOUT_S = config.TIMEOUT_S
+CONSULTA_PATH = config.CONSULTA_PATH          # CTR-001: Frontend -> Backend
+LOGIN_PATH = config.LOGIN_PATH                # CTR-005
+HISTORIAL_PATH = config.HISTORIAL_PATH        # CTR-006
+VALORACION_PATH = config.VALORACION_PATH      # CTR-001: valoración de una respuesta
 SESSION_EXPIRED = "Tu sesión ha caducado. Cierra sesión y vuelve a entrar."
+TOO_MANY_REQUESTS = "Demasiadas consultas seguidas. Espera un momento antes de volver a intentarlo."
+CONVERSATION_NOT_FOUND = "Esta conversación ya no está disponible. Empieza un chat nuevo."
+INVALID_INPUT = "La consulta no se ha podido enviar: faltan datos o el formato es incorrecto."
+MISSING_URL = "Modo real sin servidor configurado: define ARSOFT_API_URL en el archivo .env."
+RATING_FAILED = "No se pudo enviar tu valoración. Inténtalo de nuevo."
+RATING_TOO_MANY = "Demasiadas valoraciones seguidas. Espera un momento."
+RATING_NOT_FOUND = "Esta respuesta ya no se puede valorar."
+HISTORY_TOO_MANY = "Demasiadas peticiones. Espera un momento y reintenta."
+HISTORY_SERVER_ERROR = "No se pudo cargar el historial. Inténtalo más tarde."
 
 
 def is_mock() -> bool:
+    if MODO == config.MODO_SIMULADO:
+        return True
+    if MODO == config.MODO_REAL:
+        return False
     return not API_URL
 
 
 # ------------------------------------------------------------------- HTTP común
 class ConnectionFailed(Exception):
     """No se obtuvo respuesta HTTP (sin conexión, tiempo agotado o conexión no segura)."""
+
+    def __init__(self, message: str = "", code: str = "servicio_no_disponible"):
+        super().__init__(message)
+        self.code = code
+
+
+class ConfigError(ConnectionFailed):
+    """La configuración impide conectar (falta la URL o no es segura). El mensaje se muestra."""
 
 
 def _is_local(host: str) -> bool:
@@ -58,8 +89,7 @@ def _is_local(host: str) -> bool:
 
 def _insecure() -> bool:
     u = urlparse(API_URL)
-    return (u.scheme == "http" and not _is_local(u.hostname or "")
-            and os.environ.get("ARSOFT_ALLOW_HTTP") != "1")
+    return u.scheme == "http" and not _is_local(u.hostname or "") and not config.ALLOW_HTTP
 
 
 def auth_headers() -> dict:
@@ -72,8 +102,10 @@ def call(method: str, path: str, body: dict | None = None) -> tuple[int, dict | 
     """Devuelve (código HTTP, JSON o None). Solo lanza ConnectionFailed si no hay respuesta."""
     if is_mock():
         return _mock_call(method, path, body)
+    if not API_URL:
+        raise ConfigError(MISSING_URL)
     if _insecure():
-        raise ConnectionFailed("Conexión no segura: fuera de un entorno local se exige HTTPS.")
+        raise ConfigError("Conexión no segura: fuera de un entorno local se exige HTTPS.")
     headers = {"Accept": "application/json", **auth_headers()}
     data = None
     if body is not None:
@@ -85,8 +117,10 @@ def call(method: str, path: str, body: dict | None = None) -> tuple[int, dict | 
             status, raw = r.status, r.read()
     except urllib.error.HTTPError as e:
         status, raw = e.code, e.read()
-    except (urllib.error.URLError, TimeoutError, OSError) as e:
-        raise ConnectionFailed(str(e)) from e
+    except (socket.timeout, TimeoutError) as e:
+        raise ConnectionFailed(str(e), "tiempo_agotado") from e
+    except (urllib.error.URLError, OSError) as e:
+        raise ConnectionFailed(str(e), "servicio_no_disponible") from e
     try:
         parsed = json.loads(raw.decode("utf-8"))
     except (ValueError, UnicodeDecodeError):
@@ -99,13 +133,21 @@ def send_message(conversation_id: str, pregunta: str) -> Response:
     try:
         status, data = call("POST", CONSULTA_PATH,
                             {"conversacion_id": conversation_id, "pregunta": pregunta})
-    except ConnectionFailed:
-        return Response.error()
+    except ConfigError as e:                   # falta la URL o no es segura: el usuario debe saberlo
+        return Response.error(str(e), "configuracion")
+    except ConnectionFailed as e:
+        return Response.error(codigo=e.code)
     if status in (401, 403):
         return Response.error(SESSION_EXPIRED, "sesion_caducada")
+    if status == 429:
+        return Response.error(TOO_MANY_REQUESTS, "demasiadas_consultas")
+    if status == 404:                          # chat ajeno o borrado: el Backend no reenvía a Agentes
+        return Response.error(CONVERSATION_NOT_FOUND, "conversacion_no_encontrada")
+    if status == 422:
+        return Response.error(INVALID_INPUT, "entrada_invalida")
     if status == 200 and data is not None:
         return Response.from_dict(data)
-    return Response.error()                    # 5xx, 422, JSON no válido…: mensaje genérico
+    return Response.error()                    # 5xx, JSON no válido…: mensaje genérico
 
 
 class ChatWorker(QThread):
@@ -136,6 +178,10 @@ def fetch_history() -> HistoryResult:
         return HistoryResult(False, error="No se ha podido contactar con el servidor.")
     if status in (401, 403):
         return HistoryResult(False, error=SESSION_EXPIRED, session_expired=True)
+    if status == 429:
+        return HistoryResult(False, error=HISTORY_TOO_MANY)
+    if status >= 500:
+        return HistoryResult(False, error=HISTORY_SERVER_ERROR)
     if status == 200 and data is not None and isinstance(data.get("chats"), list):
         try:
             return HistoryResult(True, [Conversation.from_dict(c) for c in data["chats"]])
@@ -151,8 +197,53 @@ class HistoryWorker(QThread):
         self.done.emit(fetch_history())
 
 
+# ----------------------------------------------------------- valoración (CTR-001)
+@dataclass
+class RatingResult:
+    ok: bool
+    trace_id: str = ""
+    util: bool = False
+    error: str = ""
+    session_expired: bool = False
+
+
+def send_rating(trace_id: str, util: bool) -> RatingResult:
+    """POST /valoracion {"trace_id", "util"}. El Backend solo admite respuestas con estado "respuesta"
+    del propio usuario; valorar de nuevo la misma respuesta cambia la valoración."""
+    def fail(msg: str, expired: bool = False) -> RatingResult:
+        return RatingResult(False, trace_id, util, msg, expired)
+
+    try:
+        status, data = call("POST", VALORACION_PATH, {"trace_id": trace_id, "util": util})
+    except ConfigError as e:
+        return fail(str(e))
+    except ConnectionFailed:
+        return fail(RATING_FAILED)
+    if status in (401, 403):
+        return fail(SESSION_EXPIRED, True)
+    if status == 404:
+        return fail(RATING_NOT_FOUND)
+    if status == 429:
+        return fail(RATING_TOO_MANY)
+    if status == 200 and data is not None and isinstance(data.get("util"), bool):
+        return RatingResult(True, trace_id, data["util"])
+    return fail(RATING_FAILED)                 # 422, 5xx, JSON no válido…: mensaje genérico
+
+
+class RatingWorker(QThread):
+    """Envía la valoración fuera del hilo de la interfaz."""
+    done = Signal(object)  # RatingResult
+
+    def __init__(self, trace_id: str, util: bool):
+        super().__init__()
+        self._args = (trace_id, util)
+
+    def run(self) -> None:
+        self.done.emit(send_rating(*self._args))
+
+
 # ---------------------------------------------------------------- modo simulado
-_MOCK_EMPTY_HISTORY = os.environ.get("ARSOFT_MOCK_EMPTY_HISTORY") == "1"
+_MOCK_EMPTY_HISTORY = config.MOCK_EMPTY_HISTORY
 _MOCK_CHATS = [
     {
         "conversacion_id": "demo-chat-001",
@@ -209,6 +300,10 @@ def _mock_call(method: str, path: str, body: dict | None) -> tuple[int, dict | N
             "mensaje": "Usuario o contraseña incorrectos.",
             "codigo_error": "credenciales_invalidas",
         }
+    if method == "POST" and path == VALORACION_PATH:
+        if not body or not body.get("trace_id") or not isinstance(body.get("util"), bool):
+            return 422, {"codigo_error": "entrada_invalida", "mensaje": "Valoración no válida."}
+        return 200, {"trace_id": body["trace_id"], "util": body["util"]}
     if method == "GET" and path == HISTORIAL_PATH:
         chats = [] if _MOCK_EMPTY_HISTORY else deepcopy(_MOCK_CHATS)
         return 200, {"chats": chats, "total": len(chats)}
@@ -228,6 +323,8 @@ def _mock_call(method: str, path: str, body: dict | None) -> tuple[int, dict | N
 def _mock_response(pregunta: str) -> Response:
     time.sleep(1.2)
     text = pregunta.lower()
+    if any(marker in text for marker in ("servidor_caido", "backend_caido", "agentes_caido")):
+        return Response.error(codigo="servicio_no_disponible")
     if any(marker in text for marker in ("error_simulado", "simular_error", "timeout")):
         return Response.error(
             "Error 503: Motor de búsqueda vectorial BGE-M3 no disponible (timeout > 5s).",

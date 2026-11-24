@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
         self._mock = api.is_mock()
         if self._mock:
             self.mode_label.setText("⚠ Modo simulado: sin backend conectado.\n"
-                                    "Define ARSOFT_API_URL para usar el asistente real.")
+                                    "Configura ARSOFT_API_URL en .env para usar el asistente real.")
 
         # --- estado ---
         # Modo real y simulado obtienen el historial por la misma vía: GET /chats (CTR-006).
@@ -83,6 +83,7 @@ class MainWindow(QMainWindow):
         self._typing: ChatMessage | None = None
         self._worker: api.ChatWorker | None = None
         self._hist_worker: api.HistoryWorker | None = None
+        self._rating_workers: list[api.RatingWorker] = []
 
         # --- señales ---
         self.btn_new.clicked.connect(self.new_chat)
@@ -112,7 +113,7 @@ class MainWindow(QMainWindow):
         if res.ok:
             if self._mock:
                 self.mode_label.setText("⚠ Modo simulado: sin backend conectado.\n"
-                                        "Define ARSOFT_API_URL para usar el asistente real.")
+                                        "Configura ARSOFT_API_URL en .env para usar el asistente real.")
             else:
                 self.mode_label.setText(
                     "" if res.conversations else "Todavía no tienes conversaciones.")
@@ -233,8 +234,46 @@ class MainWindow(QMainWindow):
 
     def _add_bubble(self, m: Message) -> ChatMessage:
         row = ChatMessage(m)
+        if row.btn_up is not None:                # respuesta valorable (estado "respuesta" con trace_id)
+            row.rating_requested.connect(lambda util, r=row, msg=m: self._rate(r, msg, util))
         self._insert_row(row)
         return row
+
+    # ----------------------------------------------------------- valoración
+    def _rate(self, row: ChatMessage, msg: Message, util: bool) -> None:
+        """POST /valoracion. Se marca el botón al momento; si falla, se vuelve al valor anterior."""
+        if msg.rating is util or not msg.trace_id:
+            row.set_rating(msg.rating)            # el botón es marcable: se deja como estaba
+            return
+        previous = msg.rating
+        row.clear_rating_error()
+        row.set_rating(util)
+        row.set_rating_enabled(False)
+        worker = api.RatingWorker(msg.trace_id, util)
+        worker.done.connect(lambda res, r=row, m=msg, p=previous, w=worker:
+                            self._on_rating(r, m, p, w, res))
+        self._rating_workers.append(worker)
+        worker.start()
+
+    def _on_rating(self, row: ChatMessage, msg: Message, previous: bool | None,
+                   worker: api.RatingWorker, res: api.RatingResult) -> None:
+        worker.wait()
+        if worker in self._rating_workers:
+            self._rating_workers.remove(worker)
+        alive = row in self._rows                 # la fila ya no existe si se cambió de chat
+        if res.ok:
+            msg.rating = res.util
+            if alive:
+                row.set_rating(res.util)
+                row.set_rating_enabled(True)
+            return
+        if alive:
+            row.set_rating(previous)
+            row.set_rating_enabled(True)
+            row.show_rating_error(res.error)
+        if res.session_expired:
+            QMessageBox.information(self, "Sesión caducada", res.error)
+            self.logged_out.emit()
 
     def _insert_row(self, row: ChatMessage) -> None:
         # inserta antes del stretch final (si existe)
@@ -316,6 +355,9 @@ class MainWindow(QMainWindow):
         self._refresh_list()
         self._set_busy(False)
         self.prompt.setFocus()
+        if resp.codigo_error == "sesion_caducada":   # como con el historial: no se deja seguir sin sesión
+            QMessageBox.information(self, "Sesión caducada", resp.texto)
+            self.logged_out.emit()
 
     def _set_busy(self, busy: bool) -> None:
         self.btn_send.setEnabled(not busy)
@@ -328,7 +370,7 @@ class MainWindow(QMainWindow):
         self.logged_out.emit()
 
     def closeEvent(self, e):
-        for w in (self._worker, self._hist_worker):
+        for w in (self._worker, self._hist_worker, *self._rating_workers):
             if w is not None:
                 w.wait(3000)
         super().closeEvent(e)

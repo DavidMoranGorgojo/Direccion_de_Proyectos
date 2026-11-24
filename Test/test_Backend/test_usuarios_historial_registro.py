@@ -22,7 +22,7 @@ import jwt
 import uvicorn
 from fastapi.testclient import TestClient
 
-from Backend.api.app import sesiones
+from Backend.api.app import limite_consultas, sesiones
 from Backend.api.app.links import connect
 from Backend.api.app.main import app
 
@@ -154,6 +154,7 @@ class ConBaseDeDatos(unittest.TestCase):
             from Backend.api.app.usuarios_prueba import crear_usuarios_prueba
             crear_usuarios_prueba(conn)
         sesiones._fallos.clear()
+        limite_consultas.reiniciar()
         self.recibidas = []
         self.agentes_caido = False
         self.client = TestClient(app)
@@ -214,11 +215,36 @@ class ConBaseDeDatos(unittest.TestCase):
         self.assertEqual(r.status_code, 429)
         self.assertEqual(r.json()["codigo_error"], "demasiados_intentos")
 
-    def test_usuario_desactivado_pierde_la_sesion(self):
+    def test_usuario_desactivado_recibe_403(self):
         h = self.login()
         with connect() as conn:
             conn.execute("UPDATE aplicacion.usuario SET activo=false WHERE nombre_usuario='usuario1'")
-        self.assertEqual(self.client.get("/chats", headers=h).status_code, 401)
+        for r in (self.client.get("/chats", headers=h),
+                  self.client.post("/consulta", json={"conversacion_id": "", "pregunta": "hola"}, headers=h)):
+            self.assertEqual(r.status_code, 403)
+            self.assertEqual(r.json()["codigo_error"], "acceso_denegado")
+        self.assertEqual(self.recibidas, [])
+
+    def test_429_demasiadas_consultas_por_usuario(self):
+        h1, h2 = self.login(), self.login("usuario2")
+        with patch.dict(os.environ, {"ARSOFT_CONSULTAS_POR_MINUTO": "3"}):
+            for i in range(3):
+                self.preguntar(h1, f"refrigerante {i}")
+            r = self.client.post("/consulta", json={"conversacion_id": "", "pregunta": "otra"}, headers=h1)
+            self.assertEqual(r.status_code, 429)
+            self.assertEqual(r.json()["codigo_error"], "demasiadas_consultas")
+            self.assertGreaterEqual(int(r.headers["Retry-After"]), 1)
+            self.assertEqual(len(self.recibidas), 3)  # la cuarta no llega a Agentes
+            self.preguntar(h2, "refrigerante")  # el límite es por usuario
+
+    def test_500_con_formato_de_error(self):
+        h = self.login()
+        with patch("Backend.api.app.main.consultar_agentes", side_effect=RuntimeError("fallo inesperado")), \
+                TestClient(app, raise_server_exceptions=False) as client:
+            r = client.post("/consulta", json={"conversacion_id": "", "pregunta": "hola"}, headers=h)
+        self.assertEqual(r.status_code, 500)
+        self.assertEqual(r.json(), {"codigo_error": "error_interno", "mensaje": "Error interno del servidor."})
+        self.assertNotIn("fallo inesperado", r.text)
 
     # ------------------------------------------------------------- CTR-001 + CTR-006
     def test_consulta_crea_el_chat_y_guarda_el_turno(self):
@@ -308,6 +334,35 @@ class ConBaseDeDatos(unittest.TestCase):
             self.assertEqual(httpx.get(f"{url}/health", timeout=5).status_code, 200)
             self.assertLess(time.perf_counter() - inicio, 0.5)
             hilo.join()
+
+    # ------------------------------------------------------------- CTR-007
+    def test_agentes_leen_el_historial_con_su_cliente_real(self):
+        """CTR-007 con Agents/agente1/cliente_backend.py contra el Backend levantado con uvicorn."""
+        from Agents.agente1.cliente_backend import ClienteBackendAgentes
+        h = self.login()
+        cid = self.preguntar(h, "¿Cada cuántos km se cambia el refrigerante?")["conversacion_id"]
+        self.preguntar(h, "¿Y la bomba auxiliar?", cid)
+        with serve(app) as url:
+            agentes = ClienteBackendAgentes(base_url=url, token_auth=TOKEN_SERVICIO, timeout=5)
+            todos = agentes.obtener_historial(cid)
+            ultimos = agentes.obtener_historial(cid, limit=2)
+            self.assertEqual(agentes.obtener_historial("no-existe"), [])
+            sin_token = ClienteBackendAgentes(base_url=url, token_auth="otro-token", timeout=5)
+            self.assertEqual(sin_token.obtener_historial(cid), [])
+        self.assertEqual([m["role"] for m in todos], ["user", "assistant", "user", "assistant"])
+        self.assertEqual(todos[0]["contenido"], "¿Cada cuántos km se cambia el refrigerante?")
+        self.assertEqual([m["contenido"] for m in ultimos], [m["contenido"] for m in todos[-2:]])
+
+    def test_token_de_servicio_solo_lee_un_chat(self):
+        h = self.login()
+        cid = self.preguntar(h, "refrigerante")["conversacion_id"]
+        servicio = {"Authorization": f"Bearer {TOKEN_SERVICIO}"}
+        self.assertEqual(self.client.get(f"/chats/{cid}", headers=servicio).status_code, 200)
+        self.assertEqual(self.client.get("/chats", headers=servicio).status_code, 401)  # no lista chats
+        self.assertEqual(self.client.delete(f"/chats/{cid}", headers=servicio).status_code, 401)
+        self.assertEqual(self.client.patch(f"/chats/{cid}", json={"titulo": "x"}, headers=servicio).status_code, 401)
+        r = self.client.post("/consulta", json={"conversacion_id": "", "pregunta": "hola"}, headers=servicio)
+        self.assertEqual(r.status_code, 401)  # el token de servicio no es una sesión de usuario
 
     def test_renombrar_y_borrar_chat(self):
         h = self.login()

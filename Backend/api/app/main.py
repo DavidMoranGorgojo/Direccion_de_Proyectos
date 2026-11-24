@@ -21,11 +21,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from .conocimiento import router as knowledge
 from .historial import ConversacionAjena, guardar_turno, reservar_chat
 from .historial import router as historial
+from . import limite_consultas
 from .links import connect, service_access, service_headers
 from .registro import registrar
 from .registro import router as registro
 from .sesiones import router as sesiones
 from .sesiones import usuario_actual
+from .valoracion import router as valoracion
 from .vectorial import crear_router as crear_router_vectorial
 
 AGENT_TIMEOUT_SECONDS = 25.0
@@ -51,6 +53,7 @@ app.include_router(crear_router_vectorial(connect, service_access))  # POST /con
 app.include_router(sesiones)
 app.include_router(historial)
 app.include_router(registro)
+app.include_router(valoracion)  # POST /valoracion (CTR-001)
 
 
 class Pregunta(BaseModel):
@@ -97,6 +100,14 @@ async def http_error(request: Request, error: StarletteHTTPException):
     return JSONResponse(body, status_code=error.status_code, headers=error.headers)
 
 
+@app.exception_handler(Exception)
+async def internal_error(request: Request, error: Exception):
+    """500 con el formato de error de la API, sin detalles internos (CTR-001: error 500)."""
+    log.exception("Error no controlado en %s", request.url.path)
+    return JSONResponse({"codigo_error": "error_interno", "mensaje": "Error interno del servidor."},
+                        status_code=500)
+
+
 @app.exception_handler(psycopg.Error)
 async def postgres_error(request: Request, error: psycopg.Error):
     return JSONResponse({"codigo": "indice_no_disponible"}, status_code=503)
@@ -107,7 +118,7 @@ async def validation_error(request: Request, error: RequestValidationError):
     if request.url.path == "/auth/login":  # CTR-005: 422 con el cuerpo de login
         return JSONResponse({"estado": "no_autenticado", "codigo_error": "datos_incompletos",
                              "mensaje": "Faltan datos o el formato es incorrecto."}, status_code=422)
-    if request.url.path == "/consulta" and await bearer(request) is None:
+    if request.url.path in ("/consulta", "/valoracion") and await bearer(request) is None:
         return JSONResponse({"codigo_error": "sesion_caducada", "mensaje": "Tu sesión ha caducado."},
                             status_code=401)
     return JSONResponse({"codigo_error": "entrada_invalida", "mensaje": "Faltan datos o el formato es incorrecto."},
@@ -150,6 +161,11 @@ async def consulta(data: Pregunta, request: Request,
     cid = data.conversacion_id or uuid4().hex
     if invalid_question(data.pregunta):
         return failed(cid, "entrada_invalida", "La pregunta debe contener entre 1 y 2000 caracteres.")
+    espera = limite_consultas.admitir(usuario["id"])
+    if espera:  # CTR-001: 429 si el usuario encadena demasiadas consultas
+        raise HTTPException(429, headers={"Retry-After": str(espera)},
+                            detail={"codigo_error": "demasiadas_consultas",
+                                    "mensaje": "Demasiadas consultas seguidas. Espera un momento."})
     # psycopg es síncrono: el acceso a la base va a un hilo aparte para no bloquear el event loop
     try:
         await run_in_threadpool(reservar, usuario["id"], cid, data.pregunta)

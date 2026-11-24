@@ -11,7 +11,6 @@ from __future__ import annotations
 import sys
 import types
 import xml.etree.ElementTree as ET
-from datetime import datetime
 
 
 def setup_qt_harness() -> None:
@@ -191,6 +190,12 @@ def setup_qt_harness() -> None:
 
         def setProperty(self, name, value):
             self._properties[name] = value
+
+        def setToolTip(self, tip):
+            self._tool_tip = tip
+
+        def toolTip(self):
+            return getattr(self, "_tool_tip", "")
 
         def windowTitle(self):
             return self._window_title

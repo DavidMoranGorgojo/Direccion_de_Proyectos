@@ -22,3 +22,7 @@ From: pgvector/pgvector@sha256:484e838076e04939d27d3e176e91c86eea96236126023be8d
         -c listen_addresses=127.0.0.1 \
         -c unix_socket_directories=/var/run/postgresql \
         -c port=5432
+
+%test
+    psql --version
+    test -x /usr/local/bin/docker-entrypoint.sh

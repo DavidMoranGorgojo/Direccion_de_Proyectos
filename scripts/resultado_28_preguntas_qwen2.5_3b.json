@@ -1,0 +1,479 @@
+{
+  "fecha": "2026-11-23T11:45:19.038113+00:00",
+  "modelo": "qwen2.5:3b",
+  "resultados": [
+    {
+      "id": "CTRL-01",
+      "tipo": "control",
+      "pregunta": "¿Cuál es la función principal del sistema ThermoDrive HTM-240?",
+      "doc_esperado": "HTM240-MAN-001",
+      "estado_a2": "suficiente",
+      "docs_recuperados_a2": [
+        "HTM240-MAN-001",
+        "HTM240-OPE-001",
+        "HTM240-MAN-001"
+      ],
+      "doc_encontrado_a2": true,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué versión necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 10.03,
+      "veredicto": "OK (Aclaración versión)"
+    },
+    {
+      "id": "CTRL-02",
+      "tipo": "control",
+      "pregunta": "¿Cómo se llaman los tres circuitos térmicos independientes que componen la arquitectura funcional?",
+      "doc_esperado": "HTM240-MAN-001",
+      "estado_a2": "ambiguo",
+      "docs_recuperados_a2": [
+        "HTM240-ESQ-001",
+        "HTM240-MAN-001",
+        "HTM240-DIA-001"
+      ],
+      "doc_encontrado_a2": true,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué version necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 3.58,
+      "veredicto": "OK (Aclaración versión)"
+    },
+    {
+      "id": "CTRL-03",
+      "tipo": "control",
+      "pregunta": "¿Qué componente es el CMP-04 y qué permite hacer a la Unidad de Control Térmico (TCU)?",
+      "doc_esperado": "HTM240-CAT-001",
+      "estado_a2": "suficiente",
+      "docs_recuperados_a2": [
+        "HTM240-ESQ-001",
+        "HTM240-ESQ-001",
+        "HTM240-MAN-001"
+      ],
+      "doc_encontrado_a2": false,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué versión necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 3.44,
+      "veredicto": "FALLO (A2 no halló doc)"
+    },
+    {
+      "id": "CTRL-04",
+      "tipo": "control",
+      "pregunta": "¿A qué temperatura inicial debe abrir el termostato electrónico (CMP-08)?",
+      "doc_esperado": "HTM240-CAT-001",
+      "estado_a2": "suficiente",
+      "docs_recuperados_a2": [
+        "HTM240-CAT-001",
+        "HTM240-DTC-001",
+        "HTM240-ESQ-001"
+      ],
+      "doc_encontrado_a2": true,
+      "estado_a1": "error",
+      "fuentes_a1": [],
+      "texto_a1": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 16.55,
+      "veredicto": "FALLO A1 (Redactor/Verificador error)"
+    },
+    {
+      "id": "CTRL-05",
+      "tipo": "control",
+      "pregunta": "¿Cuál es el rango normal de temperatura de funcionamiento para el inversor (Circuito CIR-03)?",
+      "doc_esperado": "HTM240-MAN-001",
+      "estado_a2": "suficiente",
+      "docs_recuperados_a2": [
+        "HTM240-ESQ-001",
+        "HTM240-MNT-001",
+        "HTM240-MNT-001"
+      ],
+      "doc_encontrado_a2": false,
+      "estado_a1": "error",
+      "fuentes_a1": [],
+      "texto_a1": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 11.31,
+      "veredicto": "FALLO A2 (No recuperó HTM240-MAN-001)"
+    },
+    {
+      "id": "CTRL-06",
+      "tipo": "control",
+      "pregunta": "¿Qué diferencia principal existe en el calentador PTC (CMP-12) entre la versión V1.0 y la versión V2.0?",
+      "doc_esperado": "HTM240-MAN-001",
+      "estado_a2": null,
+      "docs_recuperados_a2": [],
+      "doc_encontrado_a2": false,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué versión necesitas consultar?",
+      "latencia_s": 3.7,
+      "veredicto": "FALLO (A2 no halló doc)"
+    },
+    {
+      "id": "CTRL-07",
+      "tipo": "control",
+      "pregunta": "Según el plan de mantenimiento preventivo, ¿qué líquido refrigerante consumible debe utilizarse en el sistema?",
+      "doc_esperado": "HTM240-MNT-001",
+      "estado_a2": "ambiguo",
+      "docs_recuperados_a2": [
+        "HTM240-BOL-006",
+        "HTM240-MNT-001",
+        "HTM240-MNT-001"
+      ],
+      "doc_encontrado_a2": true,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 3.24,
+      "veredicto": "OK (Aclaración versión)"
+    },
+    {
+      "id": "CTRL-08",
+      "tipo": "control",
+      "pregunta": "¿Qué riesgo principal existe al inspeccionar el nivel de refrigerante (HTM240-PRC-001) y a qué temperatura debe estar el motor?",
+      "doc_esperado": "HTM240-PRC-001",
+      "estado_a2": "sin_evidencia",
+      "docs_recuperados_a2": [],
+      "doc_encontrado_a2": false,
+      "estado_a1": "sin_evidencia",
+      "fuentes_a1": [],
+      "texto_a1": "No se ha encontrado información en la documentación disponible.",
+      "latencia_s": 3.95,
+      "veredicto": "FALLO A2 (No recuperó HTM240-PRC-001)"
+    },
+    {
+      "id": "CTRL-09",
+      "tipo": "control",
+      "pregunta": "En la versión V1.1 y V2.0, ¿qué caudal y corriente debe registrar la bomba auxiliar A (CMP-02) durante su verificación?",
+      "doc_esperado": "HTM240-BOL-002",
+      "estado_a2": null,
+      "docs_recuperados_a2": [],
+      "doc_encontrado_a2": false,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué versión necesitas consultar?",
+      "latencia_s": 4.18,
+      "veredicto": "FALLO (A2 no halló doc)"
+    },
+    {
+      "id": "CTRL-10",
+      "tipo": "control",
+      "pregunta": "¿Qué significa coloquialmente que el vehículo está en 'Modo tortuga'?",
+      "doc_esperado": "HTM240-DIC-001",
+      "estado_a2": "ambiguo",
+      "docs_recuperados_a2": [
+        "HTM240-ADV-001",
+        "HTM240-DTC-001",
+        "HTM240-DTC-001"
+      ],
+      "doc_encontrado_a2": false,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué version necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 2.96,
+      "veredicto": "FALLO (A2 no halló doc)"
+    },
+    {
+      "id": "CTRL-11",
+      "tipo": "control",
+      "pregunta": "Durante una comprobación de fugas (PRC-008), ¿qué herramienta ficticia se recomienda usar junto con una linterna UV si no hay fugas visibles a simple vista?",
+      "doc_esperado": "HTM240-PRC-008",
+      "estado_a2": "suficiente",
+      "docs_recuperados_a2": [
+        "HTM240-DIC-001"
+      ],
+      "doc_encontrado_a2": false,
+      "estado_a1": "error",
+      "fuentes_a1": [],
+      "texto_a1": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 13.4,
+      "veredicto": "FALLO A2 (No recuperó HTM240-PRC-008)"
+    },
+    {
+      "id": "CTRL-12",
+      "tipo": "control",
+      "pregunta": "Al comprobar la presión del circuito de motor (PRC-009), ¿hasta cuántos bares se debe presurizar el circuito y durante cuánto tiempo?",
+      "doc_esperado": "HTM240-PRC-009",
+      "estado_a2": "suficiente",
+      "docs_recuperados_a2": [
+        "HTM240-DIA-001"
+      ],
+      "doc_encontrado_a2": false,
+      "estado_a1": "error",
+      "fuentes_a1": [],
+      "texto_a1": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 11.4,
+      "veredicto": "FALLO A2 (No recuperó HTM240-PRC-009)"
+    },
+    {
+      "id": "CTRL-13",
+      "tipo": "control",
+      "pregunta": "¿Qué código DTC se asocia a la detección de contaminación cruzada con aceite en el circuito refrigerante?",
+      "doc_esperado": "HTM240-DTC-001",
+      "estado_a2": "ambiguo",
+      "docs_recuperados_a2": [
+        "HTM240-HIS-001",
+        "HTM240-HIS-001",
+        "HTM240-HIS-001"
+      ],
+      "doc_encontrado_a2": false,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 3.63,
+      "veredicto": "FALLO (A2 no halló doc)"
+    },
+    {
+      "id": "CTRL-14",
+      "tipo": "control",
+      "pregunta": "¿Qué significa el testigo TES-05 encendido en color rojo?",
+      "doc_esperado": "HTM240-ADV-001",
+      "estado_a2": "suficiente",
+      "docs_recuperados_a2": [
+        "HTM240-ADV-001",
+        "HTM240-ADV-001",
+        "HTM240-HIS-001"
+      ],
+      "doc_encontrado_a2": true,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué versión necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 3.52,
+      "veredicto": "OK (Aclaración versión)"
+    },
+    {
+      "id": "CTRL-15",
+      "tipo": "control",
+      "pregunta": "¿Qué equipo de protección individual se debe usar, de forma ficticia, cuando exista proximidad a componentes de alta tensión?",
+      "doc_esperado": "HTM240-SEG-001",
+      "estado_a2": "ambiguo",
+      "docs_recuperados_a2": [
+        "HTM240-SEG-001",
+        "HTM240-MAN-001",
+        "HTM240-ADV-001"
+      ],
+      "doc_encontrado_a2": true,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué version necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 3.12,
+      "veredicto": "OK (Aclaración versión)"
+    },
+    {
+      "id": "CTRL-16",
+      "tipo": "control",
+      "pregunta": "En el Historial de Casos (HTM-CASO-002), ¿cuál fue la causa raíz de una alerta de reducción de velocidad durante la carga rápida?",
+      "doc_esperado": "HTM240-HIS-001",
+      "estado_a2": "ambiguo",
+      "docs_recuperados_a2": [
+        "HTM240-HIS-001",
+        "HTM240-OPE-001",
+        "HTM240-DIA-001"
+      ],
+      "doc_encontrado_a2": true,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué version necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 3.76,
+      "veredicto": "OK (Aclaración versión)"
+    },
+    {
+      "id": "CTRL-17",
+      "tipo": "control",
+      "pregunta": "Según el boletín técnico HTM240-BOL-003, ¿qué indica el código HTM-0142 en la versión de software V2.0?",
+      "doc_esperado": "HTM240-BOL-003",
+      "estado_a2": "suficiente",
+      "docs_recuperados_a2": [
+        "HTM240-BOL-003"
+      ],
+      "doc_encontrado_a2": true,
+      "estado_a1": "error",
+      "fuentes_a1": [],
+      "texto_a1": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 9.9,
+      "veredicto": "FALLO A1 (Redactor/Verificador error)"
+    },
+    {
+      "id": "CTRL-18",
+      "tipo": "control",
+      "pregunta": "¿Cada cuánto tiempo o kilometraje se debe verificar de forma completa la comunicación CAN de la TCU?",
+      "doc_esperado": "HTM240-MNT-001",
+      "estado_a2": "ambiguo",
+      "docs_recuperados_a2": [
+        "HTM240-ESQ-001",
+        "HTM240-HIS-001",
+        "HTM240-ESQ-001"
+      ],
+      "doc_encontrado_a2": false,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 3.07,
+      "veredicto": "FALLO (A2 no halló doc)"
+    },
+    {
+      "id": "CTRL-19",
+      "tipo": "control",
+      "pregunta": "El boletín HTM240-BOL-006 corrige un dato sobre el plan de mantenimiento. ¿A qué kilómetros debe cambiarse el refrigerante y qué cifra era incorrecta?",
+      "doc_esperado": "HTM240-BOL-006",
+      "estado_a2": "suficiente",
+      "docs_recuperados_a2": [
+        "HTM240-BOL-006"
+      ],
+      "doc_encontrado_a2": true,
+      "estado_a1": "error",
+      "fuentes_a1": [],
+      "texto_a1": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 8.89,
+      "veredicto": "FALLO A1 (Redactor/Verificador error)"
+    },
+    {
+      "id": "CTRL-20",
+      "tipo": "control",
+      "pregunta": "Si tres o más testigos se activan simultáneamente, ¿qué procedimiento hay que ejecutar antes de asumir un fallo único?",
+      "doc_esperado": "HTM240-DIA-001",
+      "estado_a2": "solo_obsoleto",
+      "docs_recuperados_a2": [
+        "HTM240-PRC-003"
+      ],
+      "doc_encontrado_a2": false,
+      "estado_a1": "error",
+      "fuentes_a1": [],
+      "texto_a1": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 9.17,
+      "veredicto": "FALLO A2 (No recuperó HTM240-DIA-001)"
+    },
+    {
+      "id": "TRAMP-01",
+      "tipo": "trampa",
+      "pregunta": "¿Cuál es la presión recomendada para el inflado de los neumáticos delanteros del HTM-240?",
+      "doc_esperado": null,
+      "estado_a2": null,
+      "docs_recuperados_a2": [],
+      "doc_encontrado_a2": null,
+      "estado_a1": "fuera_de_ambito",
+      "fuentes_a1": [],
+      "texto_a1": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales.",
+      "latencia_s": 0.54,
+      "veredicto": "OK (Frenada: fuera_de_ambito)"
+    },
+    {
+      "id": "TRAMP-02",
+      "tipo": "trampa",
+      "pregunta": "¿Qué aceite de motor (qué grado de viscosidad) debo usar al rellenar el cárter?",
+      "doc_esperado": null,
+      "estado_a2": "suficiente",
+      "docs_recuperados_a2": [
+        "HTM240-OPE-001",
+        "HTM240-CAT-001",
+        "HTM240-CAT-001"
+      ],
+      "doc_encontrado_a2": null,
+      "estado_a1": "error",
+      "fuentes_a1": [],
+      "texto_a1": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 9.75,
+      "veredicto": "OK (Bloqueo seguridad A1-07)"
+    },
+    {
+      "id": "TRAMP-03",
+      "tipo": "trampa",
+      "pregunta": "El cliente se queja de que el aire acondicionado (A/C) del habitáculo no enfría en verano. ¿Cómo recargo el gas frigorífico?",
+      "doc_esperado": null,
+      "estado_a2": "ambiguo",
+      "docs_recuperados_a2": [
+        "HTM240-HIS-001",
+        "HTM240-BOL-001",
+        "HTM240-BOL-002"
+      ],
+      "doc_encontrado_a2": null,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 3.82,
+      "veredicto": "FALLO ALUCINACIÓN (aclaracion)"
+    },
+    {
+      "id": "TRAMP-04",
+      "tipo": "trampa",
+      "pregunta": "¿Cada cuántos kilómetros se debe sustituir la correa de distribución que mueve la bomba mecánica (CMP-01)?",
+      "doc_esperado": null,
+      "estado_a2": "suficiente",
+      "docs_recuperados_a2": [
+        "HTM240-CAT-001",
+        "HTM240-MAN-001"
+      ],
+      "doc_encontrado_a2": null,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué versión necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 3.53,
+      "veredicto": "FALLO ALUCINACIÓN (aclaracion)"
+    },
+    {
+      "id": "TRAMP-05",
+      "tipo": "trampa",
+      "pregunta": "Tengo el código de error HTM-0850 en la máquina de diagnóstico. ¿Qué debo revisar?",
+      "doc_esperado": null,
+      "estado_a2": "sin_evidencia",
+      "docs_recuperados_a2": [],
+      "doc_encontrado_a2": null,
+      "estado_a1": "sin_evidencia",
+      "fuentes_a1": [],
+      "texto_a1": "No se ha encontrado información en la documentación disponible.",
+      "latencia_s": 3.82,
+      "veredicto": "OK (Frenada: sin_evidencia)"
+    },
+    {
+      "id": "TRAMP-06",
+      "tipo": "trampa",
+      "pregunta": "¿A qué par de apriete exacto (en Nm) debo apretar los tornillos de la culata del bloque motor?",
+      "doc_esperado": null,
+      "estado_a2": "ambiguo",
+      "docs_recuperados_a2": [
+        "HTM240-OPE-001",
+        "HTM240-MAN-001",
+        "HTM240-CAT-001"
+      ],
+      "doc_encontrado_a2": null,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué version necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 3.29,
+      "veredicto": "FALLO ALUCINACIÓN (aclaracion)"
+    },
+    {
+      "id": "TRAMP-07",
+      "tipo": "trampa",
+      "pregunta": "No me queda refrigerante ThermoGlyc HX-40. ¿Es seguro mezclarlo con anticongelante genérico G12 de color rosa?",
+      "doc_esperado": null,
+      "estado_a2": "ambiguo",
+      "docs_recuperados_a2": [
+        "HTM240-SEG-001",
+        "HTM240-ADV-001",
+        "HTM240-MNT-001"
+      ],
+      "doc_encontrado_a2": null,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué version necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 3.88,
+      "veredicto": "FALLO ALUCINACIÓN (aclaracion)"
+    },
+    {
+      "id": "TRAMP-08",
+      "tipo": "trampa",
+      "pregunta": "¿Cómo se purga el sistema de líquido de frenos del HTM-240?",
+      "doc_esperado": null,
+      "estado_a2": "ambiguo",
+      "docs_recuperados_a2": [
+        "HTM240-HIS-001",
+        "HTM240-MNT-001",
+        "HTM240-ESQ-001"
+      ],
+      "doc_encontrado_a2": null,
+      "estado_a1": "aclaracion",
+      "fuentes_a1": [],
+      "texto_a1": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 3.5,
+      "veredicto": "FALLO ALUCINACIÓN (aclaracion)"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-﻿{
+{
   "version": "1.0",
   "paquete_trabajo": "CJ-02: Set de pruebas y métricas",
   "departamento": "Agentes (Agente 1 / Agente 2)",
@@ -86,7 +86,7 @@
       ],
       "chunks_esperados": [
         "HTM240-CAT-001@1.0_p1_cat_001_04",
-        "HTM240-ESQ-001@1.0_p1_arquitectura_general"
+        "HTM240-ESQ-001@1.0_p1_flujo_calentamiento_frio"
       ],
       "documento_fuente": "HTM240-CAT-001 / HTM240-ESQ-001",
       "respuesta_esperada_ground_truth": "El CMP-04 es la válvula distribuidora de 4 vías accionada por motor paso a paso de 12V. Su función es regular la interconexión térmica entre el circuito de motor (CIR-01) y el de batería (CIR-02), permitiendo desviar calor residual del motor para precalentar la batería en arranques en frío [HTM240-CAT-001@1.0_p1_cat_001_04, HTM240-ESQ-001@1.0_p1_flujo_calentamiento_frio].",
@@ -146,7 +146,7 @@
       "numero": 6,
       "categoria": "valida_tecnica",
       "subtipo": "codigo_dtc_directo",
-      "pregunta_usuario": "Tengo registrado el código HTM-0201 en la diagnosis. ¿Qué indica y qué componente está implicado?",
+      "pregunta_usuario": "Tengo registrado el código HTM-0202 en la diagnosis. ¿Qué indica y qué componente está implicado?",
       "intencion_esperada": "codigo_error",
       "estado_esperado_agente2": "suficiente",
       "campo_aclaracion_esperado": null,
@@ -156,16 +156,17 @@
         "V2.0"
       ],
       "entidades_esperadas": [
-        "HTM-0201",
+        "HTM-0202",
         "CIR-02",
-        "CMP-15"
+        "CMP-18",
+        "CMP-02"
       ],
       "chunks_esperados": [
-        "HTM240-DTC-001@1.0_p1_htm0201"
+        "HTM240-DTC-001@1.0_p2_htm0202"
       ],
       "documento_fuente": "HTM240-DTC-001",
-      "respuesta_esperada_ground_truth": "El código HTM-0201 indica sobretemperatura en el circuito de batería (CIR-02), con lectura superior a 45 °C en el sensor multipunto CMP-15. Activa los testigos TES-02 y TES-06 (modo Protección) [HTM240-DTC-001@1.0_p1_htm0201].",
-      "criterio_evaluacion_estricto": "Debe citar sobretemperatura en batería (>45 °C), sensor CMP-15 y testigos TES-02/TES-06."
+      "respuesta_esperada_ground_truth": "El código HTM-0202 indica caudal nulo en el circuito de batería (CIR-02), detectado por el sensor CMP-18 cuando la bomba eléctrica auxiliar A (CMP-02) debería estar activa. Activa el testigo TES-02 y requiere el procedimiento HTM240-PRC-003 [HTM240-DTC-001@1.0_p2_htm0202].",
+      "criterio_evaluacion_estricto": "Debe citar caudal nulo en circuito de batería (CIR-02), sensor CMP-18 o bomba CMP-02 y testigo TES-02."
     },
     {
       "id_pregunta": "CJ02-007",
@@ -685,10 +686,10 @@
       ],
       "chunks_esperados": [
         "HTM240-ADV-001@1.1_p2_combinaciones",
-        "HTM240-DTC-001@1.0_p1_htm0405"
+        "HTM240-DTC-001@1.0_p4_htm0405"
       ],
       "documento_fuente": "HTM240-ADV-001 / HTM240-DTC-001",
-      "respuesta_esperada_ground_truth": "El código HTM-0405 se genera ante la activación simultánea de tres o más testigos. Indica que no debe asumirse un fallo simple aislado y exige la ejecución obligatoria del procedimiento de diagnóstico completo del sistema según HTM240-PRC-012 [HTM240-ADV-001@1.1_p2_combinaciones, HTM240-DTC-001@1.0_p1_htm0405].",
+      "respuesta_esperada_ground_truth": "El código HTM-0405 se genera ante la activación simultánea de tres o más testigos. Indica que no debe asumirse un fallo simple aislado y exige la ejecución obligatoria del procedimiento de diagnóstico completo del sistema según HTM240-PRC-012 [HTM240-ADV-001@1.1_p2_combinaciones, HTM240-DTC-001@1.0_p4_htm0405].",
       "criterio_evaluacion_estricto": "Debe exigir diagnóstico completo según PRC-012 y no asumir fallo único."
     },
     {
@@ -799,14 +800,14 @@
       ],
       "entidades_esperadas": [
         "CMP-24",
-        "HTM240-PRC-011"
+        "HTM-CASO-002"
       ],
       "chunks_esperados": [
-        "HTM240-PRC-011@1.0_p1_pasos"
+        "HTM240-HIS-001@1.0_p1_caso_002"
       ],
-      "documento_fuente": "HTM240-PRC-011",
-      "respuesta_esperada_ground_truth": "Continuando con el caso anterior de obstrucción en el filtro de batería CMP-24, la solución consiste en sustituir el elemento filtrante siguiendo el procedimiento HTM240-PRC-011: despresurizar circuito, cambiar cartucho y realizar purgado [HTM240-PRC-011@1.0_p1_pasos].",
-      "criterio_evaluacion_estricto": "Debe resolver la anáfora («eso») usando la entidad del turno anterior (filtro CMP-24)."
+      "documento_fuente": "HTM240-HIS-001",
+      "respuesta_esperada_ground_truth": "Continuando con el caso de obstrucción en el filtro de batería CMP-24, la solución documentada en el caso de servicio consiste en la sustitución del filtro CMP-24 colmatado por partículas, normalizando el caudal a 11 l/min [HTM240-HIS-001@1.0_p1_caso_002].",
+      "criterio_evaluacion_estricto": "Debe resolver la anáfora («eso») usando la entidad del turno anterior (filtro CMP-24) y prescribir la sustitución del filtro."
     },
     {
       "id_pregunta": "CJ02-034",

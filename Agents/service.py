@@ -1,6 +1,7 @@
-"""Adaptador HTTP del Agente 1 existente y su recuperador simulado."""
+"""Servicio HTTP de Agentes con recuperación real o simulación explícita."""
 
 import asyncio
+import os
 import time
 from collections import OrderedDict
 from contextlib import asynccontextmanager, suppress
@@ -16,7 +17,15 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from .agente1.core import Agente1, MODELO_LLM, OLLAMA_URL, consultar_asistente
+from .agente1.core import Agente1, MODELO_LLM, OLLAMA_URL, consultar_asistente, simulador_agente_2
+
+try:
+    from .Agent_2.src.services.pipeline import recuperar_evidencias
+    from .Agent_2.src.services.runtime import check_readiness
+except ImportError:
+    recuperar_evidencias = None
+
+USE_REAL_AGENT2 = os.getenv("USE_REAL_AGENT2", "0").lower() in ("1", "true", "yes")
 
 SESSION_TTL_SECONDS = 1800
 MAX_SESSIONS = 1024
@@ -89,11 +98,22 @@ def get_session(cid: str) -> Session:
                 if available_id is None:
                     raise HTTPException(503, "Capacidad de conversaciones ocupada.")
                 sessions.pop(available_id)
-            current = Session(Agente1(conversacion_id=cid))
+            agent = Agente1(conversacion_id=cid)
+            # CTR-007: Restauración automática de memoria desde Backend si existen turnos previos
+            with suppress(Exception):
+                from .agente1.cliente_backend import ClienteBackendAgentes
+                agent.cliente_backend = ClienteBackendAgentes()
+                agent.restaurar_memoria_desde_backend(agent.cliente_backend)
+            current = Session(agent)
             sessions[cid] = current
         current.requests += 1
         sessions.move_to_end(cid)
         return current
+
+@app.get("/health")
+def liveness():
+    """Comprueba que el proceso HTTP de Agentes está operativo, sin probar modelos externos."""
+    return {"status": "ok"}
 
 
 @app.post("/agentes/consulta")
@@ -109,8 +129,39 @@ def query(data: Query):
             with lock:
                 if current.discard_after_request:
                     current.agent = Agente1(conversacion_id=cid)
+                    with suppress(Exception):
+                        from .agente1.cliente_backend import ClienteBackendAgentes
+                        current.agent.cliente_backend = ClienteBackendAgentes()
+                        current.agent.restaurar_memoria_desde_backend(current.agent.cliente_backend)
                     current.discard_after_request = False
-            result = consultar_asistente(data.pregunta, current.agent)
+
+            # Separación estricta entre servicio real y simulador (B11):
+            if USE_REAL_AGENT2:
+                if recuperar_evidencias is None:
+                    return {
+                        "trace_id": uuid4().hex,
+                        "estado": "error",
+                        "texto": GENERIC_ERROR,
+                        "fuentes": [],
+                        "codigo_error": "servicio_no_disponible",
+                    }
+                agente2_impl = recuperar_evidencias
+            else:
+                agente2_impl = simulador_agente_2
+
+            result = consultar_asistente(data.pregunta, current.agent, agente2=agente2_impl)
+
+            # CTR-003: Registro automático de consulta y trazabilidad en Backend
+            with suppress(Exception):
+                from .agente1.cliente_backend import ClienteBackendAgentes
+                ClienteBackendAgentes().registrar_turno({
+                    "trace_id": result.get("trace_id", uuid4().hex),
+                    "conversacion_id": cid,
+                    "pregunta": data.pregunta,
+                    "estado": result.get("estado"),
+                    "codigo_error": result.get("codigo_error", ""),
+                    "fuentes": [f.get("chunk_id") if isinstance(f, dict) else str(f) for f in result.get("fuentes", [])],
+                })
     finally:
         with lock:
             current.touched = time.monotonic()
@@ -140,11 +191,22 @@ def close(conversacion_id: str):
 
 @app.get("/agentes/salud")
 def health():
+    if USE_REAL_AGENT2:
+        if recuperar_evidencias is None:
+            return JSONResponse({"status": "unavailable", "recuperacion": "agente2_no_disponible"}, status_code=503)
+        recuperacion_modo = "agente2"
+    else:
+        recuperacion_modo = "mock"
+
     try:
         response = httpx.get(f"{OLLAMA_URL.rstrip('/')}/models", timeout=3, trust_env=False)
         response.raise_for_status()
         if MODELO_LLM not in {item["id"] for item in response.json()["data"]}:
             raise ValueError("Modelo no encontrado")
     except (httpx.HTTPError, ValueError, KeyError):
-        return JSONResponse({"status": "unavailable", "recuperacion": "mock"}, status_code=503)
-    return {"status": "ok", "recuperacion": "mock"}
+        return JSONResponse({"status": "unavailable", "recuperacion": recuperacion_modo}, status_code=503)
+    if USE_REAL_AGENT2:
+        readiness = check_readiness()
+        if readiness["status"] != "ok":
+            return JSONResponse({**readiness, "recuperacion": recuperacion_modo}, status_code=503)
+    return {"status": "ok", "recuperacion": recuperacion_modo}
