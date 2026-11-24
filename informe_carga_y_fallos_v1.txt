@@ -1,0 +1,27 @@
+
+=== CARGA: Búsqueda Léxica (/conocimiento/lexica) (200 reqs, 10 hilos) ===
+  Éxitos: 200/200 | Errores: 0 | Throughput: 97.9 req/s
+  Media:  99.38 ms
+  p50:    98.06 ms
+  p95:    136.45 ms
+  p99:    146.50 ms
+  Máx:    159.04 ms
+
+=== CARGA: Búsqueda Vectorial HNSW (/conocimiento/vectorial) (200 reqs, 10 hilos) ===
+  Éxitos: 200/200 | Errores: 0 | Throughput: 80.9 req/s
+  Media:  120.55 ms
+  p50:    117.17 ms
+  p95:    153.13 ms
+  p99:    191.28 ms
+  Máx:    200.07 ms
+
+=== PRUEBAS DE FALLO Y RESILIENCIA ===
+  [PASS] Sin token Bearer                           -> status=401 (3.2 ms)
+  [PASS] Token inválido                             -> status=401 (1.8 ms)
+  [PASS] JSON malformado                            -> status=422 (1.9 ms)
+  [PASS] Texto vacío en léxica                      -> status=422 (3.2 ms)
+  [PASS] Vector dimensión inválida (512 != 1024)    -> status=400 (2.5 ms)
+  [PASS] Vector con NaN / tipo inválido             -> status=400 (8.7 ms)
+  [PASS] Parámetro k fuera de rango (k=9999)        -> status=422 (2.8 ms)
+  [PASS] Filtro versión inexistente (V9.9)          -> status=400 (2.2 ms)
+  [PASS] Timeout cliente agresivo (0.0002s)         -> status=TimeoutError (1.6 ms)
