@@ -148,6 +148,7 @@ def generar_candidatos(cantidad):
     return candidatos
 
 
+@pytest.mark.modelo_real
 @pytest.mark.skipif(
     os.getenv("RUN_REAL_RERANKER_TEST") != "1",
     reason="Benchmark del modelo real desactivado por defecto",

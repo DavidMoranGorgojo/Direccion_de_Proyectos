@@ -163,8 +163,10 @@ modelos ni Backend.
 $env:PYTHONPATH = "shared;Backend/api;."
 python -m pytest Test/test_Models Test/test_Agents Test/test_Performance -q
 
-# Solo el contrato con el Agente 1 y la calibración
-python -m pytest Test/test_Models/test_contrato_ctr004_agente1.py Test/test_Models/test_calibracion_28.py -q
+# Por marcador (registrados en pytest.ini, asignados en Test/test_Models/conftest.py)
+python -m pytest Test -m agente2 -q        # todo el Agente 2
+python -m pytest Test -m contrato -q       # contrato CTR-004 con el Agente 1 y calibración A2-08
+python -m pytest Test -m "not modelo_real" -q
 
 # Pruebas con el reranker real (se saltan por defecto)
 $env:RUN_REAL_RERANKER_TEST = "1"
