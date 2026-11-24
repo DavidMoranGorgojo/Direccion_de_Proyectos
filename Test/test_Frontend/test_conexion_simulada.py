@@ -117,6 +117,14 @@ class TestCTR001LecturaRespuestas(BaseFrontendTestCase):
         self.assertEqual(res.codigo_error, "error")
         self.assertIn("503", res.texto)
 
+    def test_ctr001_servidor_caido_en_simulador(self):
+        """El simulador representa una caída del servicio con el error contractual."""
+        res = api.send_message("conv-down", "simular servidor_caido")
+
+        self.assertEqual(res.estado, STATUS_ERROR)
+        self.assertEqual(res.codigo_error, "servicio_no_disponible")
+        self.assertEqual(res.texto, GENERIC_ERROR)
+
     def test_ctr001_aclaracion_por_pregunta_demasiado_corta(self):
         """Preguntas de dos o menos palabras provocan repregunta (estado aclaracion)."""
         res = api.send_message("conv-002", "motor fallo")
@@ -422,6 +430,16 @@ class TestEnvioConsulta(BaseFrontendTestCase):
             resp = api.send_message("c-err", "alguna pregunta")
             self.assertEqual(resp.estado, STATUS_ERROR)
             self.assertEqual(resp.texto, GENERIC_ERROR)
+            self.assertEqual(resp.codigo_error, "servicio_no_disponible")
+
+    def test_envio_consulta_con_tiempo_agotado(self):
+        """Un timeout de red conserva el error estructurado del contrato."""
+        with patch("services.api.call",
+                   side_effect=api.ConnectionFailed("Tiempo agotado", "tiempo_agotado")):
+            resp = api.send_message("c-timeout", "alguna pregunta")
+            self.assertEqual(resp.estado, STATUS_ERROR)
+            self.assertEqual(resp.texto, GENERIC_ERROR)
+            self.assertEqual(resp.codigo_error, "tiempo_agotado")
 
     def test_envio_consulta_con_error_de_configuracion(self):
         """Una configuración inválida (p. ej. modo real sin URL) se muestra al usuario, no el error genérico."""
