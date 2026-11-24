@@ -31,7 +31,7 @@ from .sesiones import usuario_actual
 from .valoracion import router as valoracion
 from .vectorial import crear_router as crear_router_vectorial
 
-AGENT_TIMEOUT_SECONDS = 25.0
+AGENT_TIMEOUT_SECONDS = float(os.environ.get("ARSOFT_AGENT_TIMEOUT_SECONDS", "25.0"))
 CODIGOS_ERROR_CTR001 = frozenset({
     "entrada_invalida",
     "modelo_no_disponible",
