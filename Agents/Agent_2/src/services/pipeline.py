@@ -471,6 +471,17 @@ class Agent2Pipeline:
                     "codigo_error": "servicio_no_disponible",
                     "mensaje_error": f"Fallo durante reranking: {err}",
                 }
+            if self.trace_retrieval:
+                # A2-08: ranking del reranker tras el umbral. Con
+                # threshold=0.0 es el ranking completo que usa la
+                # calibración de umbrales. Fuera del try: un fallo de traza
+                # no debe presentarse como fallo del reranker.
+                metricas["rankings"]["reranker"] = [
+                    {"chunk_id": c["chunk_id"],
+                     "documento": (c.get("metadata") or {}).get("documento") or c.get("documento"),
+                     "rerank_score": c["rerank_score"]}
+                    for c in candidatos_umbral
+                ]
         else:
             metricas["modo_recuperacion"] = "rrf_sin_reranker"
             # Modo sin reranker autorizado solo mediante Agent2Pipeline(...,
