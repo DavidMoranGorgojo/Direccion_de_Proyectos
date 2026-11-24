@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-11-24T11:41:13+00:00",
+  "fecha": "2026-11-24T11:47:15+00:00",
   "backend": "simulado",
   "reranker": "solapamiento",
   "valido_para_fijar_umbral": false,
@@ -22,6 +22,7 @@
       "motivo": "documento esperado ausente del índice"
     }
   ],
+  "errores": [],
   "umbral_recomendado": {
     "threshold": 0.5,
     "equilibrio": 0.6617647058823529

@@ -165,10 +165,13 @@ def tabla_markdown(resultados):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--backend", choices=("simulado", "real"), default="simulado")
-    parser.add_argument("--reranker", choices=("real", "solapamiento"), default="real")
+    parser.add_argument("--reranker", choices=("real", "solapamiento"), default=None,
+                        help="Por defecto: real con --backend real, solapamiento con --backend simulado")
     parser.add_argument("--preguntas", type=Path, default=None, help="Batería JSON (por defecto, la oficial de 28)")
     parser.add_argument("--salida", type=Path, default=SALIDA_POR_DEFECTO, help="Carpeta de resultados")
     args = parser.parse_args(argv)
+    if args.reranker is None:
+        args.reranker = "real" if args.backend == "real" else "solapamiento"
 
     if args.backend == "simulado":
         os.environ.setdefault("ARSOFT_ENV", "test")
@@ -185,14 +188,26 @@ def main(argv=None):
     )
 
     preguntas = cargar_preguntas(args.preguntas or PREGUNTAS_POR_DEFECTO)
-    _, documentos = _documentos_dataset()
+    # Solo con el Backend simulado se sabe qué documentos hay en el índice; con
+    # el real no se excluye nada para no depender del fixture local.
+    documentos = _documentos_dataset()[1] if args.backend == "simulado" else None
     pipeline = crear_pipeline(args.backend, args.reranker)
 
     trazas = {}
     datos = construir_consultas(preguntas, obtener_ranking_con(pipeline, trazas), documentos)
-    errores = {pid: t for pid, t in trazas.items() if t["estado_a2"] == "error"}
+
+    # Un fallo técnico no es una abstención: esas preguntas salen del cálculo.
+    errores = [
+        {"id": pid, "codigo_error": t["codigo_error"]}
+        for pid, t in trazas.items() if t["estado_a2"] == "error"
+    ]
+    ids_error = {e["id"] for e in errores}
+    datos["consultas"] = [c for c in datos["consultas"] if c["query_id"] not in ids_error]
     if errores:
-        print(f"AVISO: {len(errores)} preguntas terminaron en error: {errores}", file=sys.stderr)
+        print(f"AVISO: {len(errores)} preguntas terminaron en error y no se evalúan: {errores}", file=sys.stderr)
+    if not datos["consultas"]:
+        print("ERROR: ninguna pregunta se pudo evaluar.", file=sys.stderr)
+        return 1
 
     resultado = evaluate_thresholds(datos["consultas"])
     recomendacion = recomendar_umbral(resultado["results"])
@@ -205,6 +220,7 @@ def main(argv=None):
         "granularidad": "documento",
         "preguntas_evaluadas": len(datos["consultas"]),
         "excluidas": datos["excluidas"],
+        "errores": errores,
         "umbral_recomendado": recomendacion,
         "trazas": trazas,
         "rankings": datos["rankings"],

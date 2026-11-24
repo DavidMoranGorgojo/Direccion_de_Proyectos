@@ -37,6 +37,8 @@ def cargar_preguntas(path=PREGUNTAS_POR_DEFECTO):
 
     vistos = set()
     for pregunta in preguntas:
+        if not isinstance(pregunta, dict):
+            raise CalibrationError(f"Cada pregunta debe ser un diccionario: {pregunta!r}")
         pid = pregunta.get("id")
         if not isinstance(pid, str) or not pid or pid in vistos:
             raise CalibrationError(f"Identificador de pregunta no válido: {pid!r}")

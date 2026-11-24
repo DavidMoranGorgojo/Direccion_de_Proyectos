@@ -199,3 +199,84 @@ def test_sin_traza_no_se_expone_el_ranking_del_reranker():
     salida = _pipeline_simulado(threshold=0.0).procesar_consulta({"texto_preprocesado": "codigo HTM-0142"})
 
     assert "rankings" not in salida["metricas"]
+
+
+# --- Correcciones de la revisión -------------------------------------------
+
+def test_cargar_preguntas_rechaza_elementos_que_no_son_diccionarios(tmp_path):
+    with pytest.raises(CalibrationError, match="diccionario"):
+        cargar_preguntas(_escribir(tmp_path, ["CTRL-01"]))
+
+
+class _PipelineFalso:
+    """Devuelve error en las preguntas indicadas y un ranking fijo en el resto."""
+
+    def __init__(self, con_error):
+        self.con_error = con_error
+
+    def procesar_consulta(self, entrada):
+        if entrada["texto_preprocesado"] in self.con_error:
+            return {"estado": "error", "evidencias": [], "codigo_error": "tiempo_agotado", "metricas": {}}
+        return {"estado": "suficiente", "evidencias": [], "metricas": {"rankings": {"reranker": [
+            {"chunk_id": "HTM240-MAN-001@p1", "documento": "HTM240-MAN-001", "rerank_score": 0.9}]}}}
+
+
+def _main_con_pipeline(monkeypatch, tmp_path, pipeline, backend):
+    script = _cargar_script()
+    monkeypatch.setattr(script, "crear_pipeline", lambda *_: pipeline)
+    codigo = script.main(["--backend", backend, "--salida", str(tmp_path)])
+    nombres = list(tmp_path.glob("*.json"))
+    informe = json.loads(nombres[0].read_text(encoding="utf-8")) if nombres else None
+    return codigo, informe
+
+
+def test_los_errores_del_pipeline_no_cuentan_como_abstencion(monkeypatch, tmp_path):
+    preguntas = {p["id"]: p["pregunta"] for p in cargar_preguntas()}
+    pipeline = _PipelineFalso({preguntas["TRAMP-03"], preguntas["CTRL-01"]})
+
+    codigo, informe = _main_con_pipeline(monkeypatch, tmp_path, pipeline, "simulado")
+
+    assert codigo == 0
+    assert {e["id"] for e in informe["errores"]} == {"TRAMP-03", "CTRL-01"}
+    evaluadas = {q["query_id"] for q in informe["results"][0]["queries"]}
+    assert "TRAMP-03" not in evaluadas and "CTRL-01" not in evaluadas
+    # 25 evaluables (28 - 3 excluidas) menos las 2 con error.
+    assert informe["preguntas_evaluadas"] == 23
+    assert informe["results"][0]["abstencion"]["consultas_sin_relevantes"] == 7
+
+
+def test_si_todo_falla_el_script_termina_con_error(monkeypatch, tmp_path):
+    todas = {p["pregunta"] for p in cargar_preguntas()}
+
+    codigo, _ = _main_con_pipeline(monkeypatch, tmp_path, _PipelineFalso(todas), "simulado")
+
+    assert codigo == 1
+
+
+def test_con_backend_real_no_se_excluye_por_el_fixture_local(monkeypatch, tmp_path):
+    codigo, informe = _main_con_pipeline(monkeypatch, tmp_path, _PipelineFalso(set()), "real")
+
+    assert codigo == 0
+    assert informe["reranker"] == "real"
+    assert informe["excluidas"] == []
+    assert informe["preguntas_evaluadas"] == 28
+
+
+def test_la_traza_tolera_metadata_nula_sin_convertirse_en_error(monkeypatch):
+    from Agents.Agent_2.src.services import pipeline as modulo
+
+    original = modulo.rerank_with_threshold
+
+    def con_metadata_nula(*args, **kwargs):
+        candidatos, metricas = original(*args, **kwargs)
+        for candidato in candidatos:
+            candidato["metadata"] = None
+        return candidatos, metricas
+
+    monkeypatch.setattr(modulo, "rerank_with_threshold", con_metadata_nula)
+    salida = _pipeline_simulado(threshold=0.0, trace_retrieval=True).procesar_consulta(
+        {"texto_preprocesado": "codigo HTM-0142"}
+    )
+
+    ranking = salida["metricas"]["rankings"]["reranker"]
+    assert ranking and all(item["documento"] for item in ranking)
