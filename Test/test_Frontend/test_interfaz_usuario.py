@@ -328,6 +328,8 @@ class TestMainWindowUI(unittest.TestCase):
         resp = Response(
             texto="Comprueba el nivel en frío.",
             estado=STATUS_OK,
+            fuentes=[Source(documento="Manual de mantenimiento", seccion="Nivel de aceite", pagina=1,
+                            chunk_id="manual-mantenimiento-p1")],
             trace_id="t-100",
             conversacion_id="server-conv-888"
         )
@@ -436,6 +438,18 @@ class TestMainWindowUI(unittest.TestCase):
 # ==============================================================================
 class TestComponentesVisuales(unittest.TestCase):
     """Comprueba el renderizado y formateo de los widgets modulares de la interfaz."""
+
+    def test_message_from_response_con_respuesta_ok_y_fuente_citable(self):
+        """Una respuesta CTR-001 válida se convierte en un mensaje sin perder texto ni cita."""
+        fuente = Source(documento="Manual de mantenimiento", seccion="Nivel de aceite", pagina=1,
+                        chunk_id="manual-mantenimiento-p1")
+        respuesta = Response(texto="Comprueba el nivel en frío.", estado=STATUS_OK, fuentes=[fuente])
+
+        mensaje = Message.from_response(respuesta)
+
+        self.assertEqual(mensaje.text, "Comprueba el nivel en frío.")
+        self.assertEqual(mensaje.status, STATUS_OK)
+        self.assertEqual(mensaje.sources, [fuente])
 
     def test_chat_message_burbuja_usuario(self):
         """Un mensaje de usuario se renderiza en la burbuja 'bubbleUser' con texto exacto."""

@@ -46,9 +46,11 @@ lock = Lock()
 
 def service_access(authorization: Annotated[str, Header()] = "") -> None:
     if not service_token_configured():
-        raise HTTPException(503)
+        raise HTTPException(503, detail={"codigo": "servicio_no_disponible",
+                                         "mensaje": "El token de servicio no está configurado."})
     if not valid_service_token(authorization):
-        raise HTTPException(401)
+        raise HTTPException(401, detail={"codigo": "acceso_denegado",
+                                         "mensaje": "Se requiere un Bearer de servicio válido."})
 
 
 def prune_sessions() -> None:
@@ -172,9 +174,17 @@ def query(data: Query):
                 sessions.move_to_end(cid)
 
     if result["estado"] == "error":
-        result["texto"] = GENERIC_ERROR
         if not result.get("codigo_error"):
             result["codigo_error"] = "error_verificacion"
+        # No exponer detalles internos del modelo o del transporte. Para fallos de verificación,
+        # indicar por qué no se presenta una respuesta como verificada.
+        if result["codigo_error"] == "error_verificacion":
+            result["texto"] = (
+                "No puedo mostrar una respuesta como verificada porque las evidencias "
+                "no superaron las comprobaciones de integridad y respaldo."
+            )
+        else:
+            result["texto"] = GENERIC_ERROR
     return result
 
 

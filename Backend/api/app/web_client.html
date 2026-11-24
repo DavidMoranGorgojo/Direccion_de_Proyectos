@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#153b57">
+  <title>ARSOFT · Asistente técnico</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, Segoe UI, sans-serif; color: #172b3a; background: #edf2f5; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    [hidden] { display: none !important; }
+    .login-wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+    .login { width: min(100%, 420px); background: white; border-radius: 14px; padding: 30px; box-shadow: 0 12px 35px #142f4518; }
+    h1, h2, p { margin-top: 0; }
+    .brand { color: #153b57; margin-bottom: 8px; }
+    .muted { color: #5a6b78; }
+    label { display: block; font-weight: 600; margin: 16px 0 6px; }
+    input, textarea { width: 100%; border: 1px solid #c6d2da; border-radius: 8px; padding: 11px 12px; background: white; }
+    input:focus, textarea:focus, button:focus-visible { outline: 3px solid #81c7e8; outline-offset: 2px; }
+    .primary { border: 0; border-radius: 8px; padding: 11px 16px; color: white; background: #14587c; font-weight: 700; }
+    .primary:disabled { opacity: .55; cursor: wait; }
+    .login .primary { width: 100%; margin-top: 20px; }
+    .error { color: #9a2929; min-height: 1.4em; margin: 12px 0 0; }
+    .app { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; background: #153b57; color: white; }
+    header h1 { font-size: 1.1rem; margin: 0; }
+    .account { display: flex; align-items: center; gap: 12px; }
+    .quiet { border: 1px solid #b9d0df; border-radius: 7px; background: transparent; color: inherit; padding: 7px 10px; }
+    .layout { min-height: 0; display: grid; grid-template-columns: 280px minmax(0, 1fr); }
+    aside { padding: 16px; border-right: 1px solid #d6e0e6; background: #f8fafb; overflow-y: auto; }
+    .new-chat { width: 100%; }
+    .chat-list { display: grid; gap: 6px; margin-top: 14px; }
+    .chat-link { text-align: left; border: 0; border-radius: 8px; background: transparent; padding: 10px; color: #20394a; overflow-wrap: anywhere; }
+    .chat-link:hover, .chat-link[aria-current="page"] { background: #e1edf3; }
+    main { min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+    .messages { overflow-y: auto; padding: 24px max(18px, calc((100% - 860px) / 2)); }
+    .welcome { max-width: 720px; margin: 12vh auto 0; text-align: center; color: #536b7a; }
+    .message { max-width: 820px; margin: 0 auto 18px; }
+    .bubble { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; border-radius: 12px; padding: 13px 15px; background: white; box-shadow: 0 2px 8px #142f450c; }
+    .message.user .bubble { background: #dceef5; }
+    .badge { display: inline-block; font-size: .8rem; font-weight: 700; color: #31566d; margin: 0 0 6px 3px; }
+    .message.error .badge { color: #9a2929; }
+    .sources { margin-top: 9px; display: grid; gap: 7px; }
+    .source-title { color: #526a79; font-size: .78rem; font-weight: 800; letter-spacing: .06em; }
+    .source { border-left: 3px solid #3281a7; background: #f8fbfc; padding: 8px 11px; font-size: .9rem; }
+    .source strong { display: block; }
+    .source small { color: #506675; }
+    .obsolete { color: #8a5100; font-weight: 650; }
+    .composer-wrap { border-top: 1px solid #d6e0e6; background: white; padding: 14px 18px max(14px, env(safe-area-inset-bottom)); }
+    .composer { max-width: 860px; margin: auto; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
+    textarea { resize: vertical; min-height: 48px; max-height: 180px; }
+    .hint { max-width: 860px; margin: 7px auto 0; color: #6c7c87; font-size: .78rem; }
+    .notice { max-width: 820px; margin: 0 auto 10px; color: #8a5100; }
+    @media (max-width: 700px) {
+      header { padding: 10px 13px; }
+      .layout { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+      aside { border-right: 0; border-bottom: 1px solid #d6e0e6; padding: 9px 12px; }
+      .chat-list { display: flex; overflow-x: auto; margin-top: 8px; }
+      .chat-link { min-width: 145px; }
+      .messages { padding: 18px 12px; }
+      .composer-wrap { padding-left: 11px; padding-right: 11px; }
+      .account span { display: none; }
+      .primary { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <section id="login-view" class="login-wrap">
+    <form id="login-form" class="login">
+      <h1 class="brand">ARSOFT · Asistente técnico</h1>
+      <p class="muted">Consulta los manuales y revisa las fuentes de cada respuesta.</p>
+      <label for="username">Usuario</label>
+      <input id="username" name="username" autocomplete="username" required>
+      <label for="password">Contraseña</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+      <button class="primary" type="submit">Iniciar sesión</button>
+      <p id="login-error" class="error" role="alert"></p>
+    </form>
+  </section>
+
+  <section id="app-view" class="app" hidden>
+    <header>
+      <h1>ARSOFT · Asistente técnico</h1>
+      <div class="account"><span id="user-name"></span><button id="logout" class="quiet" type="button">Cerrar sesión</button></div>
+    </header>
+    <div class="layout">
+      <aside aria-label="Conversaciones">
+        <button id="new-chat" class="primary new-chat" type="button">Nueva consulta</button>
+        <nav id="chat-list" class="chat-list" aria-label="Historial"></nav>
+      </aside>
+      <main>
+        <section id="messages" class="messages" aria-live="polite">
+          <div id="welcome" class="welcome">
+            <h2>Pregunta sobre el vehículo</h2>
+            <p>El asistente busca en la documentación y muestra las fuentes comprobables.</p>
+          </div>
+        </section>
+        <div class="composer-wrap">
+          <p id="notice" class="notice" role="status"></p>
+          <form id="send-form" class="composer">
+            <textarea id="question" aria-label="Consulta técnica" maxlength="2000" placeholder="Describe el síntoma o la operación técnica…" required></textarea>
+            <button id="send" class="primary" type="submit">Enviar</button>
+          </form>
+          <p class="hint">Comprueba las referencias antes de realizar una intervención. Si no hay evidencia suficiente, el asistente lo indicará.</p>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <script>
+    const state = { token: sessionStorage.getItem('arsoft-token') || '', user: null, conversationId: '' };
+    const byId = (id) => document.getElementById(id);
+    const statusText = {
+      respuesta: 'Respuesta verificada', aclaracion: 'Necesito más datos',
+      sin_evidencia: 'Sin evidencia en la documentación', fuera_de_ambito: 'Fuera de ámbito',
+      error: 'No se pudo verificar la respuesta'
+    };
+
+    function setSignedIn(signedIn) {
+      byId('login-view').hidden = signedIn;
+      byId('app-view').hidden = !signedIn;
+    }
+
+    function messageOf(data, fallback) {
+      if (data && typeof data.mensaje === 'string') return data.mensaje;
+      if (data && data.detail && typeof data.detail.mensaje === 'string') return data.detail.mensaje;
+      if (data && data.detail && typeof data.detail === 'string') return data.detail;
+      return fallback;
+    }
+
+    async function api(path, options) {
+      const opts = options || {};
+      const headers = Object.assign({ Accept: 'application/json' }, opts.headers || {});
+      if (state.token) headers.Authorization = 'Bearer ' + state.token;
+      if (opts.body) headers['Content-Type'] = 'application/json';
+      const response = await fetch(path, Object.assign({}, opts, { headers: headers }));
+      let data = null;
+      try { data = await response.json(); } catch (_) { /* respuestas sin JSON */ }
+      if (!response.ok) {
+        const error = new Error(messageOf(data, 'La petición no se pudo completar.'));
+        error.status = response.status;
+        error.code = data && (data.codigo_error || data.codigo || (data.detail && data.detail.codigo));
+        throw error;
+      }
+      return data;
+    }
+
+    function validSource(source) {
+      const documento = source && typeof source.documento === 'string' ? source.documento.trim().toLowerCase() : '';
+      return source && documento && !['doc_desconocido', 'documento sin nombre'].includes(documento) &&
+        typeof source.seccion === 'string' && source.seccion.trim() &&
+        Number.isInteger(source.pagina) && source.pagina > 0;
+    }
+
+    function normalizeAnswer(data) {
+      const sources = Array.isArray(data.fuentes) ? data.fuentes : [];
+      if (!['respuesta', 'aclaracion', 'sin_evidencia', 'fuera_de_ambito', 'error'].includes(data.estado)) {
+        return { estado: 'error', texto: 'No se reconoce el estado de esta respuesta.', fuentes: [], codigo_error: 'error_verificacion' };
+      }
+      if (data.estado === 'respuesta' && (typeof data.texto !== 'string' || !data.texto.trim())) {
+        return { estado: 'error', texto: 'La respuesta no contiene texto verificable.', fuentes: [], codigo_error: 'error_verificacion' };
+      }
+      if (data.estado === 'respuesta' && (!sources.length || sources.some((source) => !validSource(source)))) {
+        return { estado: 'error', texto: 'No puedo presentar esta respuesta como verificada: falta una referencia completa a documento, sección y página.', fuentes: [], codigo_error: 'error_verificacion' };
+      }
+      return Object.assign({}, data, { fuentes: sources.filter(validSource) });
+    }
+
+    function addMessage(role, data) {
+      const welcome = byId('welcome');
+      if (welcome) welcome.hidden = true;
+      const item = document.createElement('article');
+      item.className = 'message ' + (role === 'user' ? 'user' : 'assistant');
+      if (role !== 'user') {
+        const answer = normalizeAnswer(data);
+        item.classList.add(answer.estado === 'error' ? 'error' : answer.estado);
+        const badge = document.createElement('div');
+        badge.className = 'badge';
+        badge.textContent = statusText[answer.estado] || 'Respuesta';
+        item.appendChild(badge);
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        bubble.textContent = answer.texto || 'No se recibió una respuesta.';
+        item.appendChild(bubble);
+        if (answer.codigo_error) {
+          const code = document.createElement('small');
+          code.className = 'muted';
+          code.textContent = 'Código: ' + answer.codigo_error;
+          item.appendChild(code);
+        }
+        if (answer.fuentes.length) {
+          const sources = document.createElement('div');
+          sources.className = 'sources';
+          const heading = document.createElement('div');
+          heading.className = 'source-title';
+          heading.textContent = 'FUENTES';
+          sources.appendChild(heading);
+          answer.fuentes.forEach((source) => {
+            const card = document.createElement('div');
+            card.className = 'source';
+            const doc = document.createElement('strong');
+            doc.textContent = source.documento;
+            const meta = document.createElement('small');
+            meta.textContent = 'Sección ' + source.seccion + ' · página ' + source.pagina +
+              ((source.versiones || []).length ? ' · versiones ' + source.versiones.join(', ') : '');
+            card.append(doc, meta);
+            if (source.obsoleto) {
+              const obsolete = document.createElement('div');
+              obsolete.className = 'obsolete';
+              obsolete.textContent = 'Documento sustituido';
+              card.appendChild(obsolete);
+            }
+            sources.appendChild(card);
+          });
+          item.appendChild(sources);
+        }
+      } else {
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        bubble.textContent = data;
+        item.appendChild(bubble);
+      }
+      byId('messages').appendChild(item);
+      item.scrollIntoView({ block: 'end', behavior: 'smooth' });
+    }
+
+    function showMessages(messages) {
+      const pane = byId('messages');
+      pane.replaceChildren();
+      if (!messages.length) {
+        const welcome = document.createElement('div');
+        welcome.id = 'welcome';
+        welcome.className = 'welcome';
+        welcome.innerHTML = '<h2>Pregunta sobre el vehículo</h2><p>El asistente busca en la documentación y muestra las fuentes comprobables.</p>';
+        pane.appendChild(welcome);
+        return;
+      }
+      messages.forEach((message) => {
+        if (message.role === 'user') addMessage('user', message.contenido || '');
+        else addMessage('assistant', { estado: message.estado, texto: message.contenido,
+          fuentes: message.fuentes || [], codigo_error: message.codigo_error || '' });
+      });
+    }
+
+    async function loadChats(selectId) {
+      const result = await api('/chats?limit=100&offset=0');
+      const nav = byId('chat-list');
+      nav.replaceChildren();
+      (result.chats || []).forEach((chat) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'chat-link';
+        button.textContent = chat.titulo || (chat.mensajes && chat.mensajes[0] && chat.mensajes[0].contenido) || 'Consulta';
+        button.setAttribute('aria-current', chat.conversacion_id === (selectId || state.conversationId) ? 'page' : 'false');
+        button.addEventListener('click', async () => {
+          try {
+            const full = await api('/chats/' + encodeURIComponent(chat.conversacion_id) + '?limit=200');
+            state.conversationId = full.conversacion_id;
+            showMessages(full.mensajes || []);
+            await loadChats(state.conversationId);
+          } catch (error) { byId('notice').textContent = error.message; }
+        });
+        nav.appendChild(button);
+      });
+    }
+
+    async function startSession() {
+      const me = await api('/auth/me');
+      state.user = me;
+      byId('user-name').textContent = me.nombre || me.nombre_usuario || '';
+      setSignedIn(true);
+      await loadChats();
+    }
+
+    byId('login-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      byId('login-error').textContent = '';
+      try {
+        const result = await api('/auth/login', { method: 'POST', body: JSON.stringify({
+          usuario: byId('username').value, contrasena: byId('password').value
+        }) });
+        state.token = result.token;
+        sessionStorage.setItem('arsoft-token', state.token);
+        await startSession();
+      } catch (error) { byId('login-error').textContent = error.message; }
+    });
+
+    byId('logout').addEventListener('click', () => {
+      state.token = '';
+      state.conversationId = '';
+      sessionStorage.removeItem('arsoft-token');
+      byId('password').value = '';
+      setSignedIn(false);
+    });
+
+    byId('new-chat').addEventListener('click', () => {
+      state.conversationId = '';
+      showMessages([]);
+      byId('notice').textContent = '';
+      byId('question').focus();
+    });
+
+    byId('send-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const question = byId('question').value.trim();
+      if (!question) return;
+      byId('notice').textContent = '';
+      addMessage('user', question);
+      byId('question').value = '';
+      byId('send').disabled = true;
+      const pending = document.createElement('article');
+      pending.className = 'message assistant';
+      const pendingBubble = document.createElement('div');
+      pendingBubble.className = 'bubble muted';
+      pendingBubble.textContent = 'Buscando en la documentación…';
+      pending.appendChild(pendingBubble);
+      byId('messages').appendChild(pending);
+      try {
+        const result = await api('/consulta', { method: 'POST', body: JSON.stringify({
+          conversacion_id: state.conversationId, pregunta: question
+        }) });
+        pending.remove();
+        state.conversationId = result.conversacion_id || state.conversationId;
+        addMessage('assistant', result);
+        await loadChats(state.conversationId);
+      } catch (error) {
+        pending.remove();
+        byId('notice').textContent = error.message + (error.code ? ' (' + error.code + ')' : '');
+        if (error.status === 401) {
+          state.token = '';
+          sessionStorage.removeItem('arsoft-token');
+          setSignedIn(false);
+        }
+      } finally { byId('send').disabled = false; byId('question').focus(); }
+    });
+
+    byId('question').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        byId('send-form').requestSubmit();
+      }
+    });
+
+    if (state.token) {
+      startSession().catch(() => {
+        state.token = '';
+        sessionStorage.removeItem('arsoft-token');
+        setSignedIn(false);
+      });
+    }
+  </script>
+</body>
+</html>

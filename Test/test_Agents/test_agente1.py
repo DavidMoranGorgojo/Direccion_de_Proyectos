@@ -322,28 +322,28 @@ class TestAdaptadorUniversalCTR004(unittest.TestCase):
         self.assertEqual(ev["score_final"], 0.0)
         self.assertEqual(ev["rerank_score"], 0.0)
 
-    def test_meta_dict_no_machaca_valores_saneados(self):
-        """Un documento vacío "" en meta_dict no debe sustituir al saneado DOC_DESCONOCIDO."""
-        datos_doc_vacio = {
-            "estado": "suficiente",
-            "evidencias": [
-                {
-                    "chunk_id": "c_vacio_01",
+    def test_rechaza_evidencias_sin_referencia_completa(self):
+        """No se admiten fuentes con documento, sección o página no verificables."""
+        for campo, valor in (("documento", ""), ("seccion", " "),
+                             ("pagina", 0), ("pagina", True)):
+            with self.subTest(campo=campo, valor=valor):
+                evidencia = {
+                    "chunk_id": "c_incompleto",
                     "texto": "Instrucciones de mantenimiento general del alternador.",
                     "metadata": {
-                        "documento": "",  # Vacío a propósito
+                        "documento": "HTM240-MAN-001",
                         "seccion": "Electrico",
                         "pagina": 12,
                         "versiones": ["V2.0"]
                     }
                 }
-            ]
-        }
-
-        norm = normalizar_respuesta_agente2(datos_doc_vacio)
-        self.assertEqual(norm["estado"], "suficiente")
-        ev = norm["evidencias"][0]
-        self.assertEqual(ev["metadata"]["documento"], "DOC_DESCONOCIDO")
+                evidencia["metadata"][campo] = valor
+                norm = normalizar_respuesta_agente2(
+                    {"estado": "suficiente", "evidencias": [evidencia]}
+                )
+                self.assertEqual(norm["estado"], "error")
+                self.assertEqual(norm["codigo_error"], "error_verificacion")
+                self.assertEqual(norm["evidencias"], [])
 
     def test_variante_opencode_y_deduccion_estado(self):
         """Variante OpenCode: claves 'resultados', 'metadatos', 'score_final', sin 'estado' explícito."""

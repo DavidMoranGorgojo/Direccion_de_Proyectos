@@ -6,7 +6,9 @@ Estructura según el diseño «Arquitectura del backend» (§7.3). PostgreSQL + 
 |---|---|---|
 | `ingesta/` | Ingesta a demanda: PDF → fragmentos JSONL con metadatos y embeddings bge-m3 → pgvector. Ver [`ingesta/README.md`](ingesta/README.md). | Implementada |
 | `db/init/` | `01_conocimiento.sql`: esquema único e idempotente para `conocimiento` y `aplicacion`, con embeddings `vector(1024)`. Apptainer lo aplica al iniciar una base nueva y `start-local.sh` lo reaplica en bases existentes. | Consolidado |
-| `api/` | FastAPI: pasarela hacia Agentes, búsquedas, login, historial y registro. | Pendiente (Infraestructura) |
+| `api/` | FastAPI: pasarela hacia Agentes, búsquedas, login, historial y registro. | Implementada |
+
+El Backend sirve también una interfaz web adaptable a móvil en `http://127.0.0.1:8000/`. Permite iniciar sesión, consultar el asistente, ver las citas documentales y abrir conversaciones del historial. La interfaz PySide6 sigue disponible como cliente de escritorio. La página web se incluye en la imagen Backend desde `api/app/web_client.html`.
 
 Los PDF de ARSOFT (`data/manuales`), las credenciales (`.env`) y las salidas de la ingesta no se versionan.
 
@@ -48,7 +50,7 @@ apptainer exec instance://arsoft-api python -m app.usuarios_prueba --desarrollo
   - 404 `conversacion_no_encontrada`: el chat es de otro usuario.
   - 429 `demasiadas_consultas`: más de `ARSOFT_CONSULTAS_POR_MINUTO` (20 por defecto) consultas en 60 s por usuario; lleva `Retry-After`.
   - 500 `error_interno`: fallo no controlado, sin detalles internos en la respuesta (va al log).
-  - Los fallos de Agentes (caído, token rechazado, respuesta no válida o tiempo agotado) llegan como HTTP 200 con `estado: "error"` y `codigo_error` (`servicio_no_disponible`, `tiempo_agotado`), como fija CTR-001.
+  - Los fallos de Agentes (caído, token rechazado o tiempo agotado) llegan como HTTP 200 con `estado: "error"` y `codigo_error` (`servicio_no_disponible`, `tiempo_agotado`). Las respuestas inválidas o las fuentes sin documento, sección y página positiva se convierten en `error_verificacion`, sin exponer texto no verificado.
 
   Si `conversacion_id` llega vacío, Backend lo genera. Antes de llamar a Agentes reserva el chat de forma atómica (`INSERT … ON CONFLICT … WHERE usuario_id`): si el ID es de otro usuario, aunque lo use a la vez, devuelve 404 `conversacion_no_encontrada` y no se reenvía a Agentes. Cada turno se guarda en el historial y en el registro; si la base falla al guardar, la respuesta se entrega igual. El acceso a PostgreSQL va en un hilo aparte (`run_in_threadpool`) para no bloquear el event loop.
 - **CTR-001** `POST /valoracion` `{"trace_id", "util"}` guarda si una respuesta fue útil (`util` es `true` o `false`; no se admiten `1`, `"true"` ni `null`). Código en `api/app/valoracion.py`, tabla `aplicacion.valoracion` en `db/init/01_conocimiento.sql`. Exige sesión como `/consulta`.
