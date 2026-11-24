@@ -557,7 +557,7 @@ class TestErroresHTTP(BaseFrontendTestCase):
             hist = api.fetch_history()
             self.assertFalse(hist.ok)
             self.assertFalse(hist.session_expired)
-            self.assertIn("No se ha podido recuperar", hist.error)
+            self.assertEqual(hist.error, api.HISTORY_TOO_MANY)
 
     # --- 500 Internal Server Error ---
     def test_error_500_en_consulta(self):
@@ -572,14 +572,14 @@ class TestErroresHTTP(BaseFrontendTestCase):
         with patch("services.api.call", return_value=(500, None)):
             hist = api.fetch_history()
             self.assertFalse(hist.ok)
-            self.assertEqual(hist.error, "No se ha podido recuperar el historial.")
+            self.assertEqual(hist.error, api.HISTORY_SERVER_ERROR)
 
     def test_error_500_en_login(self):
-        """HTTP 500 en CTR-005 informa de que el servicio no está disponible."""
+        """HTTP 500 en CTR-005 informa de un problema del servidor."""
         with patch("services.api.call", return_value=(500, None)):
             res = auth.login("demo", "demo1234")
             self.assertFalse(res.ok)
-            self.assertIn("no está disponible", res.error.lower())
+            self.assertEqual(res.error, auth.SERVER_ERROR)
 
 
 # ==============================================================================
