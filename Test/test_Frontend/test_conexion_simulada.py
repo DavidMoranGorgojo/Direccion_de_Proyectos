@@ -434,7 +434,9 @@ class TestCTR006LecturaHistorial(BaseFrontendTestCase):
             "conversacion_id": "conv-sin-mid",
             "mensajes": [
                 {"role": ROLE_USER, "contenido": "¿Presión de aceite?"},
-                {"role": ROLE_BOT, "contenido": "Entre 2 y 4 bar.", "estado": "respuesta"},
+                {"role": ROLE_BOT, "contenido": "Entre 2 y 4 bar.", "estado": "respuesta",
+                 "fuentes": [{"documento": "Manual del motor", "seccion": "Lubricación",
+                              "pagina": 1, "chunk_id": "manual-aceite-p1"}]},
             ],
         })
 

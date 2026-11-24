@@ -501,7 +501,7 @@ class TestFrontendContraBackendReal(unittest.TestCase):
         """El Backend responde 200 con estado «error» y el Frontend muestra el texto genérico."""
         self.entrar()
         casos = {"caido": "servicio_no_disponible", "500": "servicio_no_disponible",
-                 "json_roto": "servicio_no_disponible", "respuesta_sin_fuentes": "servicio_no_disponible",
+                 "json_roto": "error_verificacion", "respuesta_sin_fuentes": "error_verificacion",
                  "lento": "tiempo_agotado"}
         for modo, codigo in casos.items():
             with self.subTest(agentes=modo):

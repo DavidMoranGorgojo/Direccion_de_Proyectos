@@ -27,7 +27,7 @@ class Message:
     @classmethod
     def from_response(cls, r: Response) -> "Message":
         if r.estado == STATUS_OK and (
-            not r.text.strip() or not r.fuentes or any(not source.citable for source in r.fuentes)
+            not r.texto.strip() or not r.fuentes or any(not source.citable for source in r.fuentes)
         ):
             return cls(ROLE_BOT, UNVERIFIED_SOURCE, STATUS_ERROR, r.trace_id, [])
         return cls(ROLE_BOT, r.texto, r.estado, r.trace_id, list(r.fuentes))
