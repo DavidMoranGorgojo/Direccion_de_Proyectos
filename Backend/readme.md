@@ -1,21 +1,22 @@
 # Backend — Asistente conversacional RAG (ThermoDrive HTM-240)
 
-Estructura según el diseño «Arquitectura del backend y dockerización» (§7.3). Base de datos única PostgreSQL + pgvector; la lógica RAG vive en Agentes (opción B).
+Estructura según el diseño «Arquitectura del backend» (§7.3). PostgreSQL + pgvector se ejecutan con Apptainer; la lógica RAG vive en Agentes (opción B).
 
 | Carpeta | Contenido | Estado |
 |---|---|---|
 | `ingesta/` | Ingesta a demanda: PDF → fragmentos JSONL con metadatos y embeddings bge-m3 → pgvector. Ver [`ingesta/README.md`](ingesta/README.md). | Implementada |
-| `db/init/` | Scripts SQL que PostgreSQL ejecuta al crear el contenedor. `01_conocimiento.sql`: esquema `conocimiento` (índice versionado, documentos, chunks y catálogos). `02_usuarios.sql`: esquema `aplicacion` (usuarios, chats, mensajes y registro de consultas). | Propuesta para Base de datos y carga |
-| `api/` | FastAPI: pasarela hacia Agentes, búsquedas, login, historial y registro. | Pendiente (Infraestructura) |
-| `compose.yaml` | Servicios `backend-db`, `backend-api` y `backend-ingesta`. | Pendiente (Infraestructura) |
+| `db/init/` | `01_conocimiento.sql`: esquema único e idempotente para `conocimiento` y `aplicacion`, con embeddings `vector(1024)`. Apptainer lo aplica al iniciar una base nueva y `start-local.sh` lo reaplica en bases existentes. | Consolidado |
+| `api/` | FastAPI: pasarela hacia Agentes, búsquedas, login, historial y registro. | Implementada |
+
+El Backend sirve también una interfaz web adaptable a móvil en `http://127.0.0.1:8000/`. Permite iniciar sesión, consultar el asistente, ver las citas documentales y abrir conversaciones del historial. La interfaz PySide6 sigue disponible como cliente de escritorio. La página web se incluye en la imagen Backend desde `api/app/web_client.html`.
 
 Los PDF de ARSOFT (`data/manuales`), las credenciales (`.env`) y las salidas de la ingesta no se versionan.
 
 ## Login, historial y registro de consultas (CTR-005, CTR-006 y CTR-003)
 
-Código en `api/app/sesiones.py`, `api/app/historial.py` y `api/app/registro.py`; tablas en `db/init/02_usuarios.sql` (esquema `aplicacion`, sin `fragmentos_rag`). `postgres.def` copia el script para que se cree al arrancar una base nueva.
+Código en `api/app/sesiones.py`, `api/app/historial.py` y `api/app/registro.py`; tablas en `db/init/01_conocimiento.sql` (esquema `aplicacion`, sin `fragmentos_rag`). `postgres.def` copia el script para que se cree al arrancar una base nueva.
 
-> **Migración en bases ya creadas.** PostgreSQL solo ejecuta `db/init/` la primera vez que inicia un directorio de datos vacío. En una base que ya exista hay que crear el esquema a mano, una vez: `psql "$DATABASE_URL" -f Backend/db/init/02_usuarios.sql` (es idempotente).
+> **Migración en bases ya creadas.** PostgreSQL solo ejecuta `db/init/` la primera vez que inicia un directorio de datos vacío. En una base que ya exista hay que crear el esquema a mano, una vez: `psql "$DATABASE_URL" -f Backend/db/init/01_conocimiento.sql` (es idempotente).
 
 **Usuarios de prueba.**
 
@@ -49,14 +50,14 @@ apptainer exec instance://arsoft-api python -m app.usuarios_prueba --desarrollo
   - 404 `conversacion_no_encontrada`: el chat es de otro usuario.
   - 429 `demasiadas_consultas`: más de `ARSOFT_CONSULTAS_POR_MINUTO` (20 por defecto) consultas en 60 s por usuario; lleva `Retry-After`.
   - 500 `error_interno`: fallo no controlado, sin detalles internos en la respuesta (va al log).
-  - Los fallos de Agentes (caído, token rechazado, respuesta no válida o tiempo agotado) llegan como HTTP 200 con `estado: "error"` y `codigo_error` (`servicio_no_disponible`, `tiempo_agotado`), como fija CTR-001.
+  - Los fallos de Agentes (caído, token rechazado o tiempo agotado) llegan como HTTP 200 con `estado: "error"` y `codigo_error` (`servicio_no_disponible`, `tiempo_agotado`). Las respuestas inválidas o las fuentes sin documento, sección y página positiva se convierten en `error_verificacion`, sin exponer texto no verificado.
 
   Si `conversacion_id` llega vacío, Backend lo genera. Antes de llamar a Agentes reserva el chat de forma atómica (`INSERT … ON CONFLICT … WHERE usuario_id`): si el ID es de otro usuario, aunque lo use a la vez, devuelve 404 `conversacion_no_encontrada` y no se reenvía a Agentes. Cada turno se guarda en el historial y en el registro; si la base falla al guardar, la respuesta se entrega igual. El acceso a PostgreSQL va en un hilo aparte (`run_in_threadpool`) para no bloquear el event loop.
-- **CTR-001** `POST /valoracion` `{"trace_id", "util"}` guarda si una respuesta fue útil (`util` es `true` o `false`; no se admiten `1`, `"true"` ni `null`). Código en `api/app/valoracion.py`, tabla `aplicacion.valoracion` en `db/init/02_usuarios.sql`. Exige sesión como `/consulta`.
+- **CTR-001** `POST /valoracion` `{"trace_id", "util"}` guarda si una respuesta fue útil (`util` es `true` o `false`; no se admiten `1`, `"true"` ni `null`). Código en `api/app/valoracion.py`, tabla `aplicacion.valoracion` en `db/init/01_conocimiento.sql`. Exige sesión como `/consulta`.
   - 200 `{"trace_id", "util"}`. Una valoración por usuario y respuesta: valorar otra vez la misma actualiza `util` y `actualizado_en`, no crea otra fila.
   - Solo se valoran respuestas propias con estado `respuesta` que consten en el registro (CTR-003). Un `trace_id` inexistente, de otro usuario o de una respuesta que no es `respuesta` da el mismo 404 `respuesta_no_encontrada`, para no revelar si existe.
   - 401 `sesion_caducada` · 403 `acceso_denegado` (usuario desactivado) · 422 `entrada_invalida` · 429 `demasiadas_valoraciones` (más de `ARSOFT_VALORACIONES_POR_MINUTO`, 60 por defecto, en 60 s por usuario; lleva `Retry-After` y no gasta el cupo de consultas) · 500 `error_interno` · 503 `servicio_no_disponible` (PostgreSQL caído).
-  - **Migración en bases ya creadas:** la tabla es nueva, así que hay que ejecutar una vez `psql "$DATABASE_URL" -f Backend/db/init/02_usuarios.sql` (idempotente).
+  - **Migración en bases ya creadas:** la tabla es nueva, así que hay que ejecutar una vez `psql "$DATABASE_URL" -f Backend/db/init/01_conocimiento.sql` (idempotente).
 - **CTR-002** `POST /conocimiento/vectorial` queda montado en la app (`crear_router(connect, service_access)`), con el token de servicio como el resto de `/conocimiento`.
 - **CTR-006** `GET /chats?limit&offset` → `{"chats": [{"conversacion_id", "titulo", "created_at", "updated_at", "mensajes": [{"message_id", "trace_id", "role", "contenido", "estado", "codigo_error", "timestamp", "fuentes"}]}], "total"}`, con la forma que lee Frontend. También `GET`, `PATCH {"titulo"}` y `DELETE /chats/{conversacion_id}` (al borrar se pide a Agentes que olvide la conversación). Cada usuario solo ve los suyos.
 - **CTR-007** Historial con Agentes: Agentes lee una conversación con el token de servicio en `GET /chats/{conversacion_id}?limit=N` (los N últimos mensajes, en orden). Es lo que usa `Agents/agente1/cliente_backend.py` (`obtener_historial`) para recuperar la memoria de un chat cuando su sesión en Agentes ha caducado o se ha reiniciado. Con el token de servicio solo se lee un chat: no se listan, no se modifican ni se borran, y no sirve como sesión en `/consulta`. El historial lo escribe Backend en cada `/consulta`.
@@ -66,6 +67,7 @@ apptainer exec instance://arsoft-api python -m app.usuarios_prueba --desarrollo
 
 - `Test/test_Backend/test_usuarios_historial_registro.py`: login, historial, CTR-007, registro y errores.
 - `Test/test_Backend/test_valoracion.py`: `POST /valoracion` (éxito, sin sesión, `trace_id` inexistente o ajeno, `util` inválido, valoración repetida, 403, 429, 500 y 503).
+- `Test/test_Backend/test_contrato_ctr002_real.py`: CTR-002 contra el Backend real (API arrancada con `start-all.sh` e índice cargado): seguridad, ficha, catálogos, búsqueda léxica y vectorial (metadatos, filtros, vigencia, sustituidos, 400/409), chunks con vecinos y simetría `query:`/`passage:`. Solo usa la biblioteca estándar: `python3 -m unittest Test.test_Backend.test_contrato_ctr002_real -v`. Se omite si el Backend no responde. Los vectores de consulta de la simetría están en `Test/fixtures/ctr002_consultas_bge_m3.json` (regenerar con `Test/fixtures/generar_consultas_ctr002.py` si cambia el dataset).
 - `Test/test_Backend/test_integracion_agentes.py`: de principio a fin. Levanta con uvicorn el Backend y el servicio real de Agentes (`Agents/service.py`, Agente 1 real) y usa el cliente real de Frontend (login, consulta e historial). Solo se sustituyen el LLM del Agente 1 y los modelos BGE-M3 y reranker por versiones deterministas. Si el Agente 2 real está en el repo (`Agents/Agent_2`), Agentes recupera con su pipeline real contra `/conocimiento` del Backend, y se comprueba la pregunta trampa (no se cita el documento sustituido). Si no está, usa el simulador y esa prueba se omite. Necesita PySide6.
 
 Las de base de datos necesitan un PostgreSQL de pruebas vacío **con pgvector**. Las de `Backend/api/tests` se lanzan desde su carpeta, por el `pytest.ini` de la raíz:

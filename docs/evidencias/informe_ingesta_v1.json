@@ -1,0 +1,267 @@
+{
+  "indice_version": "v1.0",
+  "fecha": "2026-11-24T15:49:39+00:00",
+  "duracion_s": 534.1,
+  "modelo_embeddings": "BAAI/bge-m3",
+  "dimensiones": 1024,
+  "prefijo_passage": "passage: ",
+  "max_tokens": 500,
+  "con_embeddings": true,
+  "documentos_procesados": 30,
+  "fragmentos": 197,
+  "documentos": [
+    {
+      "doc_id": "HTM240-MAN-001@2.0",
+      "archivo": "HTM240-MAN-001_Manual_general.pdf",
+      "obsoleto": false,
+      "fragmentos": 12,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-CAT-001@1.0",
+      "archivo": "HTM240-CAT-001_Catalogo_componentes.pdf",
+      "obsoleto": false,
+      "fragmentos": 27,
+      "avisos": [
+        "Sin fecha en la cabecera: fecha_revision queda a null."
+      ]
+    },
+    {
+      "doc_id": "HTM240-OPE-001@1.0",
+      "archivo": "HTM240-OPE-001_Manual_operacion.pdf",
+      "obsoleto": false,
+      "fragmentos": 9,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-MNT-001@1.1",
+      "archivo": "HTM240-MNT-001_Plan_mantenimiento.pdf",
+      "obsoleto": false,
+      "fragmentos": 11,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-PRC-001@1.0",
+      "archivo": "HTM240-PRC-001_Inspeccion_del_nivel_de_refrigerante.pdf",
+      "obsoleto": false,
+      "fragmentos": 3,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-PRC-002@1.0",
+      "archivo": "HTM240-PRC-002_Purgado_del_circuito_termico_del_motor.pdf",
+      "obsoleto": false,
+      "fragmentos": 3,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-PRC-003@2.0",
+      "archivo": "HTM240-PRC-003_Verificacion_de_la_bomba_electrica_auxiliar_A_(circuito_de_bateria).pdf",
+      "obsoleto": false,
+      "fragmentos": 3,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-PRC-004@1.0",
+      "archivo": "HTM240-PRC-004_Verificacion_de_la_bomba_de_circuito_de_bateria_tras_sustitucion.pdf",
+      "obsoleto": false,
+      "fragmentos": 1,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-PRC-005@1.0",
+      "archivo": "HTM240-PRC-005_Prueba_funcional_del_electroventilador.pdf",
+      "obsoleto": false,
+      "fragmentos": 1,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-PRC-006@1.0",
+      "archivo": "HTM240-PRC-006_Comprobacion_de_la_valvula_distribuidora_de_cuatro_vias.pdf",
+      "obsoleto": false,
+      "fragmentos": 1,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-PRC-007@1.0",
+      "archivo": "HTM240-PRC-007_Verificacion_de_sensores_de_temperatura.pdf",
+      "obsoleto": false,
+      "fragmentos": 3,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-PRC-008@1.0",
+      "archivo": "HTM240-PRC-008_Inspeccion_de_fugas_en_los_circuitos_termicos.pdf",
+      "obsoleto": false,
+      "fragmentos": 3,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-PRC-009@1.0",
+      "archivo": "HTM240-PRC-009_Comprobacion_de_presion_del_circuito_motor.pdf",
+      "obsoleto": false,
+      "fragmentos": 1,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-PRC-010@1.0",
+      "archivo": "HTM240-PRC-010_Verificacion_de_la_comunicacion_CAN_de_la_TCU.pdf",
+      "obsoleto": false,
+      "fragmentos": 1,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-PRC-011@1.0",
+      "archivo": "HTM240-PRC-011_Sustitucion_del_filtro_del_circuito_de_bateria.pdf",
+      "obsoleto": false,
+      "fragmentos": 3,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-PRC-012@1.0",
+      "archivo": "HTM240-PRC-012_Prueba_funcional_completa_del_sistema_ThermoDrive.pdf",
+      "obsoleto": false,
+      "fragmentos": 3,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-DIA-001@1.1",
+      "archivo": "HTM240-DIA-001_Manual_diagnostico.pdf",
+      "obsoleto": false,
+      "fragmentos": 13,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-DTC-001@1.0",
+      "archivo": "HTM240-DTC-001_Catalogo_DTC.pdf",
+      "obsoleto": false,
+      "fragmentos": 37,
+      "avisos": [
+        "Sin fecha en la cabecera: fecha_revision queda a null."
+      ]
+    },
+    {
+      "doc_id": "HTM240-ADV-001@1.1",
+      "archivo": "HTM240-ADV-001_Testigos_y_mensajes.pdf",
+      "obsoleto": false,
+      "fragmentos": 6,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-SEG-001@1.0",
+      "archivo": "HTM240-SEG-001_Manual_seguridad.pdf",
+      "obsoleto": false,
+      "fragmentos": 12,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-BOL-001@1.0",
+      "archivo": "HTM240-BOL-001.pdf",
+      "obsoleto": false,
+      "fragmentos": 1,
+      "avisos": [
+        "Sin versión en la cabecera: se asigna 1.0 por defecto."
+      ]
+    },
+    {
+      "doc_id": "HTM240-BOL-002@1.0",
+      "archivo": "HTM240-BOL-002.pdf",
+      "obsoleto": false,
+      "fragmentos": 1,
+      "avisos": [
+        "Sin versión en la cabecera: se asigna 1.0 por defecto."
+      ]
+    },
+    {
+      "doc_id": "HTM240-BOL-003@1.0",
+      "archivo": "HTM240-BOL-003.pdf",
+      "obsoleto": false,
+      "fragmentos": 1,
+      "avisos": [
+        "Sin versión en la cabecera: se asigna 1.0 por defecto."
+      ]
+    },
+    {
+      "doc_id": "HTM240-BOL-004@1.0",
+      "archivo": "HTM240-BOL-004.pdf",
+      "obsoleto": false,
+      "fragmentos": 1,
+      "avisos": [
+        "Sin versión en la cabecera: se asigna 1.0 por defecto."
+      ]
+    },
+    {
+      "doc_id": "HTM240-BOL-005@1.0",
+      "archivo": "HTM240-BOL-005.pdf",
+      "obsoleto": false,
+      "fragmentos": 1,
+      "avisos": [
+        "Sin versión en la cabecera: se asigna 1.0 por defecto."
+      ]
+    },
+    {
+      "doc_id": "HTM240-BOL-006@1.0",
+      "archivo": "HTM240-BOL-006.pdf",
+      "obsoleto": false,
+      "fragmentos": 1,
+      "avisos": [
+        "Sin versión en la cabecera: se asigna 1.0 por defecto."
+      ]
+    },
+    {
+      "doc_id": "HTM240-BOL-007@1.0",
+      "archivo": "HTM240-BOL-007.pdf",
+      "obsoleto": false,
+      "fragmentos": 1,
+      "avisos": [
+        "Sin versión en la cabecera: se asigna 1.0 por defecto."
+      ]
+    },
+    {
+      "doc_id": "HTM240-HIS-001@1.0",
+      "archivo": "HTM240-HIS-001_Casos_servicio.pdf",
+      "obsoleto": false,
+      "fragmentos": 25,
+      "avisos": [
+        "Sin versión en la cabecera: se asigna 1.0 por defecto.",
+        "Sin fecha en la cabecera: fecha_revision queda a null."
+      ]
+    },
+    {
+      "doc_id": "HTM240-ESQ-001@1.0",
+      "archivo": "HTM240-ESQ-001_Esquemas_tecnicos.pdf",
+      "obsoleto": false,
+      "fragmentos": 6,
+      "avisos": []
+    },
+    {
+      "doc_id": "HTM240-DIC-001@1.0",
+      "archivo": "HTM240-DIC-001_Diccionario_tecnico.pdf",
+      "obsoleto": false,
+      "fragmentos": 6,
+      "avisos": [
+        "Sin versión en la cabecera: se asigna 1.0 por defecto.",
+        "Sin fecha en la cabecera: fecha_revision queda a null."
+      ]
+    }
+  ],
+  "excluidos": [
+    {
+      "archivo": "HTM240-MNT-001_Plan_mantenimiento_v1.0_SUSTITUIDO.pdf",
+      "motivo": "Documento sustituido por HTM240-MNT-001@1.1: no se indexa."
+    },
+    {
+      "archivo": "HTM240-PRC-003_Verificacion_bomba_auxiliar_A_v1.0_SUSTITUIDO.pdf",
+      "motivo": "Documento sustituido por HTM240-PRC-003@2.0: no se indexa."
+    }
+  ],
+  "documentos_rechazados": [],
+  "fragmentos_rechazados": [],
+  "catalogos": {
+    "vehiculos": 3,
+    "codigos": 36,
+    "terminos": 103,
+    "componentes": 26
+  },
+  "carga": null
+}

@@ -209,7 +209,8 @@ class TestIntegracionAgente1Cluster(unittest.TestCase):
         chunk = {
             "chunk_id": "HTM240-MAN-001@1.1_p10_man_001_01",
             "texto": "El termostato abre a 87 grados.",
-            "metadata": {"documento": "Manual", "pagina": 10, "version": "V1.1"}
+            "metadata": {"documento": "Manual", "seccion": "Refrigeración", "pagina": 10,
+                         "version": "V1.1"}
         }
         
         mock_cliente_cluster.consultar.return_value = (

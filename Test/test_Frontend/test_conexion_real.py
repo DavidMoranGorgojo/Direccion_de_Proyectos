@@ -4,7 +4,7 @@ Cubre lo que pide la integración: ruta POST /consulta, conversacion_id vacío e
 (token Bearer, caducada, manipulada), historial real, continuación de un chat antiguo y errores
 (401, 429, Agentes caído, tiempo agotado, conversación ajena).
 
-Necesita un PostgreSQL de pruebas vacío en ARSOFT_TEST_DATABASE_URL (se recrean «aplicacion» y los datos de
+Necesita un PostgreSQL de pruebas vacío con pgvector en ARSOFT_TEST_DATABASE_URL (se recrean «aplicacion» y los datos de
 «conocimiento»); sin él se omite. Ejecutar desde la raíz con ``PYTHONPATH=shared;.`` (``:`` en Linux/Mac).
 
 Agentes se sustituye por un servicio mínimo con el mismo contrato (CTR-001 interno). Si AGENT2_DIR apunta a
@@ -35,7 +35,7 @@ if DB:
     if os.getenv("AGENT2_DIR"):
         sys.path.insert(0, os.environ["AGENT2_DIR"])
 
-SQL_USUARIOS = (RAIZ / "Backend" / "db" / "init" / "02_usuarios.sql").read_text(encoding="utf-8")
+SQL_ESQUEMA = (RAIZ / "Backend" / "db" / "init" / "01_conocimiento.sql").read_text(encoding="utf-8")
 
 
 @contextmanager
@@ -140,7 +140,7 @@ class FrontendContraBackendReal(unittest.TestCase):
         from Backend.api.app.usuarios_prueba import crear_usuarios_prueba
         with connect() as conn:
             conn.execute("DROP SCHEMA IF EXISTS aplicacion CASCADE")
-            conn.execute(SQL_USUARIOS)
+            conn.execute(SQL_ESQUEMA)
             crear_usuarios_prueba(conn)
             sembrar_conocimiento(conn)
         busqueda_lexica._cache.update(clave=None, indice=None)

@@ -127,6 +127,16 @@ class _ConexionEnMemoria:
             filas = [u for u in db.usuarios.values() if u["id"] == params[0]]
         elif q.startswith("UPDATE aplicacion.usuario SET ultimo_login"):
             filas = []
+        elif q.startswith("UPDATE aplicacion.chat SET titulo="):
+            titulo, cid = params
+            db.chats[cid]["titulo"] = titulo
+            db.chats[cid]["updated_at"] = ahora
+            filas = []
+        elif q.startswith("DELETE FROM aplicacion.chat WHERE conversacion_id="):
+            cid = params[0]
+            db.chats.pop(cid, None)
+            db.mensajes[:] = [m for m in db.mensajes if m["conversacion_id"] != cid]
+            filas = []
         elif q.startswith("SELECT count(*) AS n FROM aplicacion.chat WHERE usuario_id=%s"):
             filas = [{"n": sum(c["usuario_id"] == params[0] for c in db.chats.values())}]
         elif q.startswith("SELECT * FROM aplicacion.chat WHERE usuario_id=%s"):
@@ -388,6 +398,22 @@ class TestFrontendContraBackendReal(unittest.TestCase):
         self.assertEqual(len(hist.conversations), 1)
         self.assertEqual(len(hist.conversations[0].messages), 4)
 
+    def test_renombrar_y_borrar_chat_desde_cliente_frontend(self):
+        self.entrar()
+        response = api.send_message("", PREGUNTA_OK)
+        conversation_id = response.conversacion_id
+
+        renamed = api.rename_chat(conversation_id, "Chat renombrado")
+
+        self.assertTrue(renamed.ok, renamed.error)
+        self.assertEqual(renamed.conversation.title, "Chat renombrado")
+        self.assertEqual(api.fetch_history().conversations[0].title, "Chat renombrado")
+
+        deleted = api.delete_chat(conversation_id)
+
+        self.assertTrue(deleted.ok, deleted.error)
+        self.assertEqual(api.fetch_history().conversations, [])
+
     def test_ruta_interna_de_agentes_no_es_publica(self):
         """La ruta interna de Agentes no sustituye al endpoint público de CTR-001."""
         self.entrar()
@@ -475,7 +501,7 @@ class TestFrontendContraBackendReal(unittest.TestCase):
         """El Backend responde 200 con estado «error» y el Frontend muestra el texto genérico."""
         self.entrar()
         casos = {"caido": "servicio_no_disponible", "500": "servicio_no_disponible",
-                 "json_roto": "servicio_no_disponible", "respuesta_sin_fuentes": "servicio_no_disponible",
+                 "json_roto": "error_verificacion", "respuesta_sin_fuentes": "error_verificacion",
                  "lento": "tiempo_agotado"}
         for modo, codigo in casos.items():
             with self.subTest(agentes=modo):

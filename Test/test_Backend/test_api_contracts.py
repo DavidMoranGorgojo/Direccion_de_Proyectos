@@ -1,5 +1,6 @@
 """Pruebas de los adaptadores HTTP. PostgreSQL es opcional para la prueba de solo lectura."""
 
+import asyncio
 import os
 import socket
 import threading
@@ -9,11 +10,13 @@ from contextlib import contextmanager
 from unittest.mock import patch
 
 import uvicorn
+import httpx
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from Agents import service
 from Backend.api.app.links import connect
-from Backend.api.app.main import app, authorize_consultation
+from Backend.api.app.main import RespuestaAgentes, app, authorize_consultation, consultar_agentes
 
 TOKEN = "arsoft-test"
 
@@ -39,6 +42,14 @@ def serve(asgi):
 
 
 class Links(unittest.TestCase):
+    def test_root_serves_responsive_web_client(self):
+        with TestClient(app) as client:
+            response = client.get("/")
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("<html lang=\"es\">", response.text)
+            self.assertIn('name="viewport"', response.text)
+            self.assertIn("/consulta", response.text)
+
     def test_public_consultation_requires_real_session_validation(self):
         with TestClient(app) as client, patch.dict(os.environ, {"ARSOFT_SERVICE_TOKEN": TOKEN}):
             body = {"conversacion_id": "", "pregunta": "Hola"}
@@ -80,6 +91,78 @@ class Links(unittest.TestCase):
             self.assertEqual(response.status_code, 200 if index else 503)
             if index:
                 self.assertEqual(response.json()["version"], index["version"])
+
+
+class ServiceBoundary(unittest.TestCase):
+    def test_agentes_exige_bearer_de_servicio(self):
+        with patch.dict(os.environ, {"ARSOFT_SERVICE_TOKEN": TOKEN}), TestClient(service.app) as client:
+            response = client.get("/health")
+            self.assertEqual(response.status_code, 401)
+            self.assertEqual(response.json()["detail"]["codigo"], "acceso_denegado")
+            invalid = client.get("/health", headers={"Authorization": "Bearer incorrecto"})
+            self.assertEqual(invalid.status_code, 401)
+            self.assertEqual(invalid.json()["detail"]["codigo"], "acceso_denegado")
+
+    def test_agentes_retorna_503_si_falta_el_token_configurado(self):
+        env = {key: value for key, value in os.environ.items() if key != "ARSOFT_SERVICE_TOKEN"}
+        with patch.dict(os.environ, env, clear=True), TestClient(service.app) as client:
+            response = client.get("/health")
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json()["detail"]["codigo"], "servicio_no_disponible")
+
+    def test_timeout_devuelve_tiempo_agotado_y_cierra_conversacion(self):
+        metodos = []
+
+        def handler(request):
+            metodos.append(request.method)
+            if request.method == "POST":
+                raise httpx.ReadTimeout("lectura agotada", request=request)
+            return httpx.Response(204)
+
+        async def llamada():
+            async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+                with patch("Backend.api.app.main.agents_url", return_value="http://agents.test"), \
+                     patch("Backend.api.app.main.service_headers", return_value={"Authorization": "Bearer test"}):
+                    return await consultar_agentes("chat-timeout", "pregunta", client)
+
+        result = asyncio.run(llamada())
+        self.assertEqual((result.estado, result.codigo_error), ("error", "tiempo_agotado"))
+        self.assertEqual(result.fuentes, [])
+        self.assertEqual(metodos, ["POST", "DELETE"])
+
+
+class CTR001ResponseValidation(unittest.TestCase):
+    def respuesta(self, **cambios):
+        base = {
+            "trace_id": "trace-test",
+            "estado": "respuesta",
+            "texto": "El par de apriete es 20 Nm.",
+            "fuentes": [{
+                "chunk_id": "chunk-1", "documento": "HTM240-MAN-001", "seccion": "Culata",
+                "pagina": 4, "versiones": ["V1.1"], "obsoleto": False,
+            }],
+            "codigo_error": "",
+        }
+        base.update(cambios)
+        return base
+
+    def test_acepta_respuesta_con_referencia_completa(self):
+        result = RespuestaAgentes.model_validate(self.respuesta())
+        self.assertEqual(result.fuentes[0].pagina, 4)
+
+    def test_rechaza_pagina_cero_y_metadatos_incompletos(self):
+        for field, value in (("pagina", 0), ("documento", " "),
+                             ("documento", "DOC_DESCONOCIDO"), ("seccion", " ")):
+            with self.subTest(field=field, value=value):
+                body = self.respuesta()
+                body["fuentes"][0][field] = value
+                with self.assertRaises(ValidationError):
+                    RespuestaAgentes.model_validate(body)
+
+    def test_respuesta_vacia_o_sin_fuentes_no_puede_ser_verificada(self):
+        for changes in ({"texto": "  "}, {"fuentes": []}):
+            with self.subTest(changes=changes), self.assertRaises(ValidationError):
+                RespuestaAgentes.model_validate(self.respuesta(**changes))
 
 
 if __name__ == "__main__":

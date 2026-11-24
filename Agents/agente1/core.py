@@ -1357,18 +1357,22 @@ def registrar_turno_auditoria(datos: Dict[str, Any]):
 
 
 def evidencia_valida(ev: Any) -> bool:
-    """Tipos necesarios para citar y serializar fuentes de CTR-001 sin coerciones."""
-    if not isinstance(ev, dict) or not isinstance(ev.get("chunk_id"), str) or not ev["chunk_id"]:
+    """Exige metadatos completos antes de usar una evidencia como cita CTR-001."""
+    if not isinstance(ev, dict) or not isinstance(ev.get("chunk_id"), str) or not ev["chunk_id"].strip():
         return False
     if not isinstance(ev.get("texto"), str) or not ev["texto"].strip():
         return False
     meta = ev.get("metadata")
     if not isinstance(meta, dict):
         return False
-    for campo in ("documento", "seccion", "version"):
-        if campo in meta and not isinstance(meta[campo], str):
+    for campo in ("documento", "seccion"):
+        if not isinstance(meta.get(campo), str) or not meta[campo].strip():
             return False
-    if "pagina" in meta and (type(meta["pagina"]) is not int or meta["pagina"] < 0):
+    if meta["documento"].strip().casefold() in {"doc_desconocido", "documento sin nombre"}:
+        return False
+    if "pagina" not in meta or type(meta["pagina"]) is not int or meta["pagina"] < 1:
+        return False
+    if "version" in meta and not isinstance(meta["version"], str):
         return False
     if "versiones" in meta and (not isinstance(meta["versiones"], list)
                                or any(not isinstance(v, str) for v in meta["versiones"])):
@@ -1477,7 +1481,7 @@ def normalizar_respuesta_agente2(respuesta: Any) -> RespuestaSimuladorAgente2:
         for campo_str in ("documento", "seccion", "version"):
             if campo_str in meta_in and not isinstance(meta_in[campo_str], str):
                 return error
-        if "pagina" in meta_in and (type(meta_in["pagina"]) is not int or meta_in["pagina"] < 0):
+        if "pagina" in meta_in and (type(meta_in["pagina"]) is not int or meta_in["pagina"] < 1):
             return error
         if "versiones" in meta_in and (not isinstance(meta_in["versiones"], list)
                                       or any(not isinstance(v, str) for v in meta_in["versiones"])):
@@ -1527,13 +1531,12 @@ def normalizar_respuesta_agente2(respuesta: Any) -> RespuestaSimuladorAgente2:
             **meta_dict,
             "documento": documento,
         }
+        if isinstance(meta_homogeneo.get("seccion"), str):
+            meta_homogeneo["seccion"] = meta_homogeneo["seccion"].strip()
         if "pagina" not in meta_homogeneo and "pagina" in c:
-            try:
-                p = int(c["pagina"])
-                if p >= 0:
-                    meta_homogeneo["pagina"] = p
-            except (ValueError, TypeError):
-                pass
+            # El contrato exige página entera; no convertir bool, float ni texto.
+            if type(c["pagina"]) is int and c["pagina"] >= 1:
+                meta_homogeneo["pagina"] = c["pagina"]
 
         chunk_norm = {
             **c,
@@ -1559,7 +1562,9 @@ def normalizar_respuesta_agente2(respuesta: Any) -> RespuestaSimuladorAgente2:
         return error
 
     codigo_error = respuesta.get("codigo_error")
-    if codigo_error not in {"entrada_invalida", "filtro_invalido", "modelo_no_disponible", "modelo_incompatible",
+    if codigo_error in {"peticion_invalida", "filtro_invalido"}:
+        codigo_error = "entrada_invalida"
+    if codigo_error not in {"entrada_invalida", "modelo_no_disponible", "modelo_incompatible",
                             "indice_no_disponible", "tiempo_agotado", "error_verificacion",
                             "servicio_no_disponible"}:
         codigo_error = None
