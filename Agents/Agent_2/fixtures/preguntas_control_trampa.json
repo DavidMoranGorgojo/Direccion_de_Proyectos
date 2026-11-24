@@ -1,0 +1,173 @@
+{
+  "descripcion": "Batería oficial de 20 preguntas de control y 8 trampa del ThermoDrive HTM-240 (CJ-02). Fuente: scripts/evaluar_28_preguntas_a1_a2.py (rama agente1-jaime, 24-11-2026).",
+  "preguntas": [
+    {
+      "id": "CTRL-01",
+      "tipo": "control",
+      "doc_esperado": "HTM240-MAN-001",
+      "pregunta": "¿Cuál es la función principal del sistema ThermoDrive HTM-240?"
+    },
+    {
+      "id": "CTRL-02",
+      "tipo": "control",
+      "doc_esperado": "HTM240-MAN-001",
+      "pregunta": "¿Cómo se llaman los tres circuitos térmicos independientes que componen la arquitectura funcional?"
+    },
+    {
+      "id": "CTRL-03",
+      "tipo": "control",
+      "doc_esperado": "HTM240-CAT-001",
+      "pregunta": "¿Qué componente es el CMP-04 y qué permite hacer a la Unidad de Control Térmico (TCU)?"
+    },
+    {
+      "id": "CTRL-04",
+      "tipo": "control",
+      "doc_esperado": "HTM240-CAT-001",
+      "pregunta": "¿A qué temperatura inicial debe abrir el termostato electrónico (CMP-08)?"
+    },
+    {
+      "id": "CTRL-05",
+      "tipo": "control",
+      "doc_esperado": "HTM240-MAN-001",
+      "pregunta": "¿Cuál es el rango normal de temperatura de funcionamiento para el inversor (Circuito CIR-03)?"
+    },
+    {
+      "id": "CTRL-06",
+      "tipo": "control",
+      "doc_esperado": "HTM240-MAN-001",
+      "pregunta": "¿Qué diferencia principal existe en el calentador PTC (CMP-12) entre la versión V1.0 y la versión V2.0?"
+    },
+    {
+      "id": "CTRL-07",
+      "tipo": "control",
+      "doc_esperado": "HTM240-MNT-001",
+      "pregunta": "Según el plan de mantenimiento preventivo, ¿qué líquido refrigerante consumible debe utilizarse en el sistema?"
+    },
+    {
+      "id": "CTRL-08",
+      "tipo": "control",
+      "doc_esperado": "HTM240-PRC-001",
+      "pregunta": "¿Qué riesgo principal existe al inspeccionar el nivel de refrigerante (HTM240-PRC-001) y a qué temperatura debe estar el motor?"
+    },
+    {
+      "id": "CTRL-09",
+      "tipo": "control",
+      "doc_esperado": "HTM240-BOL-002",
+      "pregunta": "En la versión V1.1 y V2.0, ¿qué caudal y corriente debe registrar la bomba auxiliar A (CMP-02) durante su verificación?"
+    },
+    {
+      "id": "CTRL-10",
+      "tipo": "control",
+      "doc_esperado": "HTM240-DIC-001",
+      "pregunta": "¿Qué significa coloquialmente que el vehículo está en 'Modo tortuga'?"
+    },
+    {
+      "id": "CTRL-11",
+      "tipo": "control",
+      "doc_esperado": "HTM240-PRC-008",
+      "pregunta": "Durante una comprobación de fugas (PRC-008), ¿qué herramienta ficticia se recomienda usar junto con una linterna UV si no hay fugas visibles a simple vista?"
+    },
+    {
+      "id": "CTRL-12",
+      "tipo": "control",
+      "doc_esperado": "HTM240-PRC-009",
+      "pregunta": "Al comprobar la presión del circuito de motor (PRC-009), ¿hasta cuántos bares se debe presurizar el circuito y durante cuánto tiempo?"
+    },
+    {
+      "id": "CTRL-13",
+      "tipo": "control",
+      "doc_esperado": "HTM240-DTC-001",
+      "pregunta": "¿Qué código DTC se asocia a la detección de contaminación cruzada con aceite en el circuito refrigerante?"
+    },
+    {
+      "id": "CTRL-14",
+      "tipo": "control",
+      "doc_esperado": "HTM240-ADV-001",
+      "pregunta": "¿Qué significa el testigo TES-05 encendido en color rojo?"
+    },
+    {
+      "id": "CTRL-15",
+      "tipo": "control",
+      "doc_esperado": "HTM240-SEG-001",
+      "pregunta": "¿Qué equipo de protección individual se debe usar, de forma ficticia, cuando exista proximidad a componentes de alta tensión?"
+    },
+    {
+      "id": "CTRL-16",
+      "tipo": "control",
+      "doc_esperado": "HTM240-HIS-001",
+      "pregunta": "En el Historial de Casos (HTM-CASO-002), ¿cuál fue la causa raíz de una alerta de reducción de velocidad durante la carga rápida?"
+    },
+    {
+      "id": "CTRL-17",
+      "tipo": "control",
+      "doc_esperado": "HTM240-BOL-003",
+      "pregunta": "Según el boletín técnico HTM240-BOL-003, ¿qué indica el código HTM-0142 en la versión de software V2.0?"
+    },
+    {
+      "id": "CTRL-18",
+      "tipo": "control",
+      "doc_esperado": "HTM240-MNT-001",
+      "pregunta": "¿Cada cuánto tiempo o kilometraje se debe verificar de forma completa la comunicación CAN de la TCU?"
+    },
+    {
+      "id": "CTRL-19",
+      "tipo": "control",
+      "doc_esperado": "HTM240-BOL-006",
+      "pregunta": "El boletín HTM240-BOL-006 corrige un dato sobre el plan de mantenimiento. ¿A qué kilómetros debe cambiarse el refrigerante y qué cifra era incorrecta?"
+    },
+    {
+      "id": "CTRL-20",
+      "tipo": "control",
+      "doc_esperado": "HTM240-DIA-001",
+      "pregunta": "Si tres o más testigos se activan simultáneamente, ¿qué procedimiento hay que ejecutar antes de asumir un fallo único?"
+    },
+    {
+      "id": "TRAMP-01",
+      "tipo": "trampa",
+      "doc_esperado": null,
+      "pregunta": "¿Cuál es la presión recomendada para el inflado de los neumáticos delanteros del HTM-240?"
+    },
+    {
+      "id": "TRAMP-02",
+      "tipo": "trampa",
+      "doc_esperado": null,
+      "pregunta": "¿Qué aceite de motor (qué grado de viscosidad) debo usar al rellenar el cárter?"
+    },
+    {
+      "id": "TRAMP-03",
+      "tipo": "trampa",
+      "doc_esperado": null,
+      "pregunta": "El cliente se queja de que el aire acondicionado (A/C) del habitáculo no enfría en verano. ¿Cómo recargo el gas frigorífico?"
+    },
+    {
+      "id": "TRAMP-04",
+      "tipo": "trampa",
+      "doc_esperado": null,
+      "pregunta": "¿Cada cuántos kilómetros se debe sustituir la correa de distribución que mueve la bomba mecánica (CMP-01)?"
+    },
+    {
+      "id": "TRAMP-05",
+      "tipo": "trampa",
+      "doc_esperado": null,
+      "pregunta": "Tengo el código de error HTM-0850 en la máquina de diagnóstico. ¿Qué debo revisar?"
+    },
+    {
+      "id": "TRAMP-06",
+      "tipo": "trampa",
+      "doc_esperado": null,
+      "pregunta": "¿A qué par de apriete exacto (en Nm) debo apretar los tornillos de la culata del bloque motor?"
+    },
+    {
+      "id": "TRAMP-07",
+      "tipo": "trampa",
+      "doc_esperado": null,
+      "pregunta": "No me queda refrigerante ThermoGlyc HX-40. ¿Es seguro mezclarlo con anticongelante genérico G12 de color rosa?"
+    },
+    {
+      "id": "TRAMP-08",
+      "tipo": "trampa",
+      "doc_esperado": null,
+      "pregunta": "¿Cómo se purga el sistema de líquido de frenos del HTM-240?"
+    }
+  ]
+}

@@ -462,6 +462,15 @@ class Agent2Pipeline:
                     return_metrics=True,
                 )
                 metricas.update(metricas_rerank)
+                if self.trace_retrieval:
+                    # A2-08: ranking del reranker tras el umbral. Con
+                    # threshold=0.0 es el ranking completo que usa la
+                    # calibración de umbrales.
+                    metricas["rankings"]["reranker"] = [
+                        {"chunk_id": c["chunk_id"], "documento": c.get("metadata", {}).get("documento", c.get("documento")),
+                         "rerank_score": c["rerank_score"]}
+                        for c in candidatos_umbral
+                    ]
             except Exception as err:
                 logger.error("Fallo durante la inferencia del reranker: %s", err)
                 return {
