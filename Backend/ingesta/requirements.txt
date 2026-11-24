@@ -1,3 +1,5 @@
 pymupdf>=1.24
-sentence-transformers>=3.0
+# Fijadas con torch==2.14.1 (Backend/apptainer/ingesta.def), igual que Agents/Agent_2.
+sentence-transformers==6.3.0
+transformers==5.20.2
 psycopg[binary]>=3.1
