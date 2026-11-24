@@ -43,7 +43,9 @@ Configurar las variables de entorno antes de arrancar los servicios (o definirla
 
 ## 3. Cómo Arrancar los Agentes
 
-### Opción A: Servicio HTTP Conjunto (Modo Producción / Integración Backend)
+> **Arranque oficial:** con Apptainer, `bash apptainer/start-all.sh` (ver [`apptainer/README.md`](../apptainer/README.md)); en el clúster, `apptainer/cluster/agentes.sbatch`. Lo que sigue es para **desarrollo y pruebas locales sin contenedor**.
+
+### Opción A: Servicio HTTP conjunto (desarrollo / integración con Backend)
 
 Levanta la pasarela HTTP de Agentes (`Agents/service.py`) en el puerto 8001:
 
