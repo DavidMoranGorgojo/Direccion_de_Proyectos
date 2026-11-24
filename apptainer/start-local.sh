@@ -5,7 +5,10 @@ ENV_FILE="${ARSOFT_LOCAL_ENV:-$HERE/.env.local}"
 IMAGES="${ARSOFT_IMAGES_DIR:-$HOME/arsoft-images}"
 STATE="${ARSOFT_STATE_DIR:-$HOME/arsoft-state}"
 [[ -f "$ENV_FILE" ]] || { echo "Falta $ENV_FILE. Copia .env.local.example y configura PostgreSQL." >&2; exit 2; }
+ARSOFT_AGENT_TIMEOUT_SECONDS="$(printenv ARSOFT_AGENT_TIMEOUT_SECONDS || true)"
+[[ -n "$ARSOFT_AGENT_TIMEOUT_SECONDS" ]] || ARSOFT_AGENT_TIMEOUT_SECONDS=25
 source <(sed 's/\r$//' "$ENV_FILE")
+[[ -n "$ARSOFT_AGENT_TIMEOUT_SECONDS" ]] || ARSOFT_AGENT_TIMEOUT_SECONDS=25
 source "$HERE/database-url.sh"
 : "${ARSOFT_SERVICE_TOKEN:?Configura ARSOFT_SERVICE_TOKEN en el archivo local de entorno}"
 for name in postgres backend; do
@@ -66,6 +69,7 @@ if ! grep -q '^arsoft-api[[:space:]]' <<< "$instances"; then
   APPTAINERENV_ARSOFT_SERVICE_TOKEN="${ARSOFT_SERVICE_TOKEN:-}" \
   APPTAINERENV_ARSOFT_JWT_SECRET="${ARSOFT_JWT_SECRET:-}" \
   APPTAINERENV_DATABASE_URL="$DATABASE_URL" \
+  APPTAINERENV_ARSOFT_AGENT_TIMEOUT_SECONDS="$ARSOFT_AGENT_TIMEOUT_SECONDS" \
   APPTAINERENV_AGENTES_URL="${AGENTES_URL:-http://127.0.0.1:8001}" \
     apptainer instance start --cleanenv "$IMAGES/backend.sif" arsoft-api
 fi

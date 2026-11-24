@@ -68,12 +68,15 @@ def crear_parser() -> argparse.ArgumentParser:
     parser.add_argument("--database-url", default=os.getenv("DATABASE_URL"), help="Por defecto, $DATABASE_URL.")
     parser.add_argument("--crear-esquema", action="store_true", help="Aplica db/init/01_conocimiento.sql antes de cargar.")
     parser.add_argument("--no-activar", action="store_true", help="Carga la versión sin activarla.")
-    # Los sustituidos se indexan por defecto, marcados con obsoleto, sustituido_por y vigente_para:
-    # Agentes los necesita para avisar de lo obsoleto, y PRC-003 v1.0 sigue vigente para V1.0.
-    # La API ya filtra por obsoleto y vigente_para (vectorial/busqueda.py).
-    parser.add_argument("--excluir-sustituidos", action="store_true",
-                        help="No indexa los documentos sustituidos (por defecto se indexan, marcados como obsoletos).")
-    parser.add_argument("--incluir-sustituidos", action="store_true", help=argparse.SUPPRESS)  # antiguo, sin efecto
+    # Por defecto se excluyen los documentos sustituidos para limitar el corpus a documentación vigente.
+    politica_sustituidos = parser.add_mutually_exclusive_group()
+    politica_sustituidos.add_argument(
+        "--excluir-sustituidos", dest="excluir_sustituidos", action="store_true",
+        help="No indexa documentos sustituidos (opción por defecto).")
+    politica_sustituidos.add_argument(
+        "--incluir-sustituidos", dest="excluir_sustituidos", action="store_false",
+        help=argparse.SUPPRESS)
+    parser.set_defaults(excluir_sustituidos=True)
     return parser
 
 

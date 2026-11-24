@@ -20,6 +20,10 @@ ARSOFT_MANUALES_DIR=/ruta/a/los/manuales bash apptainer/start-all.sh
 
 Si no encuentra PDF, avisa y continúa con la prueba básica de login, historial e interfaz. Ollama debe estar levantado para generar respuestas; los PDF y los modelos de recuperación son necesarios para comprobar el RAG. El arranque no inventa respuestas ni corpus de prueba.
 
+La configuración inicial de Agentes usa `USE_REAL_AGENT2=0`: permite probar la aplicación sin índice RAG y usa el simulador de recuperación. Para validar el Agente 2 real, configura `USE_REAL_AGENT2=1` en `~/.config/arsoft/agentes.env` después de tener un índice activo y los modelos de recuperación disponibles; de lo contrario `/ready` devolverá `503` con `indice_no_disponible`. En instalaciones existentes, el archivo de configuración se conserva, por lo que cambiar el valor requiere editarlo y reiniciar `start-all.sh`.
+
+El modo básico sigue necesitando Ollama y el modelo indicado por `OLLAMA_MODEL`. En WSL, `OLLAMA_URL` debe apuntar a una dirección accesible desde Ubuntu/WSL2, por ejemplo la IP del host Windows, no necesariamente `127.0.0.1`.
+
 Las credenciales de usuario demo se crean en el entorno local (usuario1 / usuario123). Para no crearlas, configura ARSOFT_SEED_DEV_USERS=0 en local.env; las contraseñas son públicas y nunca deben usarse en producción. Los secretos del servicio se generan automáticamente en una instalación nueva; si editas los archivos de entorno, conserva el mismo ARSOFT_SERVICE_TOKEN en ambos.
 
 Para detener servicios que hayas arrancado manualmente: `bash apptainer/stop-local.sh`.

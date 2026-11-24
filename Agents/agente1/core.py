@@ -36,6 +36,7 @@ logger = logging.getLogger("Agente1")
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/v1")
 MODELO_LLM = os.environ.get("OLLAMA_MODEL", "qwen2.5:14b")
+OLLAMA_REASONING_EFFORT = os.environ.get("OLLAMA_REASONING_EFFORT", "none").strip()
 
 try:
     from openai import OpenAI
@@ -597,6 +598,7 @@ class Agente1:
                     messages=mensajes,
                     temperature=0.0,
                     max_tokens=512,  # BLOQUEANTE 5: aumentado para evitar truncar JSONs
+                    extra_body={"reasoning_effort": OLLAMA_REASONING_EFFORT},
                     timeout=restante
                 )
                 texto = respuesta.choices[0].message.content
@@ -623,6 +625,7 @@ class Agente1:
                         "messages": mensajes,
                         "temperature": 0.0,
                         "max_tokens": 512,
+                        "reasoning_effort": OLLAMA_REASONING_EFFORT,
                         "stream": False
                     }
                 else:
@@ -630,6 +633,7 @@ class Agente1:
                         "model": modelo_destino,
                         "messages": mensajes,
                         "stream": False,
+                        "think": False if OLLAMA_REASONING_EFFORT.lower() in ("none", "false", "off") else OLLAMA_REASONING_EFFORT,
                         "options": {
                             "temperature": 0.0,
                             "num_predict": 512

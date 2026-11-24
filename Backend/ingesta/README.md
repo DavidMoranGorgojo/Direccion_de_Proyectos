@@ -41,7 +41,7 @@ export DATABASE_URL=postgresql://usuario:clave@localhost:5432/bd
 PYTHONPATH=src python -m ingesta --entrada /ruta/ThermoDrive_HTM240_Alumnos_PDF --salida salida_ingesta --cargar --crear-esquema
 ```
 
-`--crear-esquema` aplica el esquema unificado de `Backend/db/init/01_conocimiento.sql` (conocimiento, aplicacion y `vector(1024)`; no hace falta si la base ya lo ejecutó al arrancar). Otras opciones: `--indice-version v1.0`, `--no-activar`, `--excluir-sustituidos`. Por defecto los documentos sustituidos (`MNT-001 v1.0` y `PRC-003 v1.0`) se indexan marcados con `obsoleto`, `sustituido_por` y `vigente_para`: Agentes los necesita para avisar de que un documento está sustituido, y `PRC-003 v1.0` sigue vigente para V1.0. La API solo los devuelve para las versiones de `vigente_para`. Con `--excluir-sustituidos` no se indexan y aparecen en `excluidos` del informe. La versión activa nunca se recarga: para reindexar se usa una versión nueva.
+`--crear-esquema` aplica el esquema unificado de `Backend/db/init/01_conocimiento.sql` (conocimiento, aplicacion y `vector(1024)`; no hace falta si la base ya lo ejecutó al arrancar). Otras opciones: `--indice-version v1.0`, `--no-activar`, `--excluir-sustituidos` y `--incluir-sustituidos` (opción avanzada). Por defecto se excluyen los documentos sustituidos (`MNT-001 v1.0` y `PRC-003 v1.0`) y aparecen en `excluidos` del informe. Con `--incluir-sustituidos` se indexan marcados con `obsoleto`, `sustituido_por` y `vigente_para`; la API filtra por `vigente_para`. Así, PRC-003 v1.0 puede recuperarse para V1.0 cuando se habilita la inclusión. La versión activa nunca se recarga: para reindexar se usa una versión nueva.
 
 ## Ejecución con Apptainer
 
