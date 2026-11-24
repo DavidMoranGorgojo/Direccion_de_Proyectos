@@ -201,3 +201,162 @@ def test_sustituido_aun_vigente_para_la_version_no_cuenta_como_obsoleto(redaccio
 
     assert final["estado"] == "respuesta"
     assert redaccion[0]["aviso"] is None
+
+
+# ---------------------------------------------------------------------------
+# Extremo a extremo: pipeline del Agente 2 -> Agente 1 real
+# ---------------------------------------------------------------------------
+#
+# Los tests anteriores construyen el mensaje con ``build_evidence_response``.
+# Estos ejecutan ``Agent2Pipeline.procesar_consulta`` sobre los 98 fragmentos
+# del dataset sintético (Backend simulado) y pasan su salida tal cual al
+# Agente 1. El embedding es constante y el reranker puntúa por solapamiento
+# de palabras, así que el resultado es determinista y no necesita modelos.
+
+import re  # noqa: E402
+
+import requests  # noqa: E402
+
+from Agents.Agent_2.src.clients.backend import BackendAPIClient  # noqa: E402
+from Agents.Agent_2.src.clients.bge_m3 import BgeM3Client  # noqa: E402
+from Agents.Agent_2.src.services.pipeline import Agent2Pipeline  # noqa: E402
+from Agents.Agent_2.src.testing.backend_simulator import (  # noqa: E402
+    BackendSimulator,
+    SimulatedSession,
+)
+
+DATASET = REPO_ROOT / "Agents" / "Agent_2" / "fixtures" / "bbdd_sintetica_chunks.json"
+CATALOGOS = DATASET.parent / "catalogos"
+
+
+class _EmbeddingConstante:
+    def encode(self, texts, **kwargs):
+        return {"dense_vecs": [[0.05] * 1024 for _ in texts]}
+
+
+def _palabras(texto):
+    return set(re.findall(r"\w+", texto.lower()))
+
+
+class _RerankerSolapamiento:
+    """Puntúa cada pasaje por la fracción de palabras de la consulta que contiene."""
+
+    def predict(self, pairs):
+        return [
+            len(_palabras(consulta) & _palabras(pasaje)) / max(1, len(_palabras(consulta)))
+            for consulta, pasaje in pairs
+        ]
+
+
+class _SesionCaida(requests.Session):
+    def request(self, *args, **kwargs):
+        raise requests.ConnectionError("Backend caído")
+
+
+def _chunks_dataset():
+    return json.loads(DATASET.read_text(encoding="utf-8-sig"))["chunks"]
+
+
+def _pipeline(chunks=None, sesion=None):
+    simulador = BackendSimulator(
+        chunks if chunks is not None else _chunks_dataset(), catalogo_dir=CATALOGOS
+    )
+    cliente = BackendAPIClient(
+        "http://backend.simulado",
+        simulador.modelo_embeddings,
+        session=sesion or SimulatedSession(simulador),
+        timeout=2,
+    )
+    return Agent2Pipeline(
+        backend_client=cliente,
+        embedding_client=BgeM3Client(_EmbeddingConstante()),
+        reranker_model=_RerankerSolapamiento(),
+        require_reranker=True,
+    )
+
+
+def _consultar(texto, version=None, **kwargs):
+    entrada = {"texto_preprocesado": texto}
+    if version:
+        entrada["filtros"] = {"version": version}
+    salida = _pipeline(**kwargs).procesar_consulta(entrada)
+    # Las métricas viajan aparte; el Agente 1 recibe solo el sobre CTR-004.
+    salida.pop("metricas", None)
+    return salida
+
+
+def test_e2e_suficiente_responde_con_las_fuentes_del_agente2(redaccion):
+    mensaje = _consultar("HTM-0142 bateria", "V1.1")
+    assert mensaje["estado"] == "suficiente"
+
+    final = core.resolver_evidencias(PREGUNTA, mensaje, None, version="V1.1")
+
+    assert final["estado"] == "respuesta"
+    assert redaccion[0]["aviso"] is None
+    usadas = {e["chunk_id"] for e in redaccion[0]["evidencias"]}
+    assert "HTM240-DTC-001@1.0_p1_htm0142" in usadas
+    assert usadas <= {e["chunk_id"] for e in mensaje["evidencias"]}
+
+
+def test_e2e_ambiguo_por_version_pide_aclaracion(redaccion):
+    # HTM-0142 cambia de significado en V2.0 (HTM240-BOL-003).
+    mensaje = _consultar("codigo HTM-0142")
+    assert mensaje["estado"] == "ambiguo"
+    assert mensaje["campo_ambiguo"] == "version"
+
+    final = core.resolver_evidencias(PREGUNTA, mensaje, None)
+
+    assert final["estado"] == "aclaracion"
+    assert final["campo_aclaracion"] == "version"
+    assert redaccion == []
+
+
+def test_e2e_pregunta_trampa_termina_sin_evidencia(redaccion):
+    # TRAMP-01: el dataset no habla de neumáticos.
+    mensaje = _consultar("presion neumaticos delanteros")
+    assert mensaje["evidencias"] == []
+
+    final = core.resolver_evidencias(PREGUNTA, mensaje, None)
+
+    assert final["estado"] == "sin_evidencia"
+    assert final["fuentes"] == []
+    assert redaccion == []
+
+
+def test_e2e_solo_obsoleto_responde_con_aviso(redaccion):
+    # Solo el plan de mantenimiento sustituido (80.000 km, vigente_para=[]).
+    sustituidos = [c for c in _chunks_dataset() if "sustituido" in c["chunk_id"]]
+    mensaje = _consultar("intervalo cambio refrigerante 80.000 km", chunks=sustituidos)
+    assert mensaje["estado"] == "solo_obsoleto"
+
+    final = core.resolver_evidencias(PREGUNTA, mensaje, None)
+
+    assert final["estado"] == "respuesta"
+    assert redaccion[0]["aviso"] is not None
+    assert [e["chunk_id"] for e in redaccion[0]["evidencias"]] == [
+        "HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k"
+    ]
+
+
+def test_e2e_sustituido_vigente_para_la_version_pedida_no_lleva_aviso(redaccion):
+    # PRC-003 v1.0 está sustituido pero sigue vigente para V1.0 (A2-06).
+    sustituidos = [c for c in _chunks_dataset() if "sustituido" in c["chunk_id"]]
+    mensaje = _consultar("corriente bomba auxiliar A", "V1.0", chunks=sustituidos)
+    assert mensaje["estado"] == "suficiente"
+
+    final = core.resolver_evidencias(PREGUNTA, mensaje, None, version="V1.0")
+
+    assert final["estado"] == "respuesta"
+    assert redaccion[0]["aviso"] is None
+
+
+def test_e2e_backend_caido_llega_como_error_con_codigo(redaccion):
+    mensaje = _consultar("HTM-0142", sesion=_SesionCaida())
+    assert mensaje["estado"] == "error"
+
+    final = core.resolver_evidencias(PREGUNTA, mensaje, None)
+
+    assert final["estado"] == "error"
+    assert final["codigo_error"] == "servicio_no_disponible"
+    assert final["fuentes"] == []
+    assert redaccion == []
