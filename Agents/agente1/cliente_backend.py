@@ -72,8 +72,10 @@ class ClienteBackendAgentes:
         port = parsed.port or (443 if parsed.scheme == "https" else 80)
         clave = f"{host}:{port}"
         ahora = time.monotonic()
-        ultimo_fallo = ClienteBackendAgentes._fallos_por_host.get(clave, 0.0)
-        if ahora - ultimo_fallo < ClienteBackendAgentes._cooldown_fallo_s:
+        fallos = getattr(self, '_fallos_por_host', {})
+        ultimo_fallo = fallos.get(clave, 0.0) if isinstance(fallos, dict) else 0.0
+        cooldown = self._cooldown_fallo_s if isinstance(getattr(self, '_cooldown_fallo_s', None), (int, float)) else 3.0
+        if isinstance(ultimo_fallo, (int, float)) and ahora - ultimo_fallo < cooldown:
             return False
         if host in ("localhost", "127.0.0.1"):
             import socket
@@ -81,7 +83,8 @@ class ClienteBackendAgentes:
                 with socket.create_connection((host, port), timeout=0.05):
                     return True
             except Exception:
-                ClienteBackendAgentes._fallos_por_host[clave] = time.monotonic()
+                if isinstance(fallos, dict):
+                    fallos[clave] = time.monotonic()
                 return False
         return True
 

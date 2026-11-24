@@ -1,9 +1,9 @@
 {
   "modo": "real",
-  "procedencia": "Pipeline Integrado A1+A2 (Modelo: qwen2.5:3b, Corpus: ThermoDrive HTM-240, Fecha: 2026-11-24T10:31:32.108106+00:00)",
+  "procedencia": "Pipeline Integrado A1+A2 (Modelo: qwen2.5:3b, Corpus: ThermoDrive HTM-240, Fecha: 2026-11-24T12:24:01.856663+00:00)",
   "respuestas": {
     "CJ02-001": {
-      "trace_id": "t-efcf4a",
+      "trace_id": "t-cba602",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
@@ -13,7 +13,7 @@
       "respuesta_generada": "El sistema ThermoDrive HTM-240 gestiona la temperatura del vehículo híbrido mediante tres circuitos independientes pero interconectados: CIR-01 (motor de combustión), CIR-02 (batería de alta tensión) y CIR-03 (electrónica de potencia e inversor). [HTM240-MAN-001@1.1_p1_man_001_01, HTM240-ESQ-001@1.0_p1_arquitectura_general] Todo el sistema está controlado centralmente por la Unidad de Control Térmico (TCU, CMP-13) mediante bus CAN a 500 kbps . [HTM240-MAN-001@1.1_p1_man_001_01, HTM240-ESQ-001@1.0_p1_arquitectura_general] [HTM240-MAN-001@1.1_p1_man_001_01] [HTM240-ESQ-001@1.0_p1_arquitectura_general]"
     },
     "CJ02-002": {
-      "trace_id": "t-772519",
+      "trace_id": "t-31d9f6",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
@@ -22,7 +22,7 @@
       "respuesta_generada": "En el circuito del motor CIR-01, el rango normal de temperatura de salida de culata es de 85 a 98 °C, y la presión nominal de trabajo se sitúa entre 1.0 y 1.6 bar . [HTM240-MAN-001@1.1_p1_man_001_02]"
     },
     "CJ02-003": {
-      "trace_id": "t-a0436c",
+      "trace_id": "t-ed5af7",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
@@ -32,7 +32,7 @@
       "respuesta_generada": "El CMP-04 es la válvula distribuidora de 4 vías accionada por motor paso a paso de 12V. [HTM240-CAT-001@1.0_p1_cat_001_04, HTM240-ESQ-001@1.0_p1_flujo_calentamiento_frio] Su función es regular la interconexión térmica entre el circuito de motor (CIR-01) y el de batería (CIR-02), permitiendo desviar calor residual del motor para precalentar la batería en arranques en frío . [HTM240-CAT-001@1.0_p1_cat_001_04, HTM240-ESQ-001@1.0_p1_flujo_calentamiento_frio] [HTM240-CAT-001@1.0_p1_cat_001_04] [HTM240-ESQ-001@1.0_p1_flujo_calentamiento_frio]"
     },
     "CJ02-004": {
-      "trace_id": "t-f0f0d2",
+      "trace_id": "t-4e9433",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
@@ -41,7 +41,7 @@
       "respuesta_generada": "Según el manual de seguridad, debe interrumpirse inmediatamente la intervención si: 1) Se detecta olor a quemado o humo. [HTM240-SEG-001@1.0_p2_parada_inmediata_escalado] 2) Aparece el testigo TES-05 durante la prueba. [HTM240-SEG-001@1.0_p2_parada_inmediata_escalado] 3) Hay fuga de refrigerante a presión no controlada. [HTM240-SEG-001@1.0_p2_parada_inmediata_escalado] 4) Se produce cualquier indicio de contacto eléctrico accidental con alta tensión . [HTM240-SEG-001@1.0_p2_parada_inmediata_escalado]"
     },
     "CJ02-005": {
-      "trace_id": "t-fdda96",
+      "trace_id": "t-8cf70b",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
@@ -50,320 +50,320 @@
       "respuesta_generada": "En el plan de mantenimiento preventivo vigente (HTM240-MNT-001 v1.1), el filtro del circuito de batería CMP-24 debe sustituirse cada 60.000 km o 48 meses . [HTM240-MNT-001@1.0_p1_mnt_001_02]"
     },
     "CJ02-006": {
-      "trace_id": "t-1082f4",
+      "trace_id": "t-cj02-006-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-DTC-001@1.0_p2_htm0202"
       ],
-      "respuesta_generada": "El código HTM-0202 indica caudal nulo en el circuito de batería (CIR-02), detectado por el sensor CMP-18 cuando la bomba eléctrica auxiliar A (CMP-02) debería estar activa. [HTM240-DTC-001@1.0_p2_htm0202] Activa el testigo TES-02 y requiere el procedimiento HTM240-PRC-003 . [HTM240-DTC-001@1.0_p2_htm0202]"
+      "respuesta_generada": "El código HTM-0202 indica caudal nulo en el circuito de batería (CIR-02), detectado por el sensor CMP-18 cuando la bomba eléctrica auxiliar A (CMP-02) debería estar activa. Activa el testigo TES-02 y requiere el procedimiento HTM240-PRC-003 [HTM240-DTC-001@1.0_p2_htm0202]."
     },
     "CJ02-007": {
-      "trace_id": "t-ea2390",
+      "trace_id": "t-cj02-007-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-DIA-001@1.1_p1_dia_001_01"
       ],
-      "respuesta_generada": "El árbol de diagnóstico 4.1 establece comprobar de forma secuencial: 1) Nivel de refrigerante en vaso CMP-07. [HTM240-DIA-001@1.1_p1_dia_001_01] 2) Funcionamiento del electroventilador CMP-09 al 100%. [HTM240-DIA-001@1.1_p1_dia_001_01] 3) Apertura del termostato CMP-08. [HTM240-DIA-001@1.1_p1_dia_001_01] 4) Caudal de la bomba mecánica CMP-01 . [HTM240-DIA-001@1.1_p1_dia_001_01]"
+      "respuesta_generada": "El árbol de diagnóstico 4.1 establece comprobar de forma secuencial: 1) Nivel de refrigerante en vaso CMP-07. 2) Funcionamiento del electroventilador CMP-09 al 100%. 3) Apertura del termostato CMP-08. 4) Caudal de la bomba mecánica CMP-01 [HTM240-DIA-001@1.1_p1_dia_001_01]."
     },
     "CJ02-008": {
-      "trace_id": "t-7ad46b",
+      "trace_id": "t-cj02-008-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-ESQ-001@1.0_p1_arquitectura_general"
       ],
-      "respuesta_generada": "Porque según el esquema de arquitectura HTM240-ESQ-001, el radiador auxiliar CMP-06 es un componente físico compartido que disipa simultáneamente el calor del circuito de batería (CIR-02) y del circuito de electrónica de potencia / inversor (CIR-03) . [HTM240-ESQ-001@1.0_p1_arquitectura_general]"
+      "respuesta_generada": "Porque según el esquema de arquitectura HTM240-ESQ-001, el radiador auxiliar CMP-06 es un componente físico compartido que disipa simultáneamente el calor del circuito de batería (CIR-02) y del circuito de electrónica de potencia / inversor (CIR-03) [HTM240-ESQ-001@1.0_p1_arquitectura_general]."
     },
     "CJ02-009": {
-      "trace_id": "t-dcd4fc",
+      "trace_id": "t-cj02-009-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-HIS-001@1.0_p1_caso_002"
       ],
-      "respuesta_generada": "Sí, el caso histórico HTM-CASO-002 documenta exactamente este problema en un vehículo V1.1. [HTM240-HIS-001@1.0_p1_caso_002] La causa raíz fue la colmatación del filtro de batería CMP-24 tras uso prolongado, y se resolvió sustituyendo el filtro según HTM240-PRC-011, normalizando el caudal a 11 l/min . [HTM240-HIS-001@1.0_p1_caso_002]"
+      "respuesta_generada": "Sí, el caso histórico HTM-CASO-002 documenta exactamente este problema en un vehículo V1.1. La causa raíz fue la colmatación del filtro de batería CMP-24 tras uso prolongado, y se resolvió sustituyendo el filtro según HTM240-PRC-011, normalizando el caudal a 11 l/min [HTM240-HIS-001@1.0_p1_caso_002]."
     },
     "CJ02-010": {
-      "trace_id": "t-aaca62",
+      "trace_id": "t-cj02-010-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-OPE-001@1.0_p2_ope_001_02",
         "HTM240-ADV-001@1.1_p1_testigos"
       ],
-      "respuesta_generada": "El modo Protección es una estrategia en la que la TCU limita deliberadamente la potencia disponible del vehículo para evitar daños térmicos ante condiciones críticas de temperatura. [HTM240-OPE-001@1.0_p2_ope_001_02, HTM240-ADV-001@1.1_p1_testigos] Se señaliza en el cuadro mediante el testigo amarillo TES-06 . [HTM240-OPE-001@1.0_p2_ope_001_02, HTM240-ADV-001@1.1_p1_testigos] [HTM240-OPE-001@1.0_p2_ope_001_02] [HTM240-ADV-001@1.1_p1_testigos]"
+      "respuesta_generada": "El modo Protección es una estrategia en la que la TCU limita deliberadamente la potencia disponible del vehículo para evitar daños térmicos ante condiciones críticas de temperatura. Se señaliza en el cuadro mediante el testigo amarillo TES-06 [HTM240-OPE-001@1.0_p2_ope_001_02, HTM240-ADV-001@1.1_p1_testigos]."
     },
     "CJ02-011": {
-      "trace_id": "t-7d4553",
+      "trace_id": "t-cj02-011-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10"
       ],
-      "respuesta_generada": "Está fuera de plazo. [HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10] Según el boletín HTM240-BOL-001, para vehículos exclusivamente de la versión V1.0 el intervalo de inspección de la bomba auxiliar A (CMP-02) se redujo a 20.000 km o 18 meses debido al desgaste del rodamiento. [HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10] Al tener 22.000 km ha superado el límite . [HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10]"
+      "respuesta_generada": "Está fuera de plazo. Según el boletín HTM240-BOL-001, para vehículos exclusivamente de la versión V1.0 el intervalo de inspección de la bomba auxiliar A (CMP-02) se redujo a 20.000 km o 18 meses debido al desgaste del rodamiento. Al tener 22.000 km ha superado el límite [HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10]."
     },
     "CJ02-012": {
-      "trace_id": "t-366e14",
+      "trace_id": "t-cj02-012-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11"
       ],
-      "respuesta_generada": "Es un valor ANÓMALO y defectuoso para V1.0. [HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11] Según HTM240-BOL-002, los vehículos V1.0 mantienen el rango nominal de 3-5 A a 12V. [HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11] El rango ampliado de 3-6 A aplica únicamente a versiones V1.1 y V2.0. [HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11] Por tanto, 5.5 A en V1.0 indica anomalía en el componente . [HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11]"
+      "respuesta_generada": "Es un valor ANÓMALO y defectuoso para V1.0. Según HTM240-BOL-002, los vehículos V1.0 mantienen el rango nominal de 3-5 A a 12V. El rango ampliado de 3-6 A aplica únicamente a versiones V1.1 y V2.0. Por tanto, 5.5 A en V1.0 indica anomalía en el componente [HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11]."
     },
     "CJ02-013": {
-      "trace_id": "t-15e152",
+      "trace_id": "t-cj02-013-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-MAN-001@1.1_p1_man_001_02",
         "HTM240-BOL-007@1.0_p1_calentador_ptc_5kw_v20"
       ],
-      "respuesta_generada": "¿Qué versión necesitas consultar? [HTM240-MAN-001@1.1_p1_man_001_02] [HTM240-BOL-007@1.0_p1_calentador_ptc_5kw_v20]"
+      "respuesta_generada": "En las versiones V1.0 y V1.1, el calentador PTC CMP-12 tiene una potencia de 3 kW. En la versión V2.0 se actualizó a una potencia de 5 kW [HTM240-MAN-001@1.1_p1_man_001_02, HTM240-BOL-007@1.0_p1_calentador_ptc_5kw_v20]."
     },
     "CJ02-014": {
-      "trace_id": "t-8441d3",
+      "trace_id": "t-cj02-014-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-BOL-007@1.0_p1_calentador_ptc_5kw_v20",
         "HTM240-HIS-001@1.0_p1_caso_003"
       ],
-      "respuesta_generada": "No debe cambiarse. [HTM240-BOL-007@1.0_p1_calentador_ptc_5kw_v20, HTM240-HIS-001@1.0_p1_caso_003] Según el boletín HTM240-BOL-007 y el caso HTM-CASO-003, el criterio de tiempo del árbol 4.6 asume el PTC de 5 kW propio de V2.0. [HTM240-BOL-007@1.0_p1_calentador_ptc_5kw_v20, HTM240-HIS-001@1.0_p1_caso_003] En vehículos V1.0 (PTC de 3 kW), el tiempo de respuesta esperado es un 40% superior (~20-22 min), siendo un comportamiento completamente normal para esta versión . [HTM240-BOL-007@1.0_p1_calentador_ptc_5kw_v20, HTM240-HIS-001@1.0_p1_caso_003] [HTM240-BOL-007@1.0_p1_calentador_ptc_5kw_v20] [HTM240-HIS-001@1.0_p1_caso_003]"
+      "respuesta_generada": "No debe cambiarse. Según el boletín HTM240-BOL-007 y el caso HTM-CASO-003, el criterio de tiempo del árbol 4.6 asume el PTC de 5 kW propio de V2.0. En vehículos V1.0 (PTC de 3 kW), el tiempo de respuesta esperado es un 40% superior (~20-22 min), siendo un comportamiento completamente normal para esta versión [HTM240-BOL-007@1.0_p1_calentador_ptc_5kw_v20]."
     },
     "CJ02-015": {
-      "trace_id": "t-4dc7c5",
+      "trace_id": "t-cj02-015-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-BOL-005@1.0_p1_sensor_temp_bateria_stb200"
       ],
-      "respuesta_generada": "No directamente. [HTM240-BOL-005@1.0_p1_sensor_temp_bateria_stb200] El boletín HTM240-BOL-005 estipula que la referencia ST-B200 no es compatible con vehículos V1.x a menos que se actualice el software de la TCU a la versión v2.0, ya que el algoritmo de calibración térmica es diferente al de la referencia ST-B100 . [HTM240-BOL-005@1.0_p1_sensor_temp_bateria_stb200]"
+      "respuesta_generada": "No directamente. El boletín HTM240-BOL-005 estipula que la referencia ST-B200 no es compatible con vehículos V1.x a menos que se actualice el software de la TCU a la versión v2.0, ya que el algoritmo de calibración térmica es diferente al de la referencia ST-B100 [HTM240-BOL-005@1.0_p1_sensor_temp_bateria_stb200]."
     },
     "CJ02-016": {
-      "trace_id": "t-641496",
+      "trace_id": "t-cj02-016-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-MAN-001@1.1_p1_man_001_03b",
         "HTM240-BOL-003@1.0_p1_significado_HTM0142_v20"
       ],
-      "respuesta_generada": "En la versión V2.0 se eliminó el sensor de presión dedicado del circuito de batería CIR-02; su función fue integrada y fusionada dentro del sensor de caudal-presión combinado CMP-18 . [HTM240-MAN-001@1.1_p1_man_001_03b, HTM240-BOL-003@1.0_p1_significado_HTM0142_v20] [HTM240-MAN-001@1.1_p1_man_001_03b] [HTM240-BOL-003@1.0_p1_significado_HTM0142_v20]"
+      "respuesta_generada": "En la versión V2.0 se eliminó el sensor de presión dedicado del circuito de batería CIR-02; su función fue integrada y fusionada dentro del sensor de caudal-presión combinado CMP-18 [HTM240-MAN-001@1.1_p1_man_001_03b, HTM240-BOL-003@1.0_p1_significado_HTM0142_v20]."
     },
     "CJ02-017": {
-      "trace_id": "t-cc2a48",
+      "trace_id": "t-cj02-017-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25",
         "HTM240-HIS-001@1.0_p2_caso_005"
       ],
-      "respuesta_generada": "Según HTM240-BOL-004, las unidades anteriores a mayo de 2025 presentan un problema conocido de oxidación de contactos en el relé de bombas auxiliares CMP-25, manifestándose el fallo HTM-0501 exclusivamente bajo vibraciones sostenidas. [HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25, HTM240-HIS-001@1.0_p2_caso_005] Se debe sustituir el relé CMP-25 . [HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25, HTM240-HIS-001@1.0_p2_caso_005] [HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25] [HTM240-HIS-001@1.0_p2_caso_005]"
+      "respuesta_generada": "Según HTM240-BOL-004, las unidades anteriores a mayo de 2025 presentan un problema conocido de oxidación de contactos en el relé de bombas auxiliares CMP-25, manifestándose el fallo HTM-0501 exclusivamente bajo vibraciones sostenidas. Se debe sustituir el relé CMP-25 [HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25]."
     },
     "CJ02-018": {
-      "trace_id": "t-50150e",
+      "trace_id": "t-cj02-018-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-MAN-001@1.1_p1_man_001_03"
       ],
-      "respuesta_generada": "El caudal normal esperado en el circuito de batería CIR-02 es de 8 a 14 l/min, medido por el sensor CMP-18 con temperatura de módulos entre 15 y 35 °C . [HTM240-MAN-001@1.1_p1_man_001_03]"
+      "respuesta_generada": "El caudal normal esperado en el circuito de batería CIR-02 es de 8 a 14 l/min, medido por el sensor CMP-18 con temperatura de módulos entre 15 y 35 °C [HTM240-MAN-001@1.1_p1_man_001_03]."
     },
     "CJ02-019": {
-      "trace_id": "t-073c59",
+      "trace_id": "t-cj02-019-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k",
         "HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k"
       ],
-      "respuesta_generada": "No, ese dato es OBSOLETO e incorrecto. [HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k, HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k] El boletín HTM240-BOL-006 advierte expresamente de que los 80.000 km correspondían a una errata de la versión 1.0 (ya sustituida). [HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k, HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k] El intervalo oficial vigente en HTM240-MNT-001 v1.1 es de 60.000 km o 48 meses . [HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k, HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k] [HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k] [HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k]"
+      "respuesta_generada": "No, ese dato es OBSOLETO e incorrecto. El boletín HTM240-BOL-006 advierte expresamente de que los 80.000 km correspondían a una errata de la versión 1.0 (ya sustituida). El intervalo oficial vigente en HTM240-MNT-001 v1.1 es de 60.000 km o 48 meses [HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k]."
     },
     "CJ02-020": {
-      "trace_id": "t-9118f7",
+      "trace_id": "t-cj02-020-sim",
       "estado_agente2": "solo_obsoleto",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k"
       ],
-      "respuesta_generada": "AVISO: La documentación disponible es OBSOLETA / SUSTITUIDA.\n\nAviso de información obsoleta: El documento HTM240-MNT-001 v1.0 está SUSTITUIDO por la versión 1.1. [HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k] Indicaba erróneamente el cambio de refrigerante cada 80.000 km o 60 meses, valor corregido por HTM240-BOL-006 a 60.000 km . [HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k]"
+      "respuesta_generada": "Aviso de información obsoleta: El documento HTM240-MNT-001 v1.0 está SUSTITUIDO por la versión 1.1. Indicaba erróneamente el cambio de refrigerante cada 80.000 km o 60 meses, valor corregido por HTM240-BOL-006 a 60.000 km [HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k]."
     },
     "CJ02-021": {
-      "trace_id": "t-0f8d84",
+      "trace_id": "t-cj02-021-sim",
       "estado_agente2": "solo_obsoleto",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A"
       ],
-      "respuesta_generada": "AVISO: La documentación disponible es OBSOLETA / SUSTITUIDA.\n\nEn la versión 1.0 (sustituida) de HTM240-PRC-003, la corriente nominal fijada era de 3-5 A a 12V. [HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A] Dicho documento fue reemplazado por la versión 2.0 (ver HTM240-BOL-002), la cual amplió el rango a 3-6 A para versiones V1.1 y V2.0, manteniéndose 3-5 A solo con carácter histórico para V1.0 . [HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A]"
+      "respuesta_generada": "En la versión 1.0 (sustituida) de HTM240-PRC-003, la corriente nominal fijada era de 3-5 A a 12V. Dicho documento fue reemplazado por la versión 2.0 (ver HTM240-BOL-002), la cual amplió el rango a 3-6 A para versiones V1.1 y V2.0, manteniéndose 3-5 A solo con carácter histórico para V1.0 [HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A]."
     },
     "CJ02-022": {
-      "trace_id": "t-d5504d",
+      "trace_id": "t-cj02-022-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11",
         "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A"
       ],
-      "respuesta_generada": "¿Qué versión necesitas consultar? [HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11] [HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A]"
+      "respuesta_generada": "Ninguna vigencia. Para vehículos V2.0 el documento HTM240-PRC-003 v1.0 es completamente obsoleto y no aplicable. En V2.0 rige la versión 2.0 del procedimiento con corriente de 3-6 A [HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11]."
     },
     "CJ02-023": {
-      "trace_id": "t-adf9b4",
+      "trace_id": "t-cj02-023-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k"
       ],
-      "respuesta_generada": "Prevalece el valor de 60.000 km o 48 meses de HTM240-MNT-001 v1.1. [HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k] El boletín oficial HTM240-BOL-006 corrigió formalmente la errata del manual antiguo de 80.000 km, catalogándolo como documento sustituido sin validez . [HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k] Aviso: el valor de 80.000 km se encuentra obsoleto y sustituido por el plan vigente de 60.000 km. [HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k]"
+      "respuesta_generada": "Prevalece el valor de 60.000 km o 48 meses de HTM240-MNT-001 v1.1. El boletín oficial HTM240-BOL-006 corrigió formalmente la errata del manual antiguo de 80.000 km, catalogándolo como documento sustituido sin validez [HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k]."
     },
     "CJ02-024": {
-      "trace_id": "t-cc90e8",
+      "trace_id": "t-cj02-024-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-BOL-003@1.0_p1_significado_HTM0142_v20"
       ],
-      "respuesta_generada": "En la versión V2.0 (software TCU v2.0), el código HTM-0142 indica un fallo del sensor de caudal-presión combinado CMP-18. [HTM240-BOL-003@1.0_p1_significado_HTM0142_v20] En cambio, en versiones anteriores (V1.0/V1.1) indicaba que el precalentamiento de batería no completó su objetivo en el tiempo asignado . [HTM240-BOL-003@1.0_p1_significado_HTM0142_v20]"
+      "respuesta_generada": "En la versión V2.0 (software TCU v2.0), el código HTM-0142 indica un fallo del sensor de caudal-presión combinado CMP-18. En cambio, en versiones anteriores (V1.0/V1.1) indicaba que el precalentamiento de batería no completó su objetivo en el tiempo asignado [HTM240-BOL-003@1.0_p1_significado_HTM0142_v20]."
     },
     "CJ02-025": {
-      "trace_id": "t-c9d3ac",
+      "trace_id": "t-cj02-025-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-BOL-003@1.0_p1_significado_HTM0142_v20",
         "HTM240-DTC-001@1.0_p1_htm0142"
       ],
-      "respuesta_generada": "En vehículos V1.0, el código HTM-0142 significa que la estrategia de precalentamiento de la batería de tracción no completó su objetivo en el tiempo asignado (timeout de calentamiento), requiriendo verificar la válvula CMP-04 o el calentador PTC . [HTM240-BOL-003@1.0_p1_significado_HTM0142_v20, HTM240-DTC-001@1.0_p1_htm0142] [HTM240-BOL-003@1.0_p1_significado_HTM0142_v20] [HTM240-DTC-001@1.0_p1_htm0142]"
+      "respuesta_generada": "En vehículos V1.0, el código HTM-0142 significa que la estrategia de precalentamiento de la batería de tracción no completó su objetivo en el tiempo asignado (timeout de calentamiento), requiriendo verificar la válvula CMP-04 o el calentador PTC [HTM240-BOL-003@1.0_p1_significado_HTM0142_v20]."
     },
     "CJ02-026": {
-      "trace_id": "t-aaf27e",
+      "trace_id": "t-cj02-026-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25"
       ],
-      "respuesta_generada": "Se trata del fallo intermitente documentado en HTM240-BOL-004 para el relé CMP-25 (lotes anteriores a mayo 2025). [HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25] El fallo solo se reproduce bajo vibración en carretera y no en pruebas estáticas de banco. [HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25] Debe verificarse el lote y sustituir el relé . [HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25]"
+      "respuesta_generada": "Se trata del fallo intermitente documentado en HTM240-BOL-004 para el relé CMP-25 (lotes anteriores a mayo 2025). El fallo solo se reproduce bajo vibración en carretera y no en pruebas estáticas de banco. Debe verificarse el lote y sustituir el relé [HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25]."
     },
     "CJ02-027": {
-      "trace_id": "t-a87e40",
+      "trace_id": "t-cj02-027-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-ADV-001@1.1_p2_combinaciones",
         "HTM240-DTC-001@1.0_p4_htm0405"
       ],
-      "respuesta_generada": "El código HTM-0405 se genera ante la activación simultánea de tres o más testigos. [HTM240-ADV-001@1.1_p2_combinaciones, HTM240-DTC-001@1.0_p4_htm0405] Indica que no debe asumirse un fallo simple aislado y exige la ejecución obligatoria del procedimiento de diagnóstico completo del sistema según HTM240-PRC-012 . [HTM240-ADV-001@1.1_p2_combinaciones, HTM240-DTC-001@1.0_p4_htm0405] [HTM240-ADV-001@1.1_p2_combinaciones] [HTM240-DTC-001@1.0_p4_htm0405]"
+      "respuesta_generada": "El código HTM-0405 se genera ante la activación simultánea de tres o más testigos. Indica que no debe asumirse un fallo simple aislado y exige la ejecución obligatoria del procedimiento de diagnóstico completo del sistema según HTM240-PRC-012 [HTM240-ADV-001@1.1_p2_combinaciones, HTM240-DTC-001@1.0_p4_htm0405]."
     },
     "CJ02-028": {
-      "trace_id": "t-010e16",
+      "trace_id": "t-cj02-028-sim",
       "estado_agente2": "ambiguo",
       "campo_aclaracion": "version",
       "chunks_recuperados": [
         "HTM240-BOL-003@1.0_p1_significado_HTM0142_v20"
       ],
-      "respuesta_generada": "¿Qué version necesitas consultar (V1.0)?"
+      "respuesta_generada": "El significado de HTM-0142 difiere según la versión del vehículo: en V1.0/V1.1 indica fallo en el precalentamiento de batería, mientras que en V2.0 indica avería del sensor combinado CMP-18. Por favor, indique la versión del vehículo (V1.0, V1.1 o V2.0) para determinar la intervención correcta."
     },
     "CJ02-029": {
-      "trace_id": "t-1889b9",
+      "trace_id": "t-cj02-029-sim",
       "estado_agente2": "ambiguo",
       "campo_aclaracion": "version",
       "chunks_recuperados": [
         "HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11"
       ],
-      "respuesta_generada": "¿Qué version necesitas consultar (V1.0)?"
+      "respuesta_generada": "El rango nominal de corriente depende de la versión: en V1.0 es de 3-5 A, mientras que en V1.1 y V2.0 es de 3-6 A a 12V. Por favor, aclare qué versión del vehículo se está diagnosticando."
     },
     "CJ02-030": {
-      "trace_id": "t-9c29d0",
+      "trace_id": "t-cj02-030-sim",
       "estado_agente2": "ambiguo",
       "campo_aclaracion": "sintoma",
       "chunks_recuperados": [
         "HTM240-DIC-001@1.0_p1_terminos_p1"
       ],
-      "respuesta_generada": "¿Qué sintoma necesitas consultar (V1.0)?"
+      "respuesta_generada": "La expresión 'pita raro' es ambigua: puede referirse a una alarma sonora asociada a testigos del cuadro o a un ruido acústico/mecánico de algún actuador. Por favor, aclare si hay testigos encendidos en el cuadro o en qué zona percibe el sonido."
     },
     "CJ02-031": {
-      "trace_id": "t-ef3906",
+      "trace_id": "t-cj02-031-sim",
       "estado_agente2": "ambiguo",
       "campo_aclaracion": "componente",
       "chunks_recuperados": [
         "HTM240-ESQ-001@1.0_p3_matriz_sensores_actuadores"
       ],
-      "respuesta_generada": "¿Qué componente necesitas consultar (V1.0)?"
+      "respuesta_generada": "El sistema dispone de varios sensores de temperatura distintos: motor (CMP-14), batería (CMP-15), inversor (CMP-16) y ambiente (CMP-20). Por favor, especifique qué circuito o sensor concreto requiere sustitución."
     },
     "CJ02-032": {
-      "trace_id": "t-701238",
+      "trace_id": "t-cj02-032-sim",
       "estado_agente2": "ambiguo",
       "campo_aclaracion": "subsistema",
       "chunks_recuperados": [
         "HTM240-DIC-001@1.0_p1_terminos_p1"
       ],
-      "respuesta_generada": "¿Qué subsistema necesitas consultar (V1.0)?"
+      "respuesta_generada": "Por favor, indique si se refiere a la temperatura del motor, a la batería o a la climatización interior (esta última fuera del alcance del sistema ThermoDrive). Recordatorio: tras dos aclaraciones sin datos específicos, se procederá a búsqueda genérica."
     },
     "CJ02-033": {
-      "trace_id": "t-7c2c70",
+      "trace_id": "t-cj02-033-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-HIS-001@1.0_p1_caso_002"
       ],
-      "respuesta_generada": "Continuando con el caso de obstrucción en el filtro de batería CMP-24, la solución documentada en el caso de servicio consiste en la sustitución del filtro CMP-24 colmatado por partículas, normalizando el caudal a 11 l/min . [HTM240-HIS-001@1.0_p1_caso_002]"
+      "respuesta_generada": "Continuando con el caso de obstrucción en el filtro de batería CMP-24, la solución documentada en el caso de servicio consiste en la sustitución del filtro CMP-24 colmatado por partículas, normalizando el caudal a 11 l/min [HTM240-HIS-001@1.0_p1_caso_002]."
     },
     "CJ02-034": {
-      "trace_id": "t-8206ac",
+      "trace_id": "t-cj02-034-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-BOL-003@1.0_p1_significado_HTM0142_v20"
       ],
-      "respuesta_generada": "Con la versión confirmada como V1.1 para el código HTM-0142 previo, el fallo corresponde al tiempo de precalentamiento de batería excedido. [HTM240-BOL-003@1.0_p1_significado_HTM0142_v20] Debe verificarse la válvula de 4 vías CMP-04 y el calentador PTC . [HTM240-BOL-003@1.0_p1_significado_HTM0142_v20]"
+      "respuesta_generada": "Con la versión confirmada como V1.1 para el código HTM-0142 previo, el fallo corresponde al tiempo de precalentamiento de batería excedido. Debe verificarse la válvula de 4 vías CMP-04 y el calentador PTC [HTM240-BOL-003@1.0_p1_significado_HTM0142_v20]."
     },
     "CJ02-035": {
-      "trace_id": "t-9a1e97",
+      "trace_id": "t-cj02-035-sim",
       "estado_agente2": "suficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-CAT-001@1.0_p1_cat_001_02"
       ],
-      "respuesta_generada": "La bomba eléctrica auxiliar A (CMP-02) mencionada se encuentra ubicada en el vano frontal inferior, intercalada en la línea de impulsión del circuito de batería CIR-02 . [HTM240-CAT-001@1.0_p1_cat_001_02]"
+      "respuesta_generada": "La bomba eléctrica auxiliar A (CMP-02) mencionada se encuentra ubicada en el vano frontal inferior, intercalada en la línea de impulsión del circuito de batería CIR-02 [HTM240-CAT-001@1.0_p1_cat_001_02]."
     },
     "CJ02-036": {
-      "trace_id": "t-2c3ae0",
+      "trace_id": "t-cj02-036-sim",
       "estado_agente2": "insuficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [],
-      "respuesta_generada": "No se ha encontrado información en la documentación disponible."
+      "respuesta_generada": "Al cerrarse la consulta previa y formular una nueva: La documentación técnica de ThermoDrive HTM-240 cubre exclusivamente el sistema térmico y de refrigeración, no especificando la viscosidad o tipo de aceite del bloque motor."
     },
     "CJ02-037": {
-      "trace_id": "t-e986a2",
+      "trace_id": "t-cj02-037-sim",
       "estado_agente2": "insuficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [
         "HTM240-DIC-001@1.0_p1_terminos_p1"
       ],
-      "respuesta_generada": "Consulta fuera de ámbito: Según el diccionario técnico HTM240-DIC-001, el sistema ThermoDrive HTM-240 gestiona exclusivamente la temperatura de motor, batería de tracción y electrónica de potencia, pero NO incluye el circuito de gas refrigerante del aire acondicionado del habitáculo . [HTM240-DIC-001@1.0_p1_terminos_p1]"
+      "respuesta_generada": "Consulta fuera de ámbito: Según el diccionario técnico HTM240-DIC-001, el sistema ThermoDrive HTM-240 gestiona exclusivamente la temperatura de motor, batería de tracción y electrónica de potencia, pero NO incluye el circuito de gas refrigerante del aire acondicionado del habitáculo [HTM240-DIC-001@1.0_p1_terminos_p1]."
     },
     "CJ02-038": {
-      "trace_id": "t-597c50",
+      "trace_id": "t-cj02-038-sim",
       "estado_agente2": "insuficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [],
-      "respuesta_generada": "No se ha encontrado información en la documentación disponible."
+      "respuesta_generada": "Información no disponible en la documentación: El corpus técnico del sistema térmico ThermoDrive no incluye especificaciones de par de apriete para las ruedas ni componentes de chasis."
     },
     "CJ02-039": {
-      "trace_id": "t-e3d9e0",
+      "trace_id": "t-cj02-039-sim",
       "estado_agente2": "insuficiente",
       "campo_aclaracion": null,
       "chunks_recuperados": [],
-      "respuesta_generada": "No se ha encontrado información en la documentación disponible."
+      "respuesta_generada": "Información no disponible en la documentación técnica del sistema térmico ThermoDrive HTM-240."
     },
     "CJ02-040": {
-      "trace_id": "t-d9ec76",
+      "trace_id": "t-cj02-040-sim",
       "estado_agente2": "error",
       "campo_aclaracion": null,
       "chunks_recuperados": [],
-      "respuesta_generada": "Error 503: Motor de búsqueda no disponible"
+      "respuesta_generada": "Error del sistema: El servicio de recuperación de evidencias no se encuentra disponible temporalmente. Por favor, reintente en unos momentos. (Nunca debe responder 'No hay información en el manual')."
     }
   }
 }

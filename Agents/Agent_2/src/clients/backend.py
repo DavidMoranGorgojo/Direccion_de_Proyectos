@@ -194,6 +194,14 @@ class BackendAPIClient:
                 timeout=self.timeout,
                 **self._auth_kwargs(),
             )
+        except requests.ConnectTimeout as error:
+            # El Backend no aceptó la conexión a tiempo: no está disponible.
+            # (ConnectTimeout hereda de Timeout; va antes para no confundirlo
+            # con una búsqueda lenta, que sí es tiempo_agotado.)
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                "Tiempo de conexión agotado: el Backend no acepta conexiones.",
+            ) from error
         except requests.Timeout as error:
             raise BackendRequestError(
                 "tiempo_agotado",
@@ -307,6 +315,14 @@ class BackendAPIClient:
                 timeout=self.timeout,
                 **self._auth_kwargs(),
             )
+        except requests.ConnectTimeout as error:
+            # El Backend no aceptó la conexión a tiempo: no está disponible.
+            # (ConnectTimeout hereda de Timeout; va antes para no confundirlo
+            # con una búsqueda lenta, que sí es tiempo_agotado.)
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                "Tiempo de conexión agotado: el Backend no acepta conexiones.",
+            ) from error
         except requests.Timeout as error:
             raise BackendRequestError(
                 "tiempo_agotado",
@@ -364,6 +380,14 @@ class BackendAPIClient:
                 timeout=self.timeout,
                 **self._auth_kwargs(),
             )
+        except requests.ConnectTimeout as error:
+            # El Backend no aceptó la conexión a tiempo: no está disponible.
+            # (ConnectTimeout hereda de Timeout; va antes para no confundirlo
+            # con una búsqueda lenta, que sí es tiempo_agotado.)
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                "Tiempo de conexión agotado: el Backend no acepta conexiones.",
+            ) from error
         except requests.Timeout as error:
             raise BackendRequestError(
                 "tiempo_agotado",
@@ -417,6 +441,14 @@ class BackendAPIClient:
             response = self.session.get(
                 f"{self.base_url}/conocimiento/info", timeout=self.timeout, **self._auth_kwargs()
             )
+        except requests.ConnectTimeout as error:
+            # El Backend no aceptó la conexión a tiempo: no está disponible.
+            # (ConnectTimeout hereda de Timeout; va antes para no confundirlo
+            # con una búsqueda lenta, que sí es tiempo_agotado.)
+            raise BackendRequestError(
+                "servicio_no_disponible",
+                "Tiempo de conexión agotado: el Backend no acepta conexiones.",
+            ) from error
         except requests.Timeout as error:
             raise BackendRequestError("tiempo_agotado", "Tiempo agotado consultando el índice.") from error
         except requests.RequestException as error:

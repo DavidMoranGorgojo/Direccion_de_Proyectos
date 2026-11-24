@@ -129,6 +129,20 @@ def test_el_token_no_aparece_en_errores(nombre, error_cls):
     assert TOKEN not in getattr(info.value, "mensaje", "")
 
 
+@pytest.mark.parametrize("error_cls, codigo", [
+    # Visto con el Backend real en Windows: un puerto cerrado agota el timeout
+    # de conexión en vez de rechazarla. Es Backend caído, no búsqueda lenta.
+    (requests.ConnectTimeout, "servicio_no_disponible"),
+    (requests.ReadTimeout, "tiempo_agotado"),
+])
+@pytest.mark.parametrize("nombre", LLAMADAS)
+def test_timeout_de_conexion_y_de_lectura_se_distinguen(nombre, error_cls, codigo):
+    with pytest.raises(BackendRequestError) as info:
+        LLAMADAS[nombre](cliente(SesionQueFalla(error_cls)))
+
+    assert info.value.codigo_error == codigo
+
+
 def test_repr_del_cliente_oculta_el_token():
     texto = repr(cliente(SesionQueFalla()))
 

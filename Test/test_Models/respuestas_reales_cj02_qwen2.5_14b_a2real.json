@@ -1,0 +1,488 @@
+{
+  "modo": "real",
+  "procedencia": "Modo: Sistema Integrado A1 + A2 (98 chunks), Modelo: qwen2.5:14b, Redactor: qwen2.5:14b, Fecha: 2026-11-24T09:37:13.322659+00:00",
+  "respuestas": {
+    "CJ02-001": {
+      "trace_id": "t-60d30e",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-MAN-001@1.1_p1_man_001_01",
+        "HTM240-OPE-001@1.0_p1_ope_001_01",
+        "HTM240-MAN-001@1.1_p3_man_001_06"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 58.72,
+      "fuentes_a1": []
+    },
+    "CJ02-002": {
+      "trace_id": "t-e5f15b",
+      "estado_agente2": "suficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-MNT-001@1.0_p1_mnt_001_02",
+        "HTM240-CAT-001@1.0_p3_cat_001_10",
+        "HTM240-ESQ-001@1.0_p1_arquitectura_general"
+      ],
+      "respuesta_generada": "Rango: 0-130 °C, ±2 °C. [HTM240-CAT-001@1.0_p3_cat_001_10]",
+      "latencia_s": 31.05,
+      "fuentes_a1": [
+        "HTM240-CAT-001@1.0_p3_cat_001_10"
+      ]
+    },
+    "CJ02-003": {
+      "trace_id": "t-cbc656",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-CAT-001@1.0_p1_cat_001_04",
+        "HTM240-MAN-001@1.1_p2_man_001_05",
+        "HTM240-MAN-001@1.1_p3_man_001_06"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 99.95,
+      "fuentes_a1": []
+    },
+    "CJ02-004": {
+      "trace_id": "t-964eb1",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-SEG-001@1.0_p2_parada_inmediata_escalado",
+        "HTM240-DIC-001@1.0_p1_terminos_p1",
+        "HTM240-HIS-001@1.0_p3_caso_011"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 12.74,
+      "fuentes_a1": []
+    },
+    "CJ02-005": {
+      "trace_id": "t-bcc566",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-HIS-001@1.0_p1_caso_002",
+        "HTM240-DTC-001@1.0_p2_htm0203",
+        "HTM240-MAN-001@1.1_p1_man_001_03"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 40.73,
+      "fuentes_a1": []
+    },
+    "CJ02-006": {
+      "trace_id": "t-d42ab6",
+      "estado_agente2": "suficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-HIS-001@1.0_p1_caso_002",
+        "HTM240-HIS-001@1.0_p6_caso_023",
+        "HTM240-DIC-001@1.0_p1_terminos_p1"
+      ],
+      "respuesta_generada": "Códigos DTC: HTM-0201 [HTM240-HIS-001@1.0_p1_caso_002]\nDiagnóstico: Filtro de circuito de batería colmatado [HTM240-HIS-001@1.0_p1_caso_002]\nCausa raíz: Filtro CMP-24 con partículas acumuladas por uso prolongado [HTM240-HIS-001@1.0_p1_caso_002]",
+      "latencia_s": 64.52,
+      "fuentes_a1": [
+        "HTM240-HIS-001@1.0_p1_caso_002"
+      ]
+    },
+    "CJ02-007": {
+      "trace_id": "t-14a1e9",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-MNT-001@1.0_p1_mnt_001_02",
+        "HTM240-ESQ-001@1.0_p1_arquitectura_general",
+        "HTM240-CAT-001@1.0_p3_cat_001_10"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 50.19,
+      "fuentes_a1": []
+    },
+    "CJ02-008": {
+      "trace_id": "t-a5a10a",
+      "estado_agente2": "suficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-ESQ-001@1.0_p1_arquitectura_general",
+        "HTM240-MNT-001@1.0_p1_mnt_001_02"
+      ],
+      "respuesta_generada": "El radiador auxiliar (CMP-06) es compartido entre el circuito de batería (CIR-02) y el de electrónica de potencia (CIR-03), por lo que una obstrucción o degradación en este componente afecta a ambos subsistemas simultáneamente. [HTM240-ESQ-001@1.0_p1_arquitectura_general]",
+      "latencia_s": 47.46,
+      "fuentes_a1": [
+        "HTM240-ESQ-001@1.0_p1_arquitectura_general"
+      ]
+    },
+    "CJ02-009": {
+      "trace_id": "t-9e0f2d",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-DTC-001@1.0_p2_htm0202",
+        "HTM240-DTC-001@1.0_p5_htm0501",
+        "HTM240-DTC-001@1.0_p4_htm0405"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 35.23,
+      "fuentes_a1": []
+    },
+    "CJ02-010": {
+      "trace_id": "t-79ec44",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-MAN-001@1.1_p4_man_001_07",
+        "HTM240-DTC-001@1.0_p4_htm0406",
+        "HTM240-OPE-001@1.0_p1_ope_001_01"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 14.0,
+      "fuentes_a1": []
+    },
+    "CJ02-011": {
+      "trace_id": "t-b31eb4",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "componente",
+      "chunks_recuperados": [
+        "HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10",
+        "HTM240-MAN-001@1.1_p1_man_001_03",
+        "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A"
+      ],
+      "respuesta_generada": "¿Qué componente necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 12.44,
+      "fuentes_a1": []
+    },
+    "CJ02-012": {
+      "trace_id": "t-0ec275",
+      "estado_agente2": "suficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10",
+        "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A",
+        "HTM240-ESQ-001@1.0_p1_arquitectura_general"
+      ],
+      "respuesta_generada": "Corriente esperada: 3-5 A a 12V (rango vigente únicamente para V1.0; la versión 2.0 del procedimiento, aplicable a V1.1 y V2.0, amplía este rango a 3-6 A según HTM240-BOL-002). [HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A]",
+      "latencia_s": 62.77,
+      "fuentes_a1": [
+        "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A"
+      ]
+    },
+    "CJ02-013": {
+      "trace_id": "t-6c09a1",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "¿Qué versión necesitas consultar?",
+      "latencia_s": 15.75,
+      "fuentes_a1": []
+    },
+    "CJ02-014": {
+      "trace_id": "t-44be55",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-CAT-001@1.0_p3_cat_001_10",
+        "HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25",
+        "HTM240-ESQ-001@1.0_p1_arquitectura_general"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 44.72,
+      "fuentes_a1": []
+    },
+    "CJ02-015": {
+      "trace_id": "t-819f01",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-MAN-001@1.1_p1_man_001_03"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 41.33,
+      "fuentes_a1": []
+    },
+    "CJ02-016": {
+      "trace_id": "t-679380",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-MAN-001@1.1_p1_man_001_03b",
+        "HTM240-BOL-003@1.0_p1_significado_HTM0142_v20",
+        "HTM240-DTC-001@1.0_p1_htm0142_v20"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 49.92,
+      "fuentes_a1": []
+    },
+    "CJ02-017": {
+      "trace_id": "t-63e4ab",
+      "estado_agente2": "suficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-DTC-001@1.0_p5_htm0501"
+      ],
+      "respuesta_generada": "HTM-0501 — Relé de alimentación de bombas auxiliares con fallo intermitente. [HTM240-DTC-001@1.0_p5_htm0501]\nPosibles causas: contactos oxidados del relé CMP-25; bobina dañada. [HTM240-DTC-001@1.0_p5_htm0501]",
+      "latencia_s": 35.0,
+      "fuentes_a1": [
+        "HTM240-DTC-001@1.0_p5_htm0501"
+      ]
+    },
+    "CJ02-018": {
+      "trace_id": "t-015ecb",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-CAT-001@1.0_p1_cat_001_02",
+        "HTM240-MAN-001@1.1_p1_man_001_03",
+        "HTM240-DTC-001@1.0_p2_htm0203"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 60.2,
+      "fuentes_a1": []
+    },
+    "CJ02-019": {
+      "trace_id": "t-1fd681",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-MNT-001@1.0_p1_mnt_001_02",
+        "HTM240-BOL-006@1.0_p1_intervalo_refrigerante_60k",
+        "HTM240-HIS-001@1.0_p3_caso_009"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 11.71,
+      "fuentes_a1": []
+    },
+    "CJ02-020": {
+      "trace_id": "t-3a2760",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "No se ha encontrado información en la documentación disponible.",
+      "latencia_s": 12.2,
+      "fuentes_a1": []
+    },
+    "CJ02-021": {
+      "trace_id": "t-ac3224",
+      "estado_agente2": "suficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A"
+      ],
+      "respuesta_generada": "Corriente esperada: 3-5 A a 12V (rango vigente únicamente para V1.0; la versión 2.0 del procedimiento, aplicable a V1.1 y V2.0, amplía este rango a 3-6 A según HTM240-BOL-002). [HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A]",
+      "latencia_s": 37.71,
+      "fuentes_a1": [
+        "HTM240-PRC-003@1.0_p1_sustituido_corriente_bomba_3_5A"
+      ]
+    },
+    "CJ02-022": {
+      "trace_id": "t-4a8391",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "¿Qué versión necesitas consultar?",
+      "latencia_s": 15.96,
+      "fuentes_a1": []
+    },
+    "CJ02-023": {
+      "trace_id": "t-b1da5e",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10",
+        "HTM240-ESQ-001@1.0_p1_arquitectura_general",
+        "HTM240-MNT-001@1.0_p1_mnt_001_02"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 12.79,
+      "fuentes_a1": []
+    },
+    "CJ02-024": {
+      "trace_id": "t-393636",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "No se ha encontrado información en la documentación disponible.",
+      "latencia_s": 13.95,
+      "fuentes_a1": []
+    },
+    "CJ02-025": {
+      "trace_id": "t-a7271f",
+      "estado_agente2": "suficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-DTC-001@1.0_p1_htm0142"
+      ],
+      "respuesta_generada": "En V1.0 y V1.1: fallo de sensor de presión del circuito de batería CMP-17-B. [HTM240-DTC-001@1.0_p1_htm0142]",
+      "latencia_s": 27.36,
+      "fuentes_a1": [
+        "HTM240-DTC-001@1.0_p1_htm0142"
+      ]
+    },
+    "CJ02-026": {
+      "trace_id": "t-85d0c9",
+      "estado_agente2": "error",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-BOL-004@1.0_p1_rele_bombas_auxiliares_cmp25",
+        "HTM240-DTC-001@1.0_p5_htm0501",
+        "HTM240-HIS-001@1.0_p2_caso_005"
+      ],
+      "respuesta_generada": "Error de verificación: No se pudo respaldar la respuesta con evidencias comprobadas del manual técnico. Por política de seguridad, no se emite respuesta no verificada.",
+      "latencia_s": 105.33,
+      "fuentes_a1": []
+    },
+    "CJ02-027": {
+      "trace_id": "t-607846",
+      "estado_agente2": "suficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [
+        "HTM240-DTC-001@1.0_p4_htm0405",
+        "HTM240-DIA-001@1.1_p4_dia_001_06",
+        "HTM240-HIS-001@1.0_p4_caso_014"
+      ],
+      "respuesta_generada": "HTM-0405 — Activación simultánea de múltiples testigos térmicos. [HTM240-DTC-001@1.0_p4_htm0405]\nDescripción: la TCU detecta activación concurrente de tres o más testigos del sistema térmico. [HTM240-DTC-001@1.0_p4_htm0405]\nCondición de activación: 3 o más testigos activos simultáneamente. [HTM240-DTC-001@1.0_p4_htm0405]\nPosibles causas: fallo de comunicación generalizado; fallo de alimentación común; fallo real múltiple. [HTM240-DTC-001@1.0_p4_htm0405]\nTestigos: TES-01, TES-02, TES-04. [HTM240-DTC-001@1.0_p4_htm0405]\nProcedimiento: HTM240-PRC-012. [HTM240-DTC-001@1.0_p4_htm0405]\nCondición de borrado: solo tras diagnóstico completo satisfactorio. [HTM240-DTC-001@1.0_p4_htm0405]\nRiesgo: ALTO — seguir criterios de HTM240-ADV-001. [HTM240-DTC-001@1.0_p4_htm0405]",
+      "latencia_s": 87.73,
+      "fuentes_a1": [
+        "HTM240-DTC-001@1.0_p4_htm0405"
+      ]
+    },
+    "CJ02-028": {
+      "trace_id": "t-aad1b9",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-DTC-001@1.0_p1_htm0142",
+        "HTM240-DTC-001@1.0_p1_htm0142_v20"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 12.87,
+      "fuentes_a1": []
+    },
+    "CJ02-029": {
+      "trace_id": "t-0c1079",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-BOL-002@1.0_p1_corriente_bomba_aux_A_v11",
+        "HTM240-ESQ-001@1.0_p1_arquitectura_general",
+        "HTM240-BOL-001@1.0_p1_intervalo_bomba_aux_A_v10"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 10.8,
+      "fuentes_a1": []
+    },
+    "CJ02-030": {
+      "trace_id": "t-d1273e",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales.",
+      "latencia_s": 0.74,
+      "fuentes_a1": []
+    },
+    "CJ02-031": {
+      "trace_id": "t-ccd93b",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-BOL-005@1.0_p1_sensor_temp_bateria_stb200",
+        "HTM240-MAN-001@1.1_p1_man_001_03b",
+        "HTM240-CAT-001@1.0_p3_cat_001_10"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0, 1.1)?",
+      "latencia_s": 9.79,
+      "fuentes_a1": []
+    },
+    "CJ02-032": {
+      "trace_id": "t-2fc873",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-MNT-001@1.0_p1_mnt_001_02",
+        "HTM240-MNT-001@1.0_p1_sustituido_refrigerante_80k",
+        "HTM240-ESQ-001@1.0_p1_arquitectura_general"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 10.4,
+      "fuentes_a1": []
+    },
+    "CJ02-033": {
+      "trace_id": "t-01e989",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales.",
+      "latencia_s": 0.81,
+      "fuentes_a1": []
+    },
+    "CJ02-034": {
+      "trace_id": "t-5f21b7",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales.",
+      "latencia_s": 0.78,
+      "fuentes_a1": []
+    },
+    "CJ02-035": {
+      "trace_id": "t-20cd86",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales.",
+      "latencia_s": 0.74,
+      "fuentes_a1": []
+    },
+    "CJ02-036": {
+      "trace_id": "t-66a6e0",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "¿De qué vehículo y motorización específicamente necesitas saber qué tipo de aceite lleva el motor?",
+      "latencia_s": 3.96,
+      "fuentes_a1": []
+    },
+    "CJ02-037": {
+      "trace_id": "t-4c678a",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-HIS-001@1.0_p5_caso_017",
+        "HTM240-HIS-001@1.0_p1_caso_001",
+        "HTM240-HIS-001@1.0_p6_caso_022"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.0)?",
+      "latencia_s": 13.11,
+      "fuentes_a1": []
+    },
+    "CJ02-038": {
+      "trace_id": "t-84c5ea",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "¿De qué vehículo y modelo específico necesitas el par de apriete para los tornillos de las ruedas traseras?",
+      "latencia_s": 5.04,
+      "fuentes_a1": []
+    },
+    "CJ02-039": {
+      "trace_id": "t-40b82e",
+      "estado_agente2": "ambiguo",
+      "campo_aclaracion": "version",
+      "chunks_recuperados": [
+        "HTM240-MAN-001@1.1_p2_man_001_05",
+        "HTM240-MAN-001@1.1_p1_man_001_02",
+        "HTM240-MAN-001@1.1_p1_man_001_03b"
+      ],
+      "respuesta_generada": "¿Qué version necesitas consultar (1.1)?",
+      "latencia_s": 10.35,
+      "fuentes_a1": []
+    },
+    "CJ02-040": {
+      "trace_id": "t-c3e05e",
+      "estado_agente2": "insuficiente",
+      "campo_aclaracion": null,
+      "chunks_recuperados": [],
+      "respuesta_generada": "Lo siento, solo puedo resolver dudas técnicas sobre automoción y sus manuales.",
+      "latencia_s": 1.09,
+      "fuentes_a1": []
+    }
+  }
+}
