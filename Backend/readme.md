@@ -1,13 +1,12 @@
 # Backend — Asistente conversacional RAG (ThermoDrive HTM-240)
 
-Estructura según el diseño «Arquitectura del backend y dockerización» (§7.3). Base de datos única PostgreSQL + pgvector; la lógica RAG vive en Agentes (opción B).
+Estructura según el diseño «Arquitectura del backend» (§7.3). PostgreSQL + pgvector se ejecutan con Apptainer; la lógica RAG vive en Agentes (opción B).
 
 | Carpeta | Contenido | Estado |
 |---|---|---|
 | `ingesta/` | Ingesta a demanda: PDF → fragmentos JSONL con metadatos y embeddings bge-m3 → pgvector. Ver [`ingesta/README.md`](ingesta/README.md). | Implementada |
 | `db/init/` | `01_conocimiento.sql`: esquema único e idempotente para `conocimiento` y `aplicacion`, con embeddings `vector(1024)`. Apptainer lo aplica al iniciar una base nueva y `start-local.sh` lo reaplica en bases existentes. | Consolidado |
 | `api/` | FastAPI: pasarela hacia Agentes, búsquedas, login, historial y registro. | Pendiente (Infraestructura) |
-| `compose.yaml` | Servicios `backend-db`, `backend-api` y `backend-ingesta`. | Pendiente (Infraestructura) |
 
 Los PDF de ARSOFT (`data/manuales`), las credenciales (`.env`) y las salidas de la ingesta no se versionan.
 

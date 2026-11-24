@@ -53,7 +53,7 @@ def _escribir_jsonl(ruta: Path, filas: list) -> None:
             fichero.write(json.dumps(fila, ensure_ascii=False) + "\n")
 
 
-def main(argv=None) -> int:
+def crear_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="python -m ingesta", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--entrada", type=Path, default=Path(os.getenv("INGESTA_ENTRADA", "data/manuales")),
@@ -68,9 +68,17 @@ def main(argv=None) -> int:
     parser.add_argument("--database-url", default=os.getenv("DATABASE_URL"), help="Por defecto, $DATABASE_URL.")
     parser.add_argument("--crear-esquema", action="store_true", help="Aplica db/init/01_conocimiento.sql antes de cargar.")
     parser.add_argument("--no-activar", action="store_true", help="Carga la versión sin activarla.")
-    parser.add_argument("--incluir-sustituidos", action="store_true",
-                        help="Indexa también los documentos sustituidos, marcados como obsoletos "
-                             "(por defecto se excluyen, según el reparto de Backend del 27-10).")
+    # Los sustituidos se indexan por defecto, marcados con obsoleto, sustituido_por y vigente_para:
+    # Agentes los necesita para avisar de lo obsoleto, y PRC-003 v1.0 sigue vigente para V1.0.
+    # La API ya filtra por obsoleto y vigente_para (vectorial/busqueda.py).
+    parser.add_argument("--excluir-sustituidos", action="store_true",
+                        help="No indexa los documentos sustituidos (por defecto se indexan, marcados como obsoletos).")
+    parser.add_argument("--incluir-sustituidos", action="store_true", help=argparse.SUPPRESS)  # antiguo, sin efecto
+    return parser
+
+
+def main(argv=None) -> int:
+    parser = crear_parser()
     args = parser.parse_args(argv)
 
     if args.cargar and args.sin_embeddings:
@@ -91,7 +99,7 @@ def main(argv=None) -> int:
     for ruta in pdfs:
         try:
             doc = leer_documento(ruta)
-            if doc.obsoleto and not args.incluir_sustituidos:
+            if doc.obsoleto and args.excluir_sustituidos:
                 excluidos.append({"archivo": ruta.name,
                                   "motivo": f"Documento sustituido por {doc.sustituido_por}: no se indexa."})
                 print(f"[--] {doc.doc_id:22} excluido (sustituido por {doc.sustituido_por})")

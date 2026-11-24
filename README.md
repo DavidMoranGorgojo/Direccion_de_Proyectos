@@ -5,8 +5,8 @@
 Estado y acuerdos técnicos confirmados con las **personas 1 (Agentes)** y **2 (Backend)** tras la validación de la suite de pruebas del Frontend:
 
 1. **Rutas (Endpoints HTTP)**:
-   - **Consulta al asistente (CTR-001)**: Ruta confirmada en el Backend como `POST /consulta` (en `Frontend/services/api.py` figura provisionalmente como `/agentes/consulta` a la espera de unificación de contrato).
-   - **Historial de conversaciones (CTR-006)**: Ruta confirmada como `GET /chats`. El Backend también expone `PATCH /chats/{id}` (renombrar) y `DELETE /chats/{id}` (eliminar con aviso a Agentes).
+   - **Consulta al asistente (CTR-001)**: Ruta definitiva `POST /consulta` entre Frontend y Backend. `/agentes/consulta` es únicamente la ruta interna Backend → Agentes.
+   - **Historial de conversaciones (CTR-006)**: Frontend lista con `GET /chats`, renombra con `PATCH /chats/{id}` y elimina con `DELETE /chats/{id}` (Backend avisa a Agentes).
    - **Autenticación (CTR-005)**: Ruta confirmada en `POST /auth/login`. Devuelve `token` (JWT), objeto `usuario` y tiempo de expiración `expires_in`.
 
 2. **Identificador de la conversación (`conversacion_id`)**:
