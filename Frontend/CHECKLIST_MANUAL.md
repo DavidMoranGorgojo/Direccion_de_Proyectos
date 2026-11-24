@@ -45,6 +45,8 @@ Esta lista de verificación detalla el protocolo paso a paso para realizar prueb
 | **WN-04** | Carga de historial existente | Iniciar sesión con un usuario con chats guardados. | Se listan las conversaciones previas ordenadas por fecha de actualización descendente con sus títulos respectivos. Se autoselecciona la más reciente. | [ ] |
 | **WN-05** | Cambio de conversación | Hacer clic en otra conversación de la lista lateral. | El panel de chat se vacía y renderiza de inmediato el historial completo del chat seleccionado (preguntas, respuestas y fuentes asociadas). | [ ] |
 | **WN-06** | Botón «Nuevo chat» | Pulsar el botón «+ Nuevo chat». | Si el chat actual ya tiene mensajes, crea una conversación vacía y la selecciona. Si el chat actual ya estaba vacío, lo reutiliza sin duplicar chats vacíos. | [ ] |
+| **WN-07** | Renombrar conversación | Pulsar el icono de edición de un chat persistido, introducir un título válido y aceptar. | El título se actualiza en la lista y, si el chat está seleccionado, en la cabecera. Un título vacío o superior a 200 caracteres no se envía. | [ ] |
+| **WN-08** | Eliminar conversación | Pulsar el icono de borrar; probar primero cancelar y luego confirmar. | Cancelar conserva el chat. Al confirmar, se elimina del historial; si estaba abierto, se selecciona otro chat o se crea uno nuevo vacío. | [ ] |
 
 ---
 
@@ -95,6 +97,6 @@ Esta lista de verificación detalla el protocolo paso a paso para realizar prueb
 | ID | Caso de Prueba | Pasos a Ejecutar | Comportamiento Esperado | Estado |
 |---|---|---|---|:---:|
 | **SS-01** | Cierre de sesión voluntario | Pulsar el botón «Cerrar sesión» en la cabecera. | Se solicita confirmación mediante diálogo. Al aceptar, se borran las credenciales de memoria (`session.clear()`), se cierra la ventana principal y vuelve a abrirse el Login limpio. | [ ] |
-| **SS-02** | Bloqueo de logout con petición activa | Enviar una consulta y pulsar inmediatamente «Cerrar sesión» antes de recibir respuesta. | El botón se encuentra deshabilitado mientras haya hilos de trabajo (`_worker`) en ejecución, evitando estados corruptos. | [ ] |
+| **SS-02** | Bloqueo de logout con operación activa | Enviar una consulta o iniciar un renombrado/borrado y pulsar «Cerrar sesión» antes de que termine. | Se informa de que hay una operación en curso y no se cierra la sesión hasta que finalice. | [ ] |
 | **SS-03** | Caducidad de sesión (HTTP 401) | Con la sesión abierta, invalidar el token o simular 401 en una llamada. | Se muestra un mensaje emergente: *"Tu sesión ha caducado. Cierra sesión y vuelve a entrar."* y la aplicación redirige automáticamente a la pantalla de Login. | [ ] |
 | **SS-04** | Aislamiento entre usuarios | Iniciar sesión como `usuario1`, crear un chat, cerrar sesión y entrar como `usuario2`. | `usuario2` no ve ninguna conversación de `usuario1` en su historial. | [ ] |

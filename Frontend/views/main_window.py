@@ -4,7 +4,8 @@ from PySide6.QtCore import QEvent, QObject, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import (QLabel, QListWidget, QListWidgetItem, QMainWindow, QMessageBox,
-                               QPlainTextEdit, QPushButton, QScrollArea, QVBoxLayout, QWidget)
+                               QInputDialog, QLineEdit, QPlainTextEdit, QPushButton, QScrollArea,
+                               QVBoxLayout, QWidget)
 
 from components.chat_message import ChatMessage
 from components.conversation_item import ConversationItem
@@ -76,7 +77,6 @@ class MainWindow(QMainWindow):
 
         # --- estado ---
         # Modo real y simulado obtienen el historial por la misma vía: GET /chats (CTR-006).
-        # El Frontend no guarda nada en local ni borra chats: el contrato no lo cubre.
         self.conversations = []
         self.current: Conversation | None = None
         self._rows: list[ChatMessage] = []
@@ -84,6 +84,7 @@ class MainWindow(QMainWindow):
         self._worker: api.ChatWorker | None = None
         self._hist_worker: api.HistoryWorker | None = None
         self._rating_workers: list[api.RatingWorker] = []
+        self._history_action_worker: api.HistoryActionWorker | None = None
 
         # --- señales ---
         self.btn_new.clicked.connect(self.new_chat)
@@ -104,6 +105,7 @@ class MainWindow(QMainWindow):
         self.btn_send.setEnabled(False)
         self._hist_worker = api.HistoryWorker()
         self._hist_worker.done.connect(self._on_history)
+        self._set_history_actions_enabled(False)
         self._hist_worker.start()
 
     def _on_history(self, res: api.HistoryResult) -> None:
@@ -133,6 +135,7 @@ class MainWindow(QMainWindow):
             return
         self.mode_label.setText("No se ha podido cargar el historial.")
         self.btn_send.setEnabled(True)
+        self._set_history_actions_enabled(True)
         if QMessageBox.warning(self, "Historial", f"{res.error}\n¿Quieres reintentarlo?",
                                QMessageBox.Retry | QMessageBox.Cancel) == QMessageBox.Retry:
             self._load_history()
@@ -148,13 +151,27 @@ class MainWindow(QMainWindow):
         for c in self.conversations:
             item = QListWidgetItem()
             item.setData(Qt.UserRole, c.id)
-            w = ConversationItem(c)
+            w = ConversationItem(c, editable=bool(c.server_id))
+            w.rename_requested.connect(self._rename_conversation)
+            w.delete_requested.connect(self._delete_conversation)
+            w.set_actions_enabled(self._history_actions_available())
             item.setSizeHint(QSize(0, 52))
             self.conversation_list.addItem(item)
             self.conversation_list.setItemWidget(item, w)
             if self.current and c.id == self.current.id:
                 self.conversation_list.setCurrentItem(item)
         self.conversation_list.blockSignals(False)
+
+    def _history_actions_available(self) -> bool:
+        return (self._worker is None and self._hist_worker is None
+                and self._history_action_worker is None)
+
+    def _set_history_actions_enabled(self, enabled: bool) -> None:
+        enabled = enabled and self._history_actions_available()
+        for index in range(self.conversation_list.count()):
+            widget = self.conversation_list.itemWidget(self.conversation_list.item(index))
+            if isinstance(widget, ConversationItem):
+                widget.set_actions_enabled(enabled)
 
     def _on_select(self, item, _prev=None) -> None:
         if item is not None:
@@ -168,6 +185,86 @@ class MainWindow(QMainWindow):
         self.title_label.setText(conv.title)
         self._render_conversation()
         self._refresh_list()
+
+    def _rename_conversation(self, conv_id: str) -> None:
+        conv = next((c for c in self.conversations if c.id == conv_id), None)
+        if conv is None or not conv.server_id or not self._history_actions_available():
+            return
+        title, accepted = QInputDialog.getText(
+            self, "Renombrar conversación", "Nuevo título:", QLineEdit.Normal, conv.title)
+        if not accepted:
+            return
+        title = title.strip()
+        if not title or len(title) > 200:
+            QMessageBox.warning(self, "Título no válido",
+                                "El título debe tener entre 1 y 200 caracteres.")
+            return
+        self._run_history_action("rename", conv.server_id, title)
+
+    def _delete_conversation(self, conv_id: str) -> None:
+        conv = next((c for c in self.conversations if c.id == conv_id), None)
+        if conv is None or not conv.server_id or not self._history_actions_available():
+            return
+        answer = QMessageBox.question(
+            self,
+            "Eliminar conversación",
+            f"¿Eliminar «{conv.title}»? Esta acción no se puede deshacer.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+        if answer == QMessageBox.Yes:
+            self._run_history_action("delete", conv.server_id)
+
+    def _run_history_action(self, action: str, conv_id: str, title: str = "") -> None:
+        self._history_action_worker = api.HistoryActionWorker(action, conv_id, title)
+        self._history_action_worker.done.connect(self._on_history_action)
+        self._set_history_actions_enabled(False)
+        self._history_action_worker.start()
+
+    def _on_history_action(self, result) -> None:
+        worker, self._history_action_worker = self._history_action_worker, None
+        if worker:
+            worker.wait()
+        action, conv_id, res = result
+        if res.session_expired:
+            QMessageBox.information(self, "Sesión caducada", res.error)
+            self.logged_out.emit()
+            return
+        if not res.ok:
+            QMessageBox.warning(self, "Historial", res.error)
+            if res.error == api.CONVERSATION_NOT_FOUND:
+                self._load_history()
+            else:
+                self._set_history_actions_enabled(True)
+            return
+
+        conv = next((c for c in self.conversations if c.server_id == conv_id), None)
+        if action == "rename":
+            if conv is not None and res.conversation is not None:
+                conv.title = res.conversation.title
+                conv.updated_at = res.conversation.updated_at
+                if self.current is conv:
+                    self.title_label.setText(conv.title)
+                self._refresh_list()
+            return
+
+        if conv is not None:
+            self.conversations.remove(conv)
+            if self.current is conv:
+                self.current = None
+                self._clear_chat()
+                self.title_label.setText("Nuevo chat")
+                if self.conversations:
+                    self.conversations.sort(key=self._sort_key, reverse=True)
+                    self._select(self.conversations[0].id)
+                else:
+                    self.new_chat()
+                    if not self._mock:
+                        self.mode_label.setText("Todavía no tienes conversaciones.")
+            else:
+                self._refresh_list()
+        else:
+            self._refresh_list()
 
     def new_chat(self) -> None:
         # Si ya hay un chat vacío, se reutiliza en vez de apilar chats vacíos.
@@ -327,13 +424,12 @@ class MainWindow(QMainWindow):
         self.prompt.clear()
         self._refresh_list()
 
+        self._worker = api.ChatWorker(conv.server_id, text)   # sin historial: lo guarda Agentes
+        self._worker.finished_ok.connect(lambda r, c=conv: self._on_response(c, r))
         self._typing = ChatMessage(None)
         self._insert_row(self._typing)
         self._set_busy(True)
         self._scroll_bottom()
-
-        self._worker = api.ChatWorker(conv.server_id, text)   # sin historial: lo guarda Agentes
-        self._worker.finished_ok.connect(lambda r, c=conv: self._on_response(c, r))
         self._worker.start()
 
     def _on_response(self, conv: Conversation, resp: Response) -> None:
@@ -361,16 +457,19 @@ class MainWindow(QMainWindow):
 
     def _set_busy(self, busy: bool) -> None:
         self.btn_send.setEnabled(not busy)
+        self._set_history_actions_enabled(not busy)
 
     def _logout(self) -> None:
-        if self._worker is not None or self._hist_worker is not None:
+        if (self._worker is not None or self._hist_worker is not None
+                or self._history_action_worker is not None):
             QMessageBox.information(self, "Cerrar sesión",
-                                    "Espera a que termine la respuesta en curso.")
+                                    "Espera a que termine la operación en curso.")
             return
         self.logged_out.emit()
 
     def closeEvent(self, e):
-        for w in (self._worker, self._hist_worker, *self._rating_workers):
+        for w in (self._worker, self._hist_worker, self._history_action_worker,
+                  *self._rating_workers):
             if w is not None:
                 w.wait(3000)
         super().closeEvent(e)

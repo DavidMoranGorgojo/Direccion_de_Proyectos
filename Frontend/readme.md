@@ -130,16 +130,18 @@ Las pruebas unitarias y de integración del Frontend se ubican en `Test/test_Fro
   - Comportamiento de los modos simulado, real y automático.
 - **`Test/test_Frontend/test_interfaz_usuario.py`**:
   - Formulario de Login (`LoginWindow`): validación de campos vacíos, limpieza de errores en `textChanged`, alternancia de visibilidad de contraseña (Password/Normal), estados de carga y bloqueo (`_set_busy`), emisión de `authenticated` y función `reset()`.
-  - Ventana Principal (`MainWindow`): renderizado inicial de cabecera y usuario, estado vacío al iniciar chat, creación y reutilización de conversaciones vacías en `new_chat`, selección y renderizado del historial, ordenación cronológica, envío con generación automática de título (truncado a 40 caracteres con elipsis), filtro de teclado (Enter para enviar vs Shift+Enter para salto de línea), eliminación de burbuja de typing al responder y bloqueo de logout con peticiones en curso.
-  - Componentes visuales (`ChatMessage`, `SourceCard`, `ConversationItem`): renderizado de burbujas de usuario y asistente, asignación de badges según estado (`aclaracion`, `sin_evidencia`, `fuera_de_ambito`, `error`), tarjetas de fuentes documentales con aviso de obsolescencia y formateo relativo de fechas (`Hoy HH:MM` vs `DD/MM/AAAA`).
+  - Ventana Principal (`MainWindow`): renderizado inicial de cabecera y usuario, estado vacío al iniciar chat, creación y reutilización de conversaciones vacías en `new_chat`, selección y renderizado del historial, ordenación cronológica, renombrado y borrado de chats persistidos, envío con generación automática de título (truncado a 40 caracteres con elipsis), filtro de teclado (Enter para enviar vs Shift+Enter para salto de línea), eliminación de burbuja de typing al responder y bloqueo de acciones durante peticiones en curso.
+  - Componentes visuales (`ChatMessage`, `SourceCard`, `ConversationItem`): renderizado de burbujas de usuario y asistente, asignación de badges según estado (`aclaracion`, `sin_evidencia`, `fuera_de_ambito`, `error`), acciones de renombrado y borrado en los chats persistidos, tarjetas de fuentes documentales con aviso de obsolescencia y formateo relativo de fechas (`Hoy HH:MM` vs `DD/MM/AAAA`).
   - Coordinador de aplicación (`App` en `main.py`): flujo completo de navegación y ciclo de vida login → chat → logout → login con almacenamiento y limpieza del estado de sesión.
 
 - **`Test/test_Frontend/test_backend_real.py`**:
   - Servidor real Uvicorn en bucle local (`127.0.0.1`) levantando la aplicación FastAPI del Backend (`Backend/api/app/main.py`).
   - Autenticación real CTR-005: emisión de JWT, validación de credenciales con bcrypt, errores 401, 422 y límite de intentos 429.
-  - Historial CTR-006: creación automática de chat en consulta, aislamiento por usuario, persistencia del `server_id` y errores 401/503.
+  - Historial CTR-006: creación automática de chat en consulta, aislamiento por usuario, persistencia del `server_id`, renombrado, borrado y errores 401/503.
   - Consulta CTR-001: comunicación completa cliente -> Backend -> Agentes, validación de todos los estados (`respuesta`, `aclaracion`, `fuera_de_ambito`, `sin_evidencia`, `error`), gestión de errores 401, 403, 429, 500 y 503.
   - Pruebas end-to-end de principio a fin activables con la variable `ARSOFT_E2E_URL`.
+
+**Alcance pendiente:** no se ha validado en la interfaz gráfica una respuesta correcta generada por un LLM real. Las pruebas locales contra Backend sustituyen PostgreSQL y el transporte de Agentes; las pruebas end-to-end opcionales requieren un despliegue configurado con `ARSOFT_E2E_URL` y no equivalen a una validación visual de la GUI.
 
 Además se dispone de:
 * **Lista de comprobación manual**: [`CHECKLIST_MANUAL.md`](CHECKLIST_MANUAL.md) con el protocolo para verificación manual de toda la interfaz.
@@ -162,23 +164,19 @@ python -m unittest discover -s Test/test_Frontend -p "test_*.py"
 
 ---
 
-## 4. Para conectar con Backend y Agentes (Estado Confirmado)
+## 4. Cierre de rutas y conformidad formal de Frontend
 
-Estado verificado de la integración tras la batería de pruebas contra el Backend real:
+**Rutas definitivas acordadas con Backend:**
 
-1. **Rutas (Endpoints HTTP)**:
-   - **CTR-001 (Consulta)**: Ruta confirmada en el Backend como `POST /consulta`. `/agentes/consulta` es únicamente la ruta interna Backend → Agentes.
-   - **CTR-006 (Historial)**: Ruta confirmada como `GET /chats`. También existen en Backend `PATCH /chats/{id}` y `DELETE /chats/{id}`.
-   - **CTR-005 (Login)**: Confirmado en `POST /auth/login`. Devuelve `token` (JWT), `usuario` y `expires_in`.
+| Contrato | Ruta definitiva | Conformidad de Frontend |
+|---|---|---|
+| CTR-001 Consulta | `POST /consulta` | Conforme. El primer mensaje envía `conversacion_id` vacío; Backend genera y devuelve el ID oficial, que se reutiliza en los turnos siguientes y al continuar un chat del historial. |
+| CTR-005 Login | `POST /auth/login` | Conforme. El cuerpo es `{"usuario", "contrasena"}`; el login devuelve el JWT y el Frontend lo envía como `Authorization: Bearer <token>`. |
+| CTR-006 Historial | `GET /chats`, `PATCH /chats/{id}`, `DELETE /chats/{id}` | Conforme. Frontend lista, renombra y elimina chats persistidos del usuario autenticado; el borrado pide confirmación y el historial se actualiza al terminar. |
 
-2. **Identificador de la conversación (`conversacion_id`)**:
-   - Si el Frontend envía `conversacion_id` vacío o un ID local, el Backend lo respeta o genera uno nuevo, devolviéndolo en la respuesta.
-   - Al continuar un chat recuperado del historial, el chat debe propagar su identificador para que los mensajes siguientes continúen el mismo hilo en Backend y Agentes.
+**Conformidad formal:** Frontend da su conformidad a los contratos CTR-001, CTR-005 y CTR-006 con las rutas y el comportamiento indicados. `/agentes/consulta` es exclusivamente la ruta interna Backend → Agentes; Frontend no la invoca.
 
-3. **Mecanismo de sesión**:
-   - **Tipo de token**: Bearer JWT en cabecera `Authorization: Bearer <token>`.
-   - **Caducidad**: 480 minutos por defecto. HTTP 401 activa `session_expired` y redirige al Login.
-   - **Seguridad**: Límite de 5 intentos fallidos antes de bloquear por HTTP 429 durante 5 minutos.
+**Sesión y alcance:** el token es Bearer JWT y dura 480 minutos por defecto. La sesión se cierra localmente en Frontend; no se añade logout de servidor ni renovación del token. Ante HTTP 401/403, Frontend trata la sesión como caducada y vuelve al Login. El límite de intentos de login es de 5 fallos en 5 minutos; Backend responde HTTP 429.
 
 ## 5. Contratos con Backend y Agentes (estado confirmado)
 
@@ -188,7 +186,7 @@ Valores por defecto de `config.py`; si cambian, basta con modificarlos en `.env`
 |---|---|---|
 | CTR-005 Login | `POST /auth/login` (`ARSOFT_LOGIN_PATH`) | Confirmada. Cuerpo `{"usuario", "contrasena"}`; devuelve `token`. |
 | CTR-001 Consulta | `POST /consulta` (`ARSOFT_CONSULTA_PATH`) | Confirmada. `/agentes/consulta` es la ruta interna Backend → Agentes; el Frontend no la usa. |
-| CTR-006 Historial | `GET /chats` (`ARSOFT_HISTORIAL_PATH`) | Confirmada. Respuesta `{"chats": [...], "total": n}`. |
+| CTR-006 Historial | `GET /chats` (`ARSOFT_HISTORIAL_PATH`), `PATCH /chats/{id}`, `DELETE /chats/{id}` | Confirmadas. Frontend lista, renombra y elimina chats propios. |
 | CTR-001 Valoración | `POST /valoracion` (`ARSOFT_VALORACION_PATH`) | Confirmada en Backend. Cuerpo `{"trace_id", "util"}` (`util` es `true` o `false`); devuelve `{"trace_id", "util"}`. |
 
 - **`conversacion_id`:** la primera pregunta de un chat nuevo lleva `conversacion_id` vacío; el Backend genera el ID y lo devuelve en la respuesta, y el Frontend lo reutiliza (`Conversation.server_id`). Un chat cargado del historial se continúa con su propio `conversacion_id`. El UUID local de `Conversation.id` solo identifica el chat en la interfaz.
@@ -228,7 +226,7 @@ Valores por defecto de `config.py`; si cambian, basta con modificarlos en `.env`
   | Historial | 429 | «Demasiadas peticiones. Espera un momento y reintenta.» |
   | Historial | 5xx | «No se pudo cargar el historial. Inténtalo más tarde.» |
 
-Pendiente de acordar entre departamentos: renovación del token y endpoints adicionales de sesión (logout, validación).
+Quedan fuera de este cierre la renovación del token y los endpoints adicionales de sesión (`logout` y validación con `/auth/me`); el cierre de sesión de Frontend es local. El renombrado y borrado de chats se realizan sobre las rutas CTR-006 indicadas en la sección 4.
 
 ### 5.1 Cierre de versión estable — 24-11-2026
 

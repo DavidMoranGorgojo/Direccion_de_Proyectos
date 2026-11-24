@@ -11,7 +11,8 @@ Contratos que implementa este módulo:
            El Backend expone POST /consulta y devuelve conversacion_id. Errores HTTP del propio Backend:
            401/403 sesión caducada, 404 conversación no encontrada, 422 entrada inválida, 429 demasiadas
            consultas; el resto (5xx, JSON no válido) se muestra como error genérico.
-  CTR-006  Historial:  GET /chats  ->  {"chats": [...], "total": n}
+  CTR-006  Historial:  GET /chats; PATCH /chats/{id} {"titulo"}; DELETE /chats/{id}
+           Cada usuario solo puede operar sobre sus propias conversaciones.
   CTR-001  Valoración: POST /valoracion {"trace_id", "util"} -> 200 {"trace_id", "util"}
            Errores: 401/403 sesión caducada, 404 respuesta no encontrada, 422 entrada inválida,
            429 demasiadas valoraciones, 500/503 error del servicio.
@@ -27,10 +28,11 @@ import json
 import socket
 import time
 from copy import deepcopy
+from datetime import datetime, timezone
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
-from urllib.parse import urlparse
+from urllib.parse import quote, unquote, urlparse
 from uuid import uuid4
 
 from PySide6.QtCore import QThread, Signal
@@ -207,6 +209,14 @@ class RatingResult:
     session_expired: bool = False
 
 
+@dataclass
+class HistoryActionResult:
+    ok: bool
+    conversation: Conversation | None = None
+    error: str = ""
+    session_expired: bool = False
+
+
 def send_rating(trace_id: str, util: bool) -> RatingResult:
     """POST /valoracion {"trace_id", "util"}. El Backend solo admite respuestas con estado "respuesta"
     del propio usuario; valorar de nuevo la misma respuesta cambia la valoración."""
@@ -240,6 +250,63 @@ class RatingWorker(QThread):
 
     def run(self) -> None:
         self.done.emit(send_rating(*self._args))
+
+
+def _history_item_path(conversation_id: str) -> str:
+    return f"{HISTORIAL_PATH.rstrip('/')}/{quote(conversation_id, safe='')}"
+
+
+def rename_chat(conversation_id: str, title: str) -> HistoryActionResult:
+    title = title.strip()
+    if not title or len(title) > 200:
+        return HistoryActionResult(False, error="El título debe tener entre 1 y 200 caracteres.")
+    try:
+        status, data = call("PATCH", _history_item_path(conversation_id), {"titulo": title})
+    except ConnectionFailed:
+        return HistoryActionResult(False, error="No se ha podido contactar con el servidor.")
+    if status in (401, 403):
+        return HistoryActionResult(False, error=SESSION_EXPIRED, session_expired=True)
+    if status == 404:
+        return HistoryActionResult(False, error=CONVERSATION_NOT_FOUND)
+    if status == 200 and data is not None:
+        try:
+            return HistoryActionResult(True, conversation=Conversation.from_dict(data))
+        except (KeyError, TypeError, ValueError):
+            pass
+    if status == 422:
+        return HistoryActionResult(False, error="El título no es válido.")
+    return HistoryActionResult(False, error="No se ha podido renombrar la conversación.")
+
+
+def delete_chat(conversation_id: str) -> HistoryActionResult:
+    try:
+        status, _ = call("DELETE", _history_item_path(conversation_id))
+    except ConnectionFailed:
+        return HistoryActionResult(False, error="No se ha podido contactar con el servidor.")
+    if status in (401, 403):
+        return HistoryActionResult(False, error=SESSION_EXPIRED, session_expired=True)
+    if status == 404:
+        return HistoryActionResult(False, error=CONVERSATION_NOT_FOUND)
+    if status == 204:
+        return HistoryActionResult(True)
+    return HistoryActionResult(False, error="No se ha podido eliminar la conversación.")
+
+
+class HistoryActionWorker(QThread):
+    done = Signal(object)  # (action, conversation_id, HistoryActionResult)
+
+    def __init__(self, action: str, conversation_id: str, title: str = ""):
+        super().__init__()
+        self._action = action
+        self._conversation_id = conversation_id
+        self._title = title
+
+    def run(self) -> None:
+        if self._action == "rename":
+            result = rename_chat(self._conversation_id, self._title)
+        else:
+            result = delete_chat(self._conversation_id)
+        self.done.emit((self._action, self._conversation_id, result))
 
 
 # ---------------------------------------------------------------- modo simulado
@@ -307,11 +374,62 @@ def _mock_call(method: str, path: str, body: dict | None) -> tuple[int, dict | N
     if method == "GET" and path == HISTORIAL_PATH:
         chats = [] if _MOCK_EMPTY_HISTORY else deepcopy(_MOCK_CHATS)
         return 200, {"chats": chats, "total": len(chats)}
+    history_item_prefix = f"{HISTORIAL_PATH.rstrip('/')}/"
+    if path.startswith(history_item_prefix) and method in ("PATCH", "DELETE"):
+        conversation_id = unquote(path[len(history_item_prefix):])
+        chat = next((c for c in _MOCK_CHATS if c["conversacion_id"] == conversation_id), None)
+        if chat is None:
+            return 404, {"codigo_error": "conversacion_no_encontrada"}
+        if method == "PATCH":
+            title = body.get("titulo", "") if body else ""
+            if not isinstance(title, str) or not title.strip() or len(title) > 200:
+                return 422, {"codigo_error": "entrada_invalida"}
+            chat["titulo"] = title.strip()
+            chat["updated_at"] = datetime.now(timezone.utc).isoformat()
+            return 200, deepcopy(chat)
+        _MOCK_CHATS.remove(chat)
+        return 204, None
     if method == "POST" and path == CONSULTA_PATH and body:
         response = _mock_response(body.get("pregunta", ""))
+        conversation_id = body.get("conversacion_id") or uuid4().hex
+        now = datetime.now(timezone.utc).isoformat()
+        chat = next((c for c in _MOCK_CHATS if c["conversacion_id"] == conversation_id), None)
+        if chat is None:
+            question = body.get("pregunta", "")
+            chat = {
+                "conversacion_id": conversation_id,
+                "titulo": question.strip()[:40] + ("…" if len(question.strip()) > 40 else ""),
+                "created_at": now,
+                "updated_at": now,
+                "mensajes": [],
+            }
+            _MOCK_CHATS.append(chat)
+        chat["updated_at"] = now
+        chat["mensajes"].extend([
+            {
+                "message_id": uuid4().hex,
+                "trace_id": response.trace_id,
+                "role": "user",
+                "contenido": body.get("pregunta", ""),
+                "estado": "",
+                "codigo_error": "",
+                "timestamp": now,
+                "fuentes": [],
+            },
+            {
+                "message_id": uuid4().hex,
+                "trace_id": response.trace_id,
+                "role": "assistant",
+                "contenido": response.texto,
+                "estado": response.estado,
+                "codigo_error": response.codigo_error,
+                "timestamp": now,
+                "fuentes": [source.to_dict() for source in response.fuentes],
+            },
+        ])
         return 200, {
             "trace_id": response.trace_id,
-            "conversacion_id": body.get("conversacion_id") or uuid4().hex,
+            "conversacion_id": conversation_id,
             "estado": response.estado,
             "texto": response.texto,
             "fuentes": [source.to_dict() for source in response.fuentes],
