@@ -10,9 +10,12 @@ From: python@sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e
     Backend/db/init/01_conocimiento.sql /opt/arsoft/db/init/01_conocimiento.sql
 
 %post
+    # torch sin versión fija (como Backend/ingesta/Dockerfile): sentence-transformers instala el
+    # transformers actual, que trata como ausente un torch antiguo ("PyTorch was not found") y
+    # la ingesta falla al calcular embeddings. Se instala la build de CPU para no traer CUDA.
     python -m pip install --no-cache-dir \
         --index-url https://download.pytorch.org/whl/cpu \
-        torch==2.5.1
+        torch
 
     python -m pip install --no-cache-dir \
         -r /opt/arsoft/ingesta/requirements.txt
