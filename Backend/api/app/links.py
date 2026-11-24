@@ -17,6 +17,8 @@ def connect():
 
 def service_access(authorization: str = Header(default="")) -> None:
     if not service_token_configured():
-        raise HTTPException(503, detail={"codigo": "servicio_no_disponible"})
+        raise HTTPException(503, detail={"codigo": "servicio_no_disponible",
+                                         "mensaje": "El token de servicio no está configurado."})
     if not valid_service_token(authorization):
-        raise HTTPException(401, detail={"codigo": "acceso_denegado"})
+        raise HTTPException(401, detail={"codigo": "acceso_denegado",
+                                         "mensaje": "Se requiere un Bearer de servicio válido."})

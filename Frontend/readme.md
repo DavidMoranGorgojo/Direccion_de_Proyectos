@@ -2,6 +2,8 @@
 
 Interfaz gráfica de escritorio para el asistente conversacional técnico sobre la documentación de ThermoDrive HTM-240, desarrollada con **Python** y **PySide6 (Qt)**.
 
+El cliente de escritorio se mantiene. Para el requisito de acceso web sencillo y adaptable a móvil, el Backend incluye una interfaz complementaria en `/` que usa los mismos endpoints de login, consulta e historial.
+
 ---
 
 ## 1. Estructura del módulo

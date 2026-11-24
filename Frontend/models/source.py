@@ -12,6 +12,19 @@ class Source:
     obsoleto: bool = False                # True = documento sustituido por otro
     chunk_id: str = ""                    # informativo: el Frontend no lo muestra
 
+    @property
+    def citable(self) -> bool:
+        if not isinstance(self.documento, str) or not isinstance(self.seccion, str):
+            return False
+        documento = self.documento.strip()
+        return (
+            bool(documento)
+            and documento.casefold() not in {"doc_desconocido", "documento sin nombre"}
+            and bool(self.seccion.strip())
+            and type(self.pagina) is int
+            and self.pagina >= 1
+        )
+
     def to_dict(self) -> dict:
         return {"chunk_id": self.chunk_id, "documento": self.documento, "seccion": self.seccion,
                 "pagina": self.pagina, "versiones": list(self.versiones),
@@ -20,6 +33,8 @@ class Source:
     @classmethod
     def from_dict(cls, d: dict) -> "Source":
         # También lee el formato antiguo (document/section/page) de historiales guardados.
+        if not isinstance(d, dict):
+            return cls(documento="", seccion="")
         page = d.get("pagina", d.get("page"))
         return cls(
             documento=d.get("documento") or d.get("document") or "Documento sin nombre",

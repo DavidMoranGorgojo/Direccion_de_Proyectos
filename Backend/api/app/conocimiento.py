@@ -21,7 +21,8 @@ def active(conn):
         FROM conocimiento.indice_version WHERE activo
     """).fetchone()
     if not index:
-        raise HTTPException(503, detail={"codigo": "indice_no_disponible"})
+        raise HTTPException(503, detail={"codigo": "indice_no_disponible",
+                                         "mensaje": "No hay una versión activa del índice."})
     return index
 
 
@@ -67,7 +68,8 @@ def chunk(chunk_id: str, vecinos: int = Query(default=0, ge=0, le=1)):
             WHERE c.indice_version=%s AND c.chunk_id=%s
         """, (index["version"], chunk_id)).fetchone()
         if not row:
-            raise HTTPException(404, detail={"codigo": "recurso_no_encontrado"})
+            raise HTTPException(404, detail={"codigo": "recurso_no_encontrado",
+                                            "mensaje": "El fragmento no existe en el índice activo."})
         document_id = row.pop("doc_id")
         adjacent = []
         if vecinos:
@@ -89,5 +91,6 @@ def catalogo(nombre: Literal["codigos", "terminos", "vehiculos", "componentes"])
         row = conn.execute("SELECT nombre, version, contenido FROM conocimiento.catalogo WHERE nombre=%s AND version=%s",
                            (nombre, index["version"])).fetchone()
     if not row:
-        raise HTTPException(404, detail={"codigo": "recurso_no_encontrado"})
+        raise HTTPException(404, detail={"codigo": "recurso_no_encontrado",
+                                         "mensaje": "El catálogo no existe en el índice activo."})
     return row
