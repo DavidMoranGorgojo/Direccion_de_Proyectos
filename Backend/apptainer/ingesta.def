@@ -10,9 +10,15 @@ From: python@sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e
     Backend/db/init/01_conocimiento.sql /opt/arsoft/db/init/01_conocimiento.sql
 
 %post
+    # Versiones fijas para que la imagen sea reproducible (la base ya va por sha256):
+    # torch==2.5.1 con el transformers 5.x que arrastraba sentence-transformers>=3.0 sin fijar
+    # hacía que transformers diera PyTorch por ausente y la ingesta fallaba al calcular embeddings.
+    # torch 2.14.1 y transformers 5.20.2 son las mismas que Agents/Agent_2/requirements.txt;
+    # transformers y sentence-transformers se fijan en Backend/ingesta/requirements.txt.
+    # Índice de CPU para no traer CUDA.
     python -m pip install --no-cache-dir \
         --index-url https://download.pytorch.org/whl/cpu \
-        torch==2.6.0
+        torch==2.14.1
 
     python -m pip install --no-cache-dir \
         -r /opt/arsoft/ingesta/requirements.txt
@@ -33,3 +39,6 @@ From: python@sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e
 
 %test
     python -m ingesta --help >/dev/null
+    # Falla al construir si transformers no reconoce el torch instalado (el error de torch==2.5.1).
+    python -c "from transformers.utils import is_torch_available; assert is_torch_available(), 'transformers no detecta torch'"
+    python -m pip list 2>/dev/null | grep -i -E '^(torch|transformers|sentence-transformers) '
