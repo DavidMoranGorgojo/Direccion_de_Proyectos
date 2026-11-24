@@ -28,7 +28,17 @@ Repositorio de ARSOFT: asistente técnico conversacional sobre la documentación
 | `Agents/` | Agentes (RAG con Ollama) y su adaptador HTTP. Ver [`Agents/README.md`](Agents/README.md). |
 | `apptainer/` | Imágenes, scripts de arranque y empaquetado. Ver [`apptainer/README.md`](apptainer/README.md). |
 
-## Cómo arrancar los Agentes (Agente 1 y Agente 2)
+## Arranque oficial (único camino): Apptainer
+
+ARSOFT se despliega **solo con Apptainer** (Ubuntu/WSL2 o clúster Slurm). No se usa Docker ni Docker Compose para desplegar (los `.def` solo toman imágenes base de un registro; las imágenes `.sif` se construyen con Apptainer). Para levantar PostgreSQL con pgvector, Backend, Agentes y Frontend:
+
+~~~bash
+bash apptainer/start-all.sh
+~~~
+
+Detalles, ingesta, paquete del Frontend y Slurm en [`apptainer/README.md`](apptainer/README.md). Instalación de Apptainer: [Windows](apptainer/GUIA_INSTALACION_WINDOWS.md) o [Mac](apptainer/GUIA_INSTALACION_MAC.md). Las secciones siguientes (`uvicorn`, `python -m`, `pytest`) son para **desarrollar y probar sin contenedor**; no son el modo de arranque del sistema.
+
+## Desarrollo de los Agentes sin contenedor (Agente 1 y Agente 2)
 
 El módulo `Agents/` contiene el Asistente Técnico completo:
 - **Servicio HTTP conjunto (FastAPI en puerto 8001):**
@@ -70,9 +80,9 @@ El módulo `Agents/` contiene el Asistente Técnico completo:
 - **Sesión:** Bearer JWT (480 min por defecto, sin renovación ni revocación en el servidor). 401/403 → «Tu sesión ha caducado» y vuelta al login. Otros errores de la consulta: 404 conversación no disponible, 422 entrada inválida, 429 demasiadas consultas, 5xx error genérico.
 - Detalle de errores y respuestas: [`Backend/readme.md`](Backend/readme.md) y [`apptainer/INTEGRACION_CONTRATOS.md`](apptainer/INTEGRACION_CONTRATOS.md).
 
-## Arrancar todo junto (Ubuntu / WSL2)
+## Detalles del arranque oficial (Ubuntu / WSL2)
 
-Desde Ubuntu/WSL2 con Apptainer instalado y WSLg activo:
+Comando descrito arriba. Requiere Ubuntu/WSL2 con Apptainer instalado y WSLg activo:
 
 ~~~bash
 bash apptainer/start-all.sh
