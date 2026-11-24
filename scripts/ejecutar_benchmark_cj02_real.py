@@ -143,7 +143,7 @@ def comprobar_ollama(url: str = "http://localhost:11434") -> bool:
 
 def crear_llm_pipeline(caso: dict):
     """Generador determinista para inferencia y redacción cuando no se dispone de hardware para LLM."""
-    def llm_handler(self, mensajes):
+    def llm_handler(self, mensajes, *args, **kwargs):
         todo = "\n".join(m.get("content", "") for m in mensajes)
         chunks_esp = caso.get("chunks_esperados", [])
         gt = caso.get("respuesta_esperada_ground_truth", "")

@@ -121,4 +121,52 @@ python Test/test_Models/evaluar_benchmark.py \
   --salida Test/test_Models/metricas_cj02_real_resultado.json
 ```
 
-Resultados detallados e informe técnico: [`INFORME_BENCHMARK_CJ02.md`](file:///C:/Users/marco/Desktop/4º%20carrera/DP/Proyecto/Direccion_de_Proyectos/INFORME_BENCHMARK_CJ02.md).
+Resultados detallados e informe técnico: [INFORME_BENCHMARK_CJ02.md](../INFORME_BENCHMARK_CJ02.md).
+
+---
+
+## 6. Conexión con Clúster Legio (GVIS - Universidad de León)
+
+Para entornos donde la inferencia se delega a los modelos alojados en el clúster Legio:
+
+### Arquitectura y Reparto de Carga
+- **Búsqueda y filtrado local:** La recuperación léxica BM25 y el filtrado por versión/vigencia se ejecutan en local en el PC sobre el corpus técnico (~98 fragmentos). No se requiere levantar bases de datos pesadas ni pgvector en el clúster.
+- **Inferencia en clúster:** Las llamadas LLM se realizan a través de un túnel SSH hacia `http://localhost:4000/v1` (endpoint compatible con OpenAI).
+- **Abstracción por roles dinámicos:**
+  - Rol `"rapido"`: Extracción de intención, entidades (DTC/versión/componente) y generación de Query JSON CTR-004.
+  - Rol `"potente"`: Razonamiento, redacción técnica con citas obligatorias `[chunk_id]` y verificación extractiva A1-07.
+  - El rol `"texto"` y los nombres fijos de modelos están estrictamente deshabilitados.
+
+### Precauciones Operativas de Recursos
+- **Nodo de acceso (`legio2`):** Cuota estricta de **4 GiB de RAM y 1 CPU por usuario**. Queda terminantemente prohibido ejecutar procesos de inferencia pesados o ingestas masivas en este nodo; solo se utiliza como pasarela para el túnel SSH.
+- **GPUs compartidas:** Mantener siempre `temperature=0.0`, `max_tokens=512` y `stream=False`. No lanzar ráfagas de miles de peticiones automáticas.
+- **Cortocircuito:** El sistema no invoca al LLM si la consulta carece de evidencias, es ambigua o está fuera de ámbito, ahorrando llamadas y cómputo.
+
+### Variables de Entorno del Clúster
+
+| Variable | Valor por defecto | Descripción |
+| :--- | :--- | :--- |
+| `LLM_PROVIDER` | `cluster` | Activa el conector de Legio en `Agente1`. |
+| `LLM_KEY` | *(archivo)* | API Key (se lee de `~/.config/llm-gvis/api_key` si no está definida). |
+| `LLM_BASE_URL` | `http://localhost:4000/v1` | URL base del endpoint a través del túnel SSH. |
+| `LLM_ROL_RAPIDO` | `rapido` | Alias para tareas ligeras y extracción de intención. |
+| `LLM_ROL_POTENTE`| `potente` | Alias para redacción técnica con citas obligatorias. |
+| `LLM_TIMEOUT_S` | `45.0` | Timeout por petición LLM en segundos (recomendado: 30-60 s). |
+
+### Puesta en Marcha
+
+1. **Abrir el túnel SSH en una terminal independiente:**
+   ```bash
+   # Si estás fuera del campus, activa primero la VPN de la ULE:
+   ssh -L 4000:localhost:4000 juan.pinos@193.146.98.97
+   ```
+
+2. **Comprobar la conexión y diagnóstico:**
+   ```bash
+   python scripts/probar_conexion_cluster.py
+   ```
+
+3. **Ejecutar el flujo RAG completo integrado:**
+   ```bash
+   python scripts/probar_rag_cluster.py --pregunta "¿A qué temperatura inicial abre el termostato CMP-08?"
+   ```

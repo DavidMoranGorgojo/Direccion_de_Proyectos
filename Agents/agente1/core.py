@@ -42,6 +42,34 @@ try:
 except ImportError:
     OpenAI = None
 
+try:
+    from .cliente_cluster import (
+        ClienteClusterLegio,
+        ROL_RAPIDO,
+        ROL_POTENTE,
+        ROLES_VALIDOS,
+        TunelClusterError,
+        AutenticacionClusterError,
+        TimeoutClusterError,
+        ModeloNoValidoError,
+        resolver_api_key,
+    )
+except ImportError:
+    try:
+        from Agents.agente1.cliente_cluster import (
+            ClienteClusterLegio,
+            ROL_RAPIDO,
+            ROL_POTENTE,
+            ROLES_VALIDOS,
+            TunelClusterError,
+            AutenticacionClusterError,
+            TimeoutClusterError,
+            ModeloNoValidoError,
+            resolver_api_key,
+        )
+    except ImportError:
+        ClienteClusterLegio = None
+
 # ============================================================================
 # 1. ESQUEMA FORMAL DEL QUERY JSON (CTR-004)
 # ============================================================================
@@ -384,7 +412,7 @@ Respuesta:
 # 4. AGENTE 1: CLIENTE LLM Y ORQUESTACIÓN (A1-02, A1-03, A1-04)
 # ============================================================================
 class Agente1:
-    def __init__(self, base_url: str = OLLAMA_URL, modelo: str = MODELO_LLM, max_turnos: int = 6, conversacion_id: str = "c-0001", timeout_s: Optional[float] = None, cliente_backend: Optional[Any] = None, modelo_redactor: Optional[str] = None, fallback_extractivo: bool = False):
+    def __init__(self, base_url: str = OLLAMA_URL, modelo: str = MODELO_LLM, max_turnos: int = 6, conversacion_id: str = "c-0001", timeout_s: Optional[float] = None, cliente_backend: Optional[Any] = None, modelo_redactor: Optional[str] = None, fallback_extractivo: bool = False, cliente_cluster: Optional[Any] = None):
         self.modelo = modelo
         self.modelo_redactor = modelo_redactor or os.environ.get("OLLAMA_MODEL_REDACTOR") or self.modelo
         self.fallback_extractivo = bool(fallback_extractivo or os.environ.get("AGENTE1_FALLBACK_EXTRACTIVO", "0").lower() in ("1", "true", "yes"))
@@ -408,6 +436,35 @@ class Agente1:
                 self.cliente_backend = ClienteBackendAgentes()
             except Exception:
                 pass
+
+        # Conexión al clúster Legio si se solicita explícitamente o por configuración
+        self.cliente_cluster = cliente_cluster
+        if self.cliente_cluster is not None:
+            self.modelo = getattr(self.cliente_cluster, "modelo_rapido", "rapido")
+            self.modelo_redactor = getattr(self.cliente_cluster, "modelo_potente", "potente")
+            self.base_url = getattr(self.cliente_cluster, "base_url", "http://localhost:4000/v1")
+        elif ClienteClusterLegio is not None:
+            activar_cluster = (
+                os.environ.get("LLM_PROVIDER", "").lower() in ("cluster", "legio")
+                or "4000" in str(base_url)
+                or os.environ.get("LLM_BASE_URL", "").startswith("http://localhost:4000")
+            )
+            if activar_cluster:
+                try:
+                    c_url = base_url if "4000" in str(base_url) else None
+                    self.cliente_cluster = ClienteClusterLegio(
+                        base_url=c_url,
+                        timeout_s=self.timeout_s,
+                        modelo_rapido=self.modelo if self.modelo in ("rapido", "potente") else None,
+                        modelo_potente=self.modelo_redactor if self.modelo_redactor in ("rapido", "potente") else None,
+                    )
+                    self.modelo = getattr(self.cliente_cluster, "modelo_rapido", "rapido")
+                    self.modelo_redactor = getattr(self.cliente_cluster, "modelo_potente", "potente")
+                    self.base_url = self.cliente_cluster.base_url
+                    logger.info("Agente 1 configurado para inferencia en clúster Legio (%s).", self.base_url)
+                except Exception as exc:
+                    logger.warning("No se pudo inicializar ClienteClusterLegio: %s", exc)
+                    self.cliente_cluster = None
 
     def reset(self):
         """Limpia el historial de la conversación para evitar mezclar sesiones."""
@@ -481,9 +538,9 @@ class Agente1:
             if propio:
                 self._deadline_llm = None
 
-    def _consultar_llm(self, mensajes: List[Dict[str, str]]) -> Optional[str]:
+    def _consultar_llm(self, mensajes: List[Dict[str, str]], *args, **kwargs) -> Optional[str]:
         """
-        Realiza la inferencia contra Ollama en localhost con max_tokens=512 (BLOQUEANTE 5).
+        Realiza la inferencia contra el clúster Legio (si está activo) o contra Ollama en localhost.
         Soporta el SDK oficial de OpenAI o fallback nativo con urllib (sin dependencias pip).
         """
         deadline = self._deadline_llm or (time.monotonic() + self.timeout_s)
@@ -491,11 +548,52 @@ class Agente1:
         restante = deadline - time.monotonic()
         if restante <= 0:
             return None
+
+        modelo = kwargs.get("modelo") or (args[0] if len(args) > 0 else None)
+        rol = kwargs.get("rol") or (args[1] if len(args) > 1 else None)
+
+        # 1. Ruta Clúster Legio si el cliente especializado está configurado
+        if getattr(self, "cliente_cluster", None) is not None:
+            # Heurística exhaustiva para determinar si la llamada corresponde a redacción/verificación (rol potente)
+            # o a extracción/clasificación/normalización (rol rapido)
+            es_redaccion = (
+                rol == "potente"
+                or (modelo is not None and (modelo == self.modelo_redactor or "potente" in str(modelo).lower()))
+                or any(
+                    kw in m.get("content", "")
+                    for m in mensajes
+                    for kw in (
+                        "Redactor Técnico",
+                        "EVIDENCIA [",
+                        "EVIDENCIAS DISPONIBLES",
+                        "CONSULTA DEL TÉCNICO",
+                        "Causas y Diagnóstico",
+                        "Procedimiento técnico",
+                        "ALERTA: Has citado",
+                        "CERO ALUCINACIÓN",
+                        "fuentes consultadas",
+                    )
+                )
+            )
+            rol_efectivo = "potente" if es_redaccion else "rapido"
+            try:
+                return self.cliente_cluster.consultar(
+                    mensajes=mensajes,
+                    rol=rol_efectivo,
+                    timeout_s=restante,
+                )
+            except Exception as e:
+                logger.warning("Fallo en inferencia contra clúster Legio (%s): %s", type(e).__name__, e)
+                return None
+
+        # 2. Inferencia estándar Ollama / Local
+        modelo_destino = modelo or self.modelo
+
         # Intento 1: SDK de OpenAI si está instalado
         if self.cliente:
             try:
                 respuesta = self.cliente.chat.completions.create(
-                    model=self.modelo,
+                    model=modelo_destino,
                     messages=mensajes,
                     temperature=0.0,
                     max_tokens=512,  # BLOQUEANTE 5: aumentado para evitar truncar JSONs
@@ -521,7 +619,7 @@ class Agente1:
             try:
                 if modo == "v1":
                     payload = {
-                        "model": self.modelo,
+                        "model": modelo_destino,
                         "messages": mensajes,
                         "temperature": 0.0,
                         "max_tokens": 512,
@@ -529,7 +627,7 @@ class Agente1:
                     }
                 else:
                     payload = {
-                        "model": self.modelo,
+                        "model": modelo_destino,
                         "messages": mensajes,
                         "stream": False,
                         "options": {
@@ -617,10 +715,17 @@ class Agente1:
         # Paso 3: Invocación al LLM
         salida_llm = self._consultar_llm(mensajes)
         if not isinstance(salida_llm, str) or not salida_llm.strip():
+            if getattr(self, "cliente_cluster", None) is not None:
+                mensaje_err = (
+                    "No se pudo conectar con el clúster Legio. Verifica el túnel SSH en localhost:4000 "
+                    "(ssh -L 4000:localhost:4000 juan.pinos@193.146.98.97) o tu clave en ~/.config/llm-gvis/api_key."
+                )
+            else:
+                mensaje_err = "No se pudo conectar con Ollama. Verifica que 'ollama serve' esté activo."
             return {
                 "estado": "error",
                 "codigo_error": "modelo_no_disponible",
-                "mensaje": "No se pudo conectar con Ollama. Verifica que 'ollama serve' esté activo."
+                "mensaje": mensaje_err
             }
 
         salida_strip = salida_llm.strip()
@@ -1160,7 +1265,7 @@ def _redactar_respuesta_con_verificacion(
     ]
 
     # INTENTO 1
-    kw_llm = {"modelo": agente.modelo_redactor} if getattr(agente, "modelo_redactor", agente.modelo) != agente.modelo else {}
+    kw_llm = {"modelo": agente.modelo_redactor, "rol": "potente"}
     respuesta_1 = agente._consultar_llm(mensajes_base, **kw_llm)
     if not respuesta_1:
         return {
