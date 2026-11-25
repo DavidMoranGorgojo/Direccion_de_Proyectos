@@ -6,7 +6,7 @@ ARSOFT Reto Automoción — Prueba de Ejecución Local de Agente 2 (Dataset Sint
 =============================================================================
 Script para validar en local que el pipeline del Agente 2 (recuperador híbrido)
 funciona correctamente contra el dataset sintético (98 fragmentos) sin necesidad
-de tener levantado PostgreSQL, Docker o el backend real.
+de levantar PostgreSQL ni el backend real.
 
 Ejemplos de uso:
   python3 scripts/probar_agente2_local.py

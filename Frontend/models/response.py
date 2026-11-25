@@ -12,6 +12,7 @@ STATUS_ERROR = "error"
 STATUSES = (STATUS_OK, STATUS_CLARIFY, STATUS_NO_EVIDENCE, STATUS_OUT_OF_SCOPE, STATUS_ERROR)
 
 GENERIC_ERROR = "El asistente no está disponible, inténtalo de nuevo."
+UNVERIFIED_SOURCE = "No puedo presentar esta respuesta como verificada: el texto o las fuentes no superan las comprobaciones necesarias."
 
 
 @dataclass
@@ -33,7 +34,16 @@ class Response:
         estado = d.get("estado", "")
         if estado not in STATUSES:               # estado desconocido: no se inventa nada
             return cls.error(d.get("texto") or GENERIC_ERROR, "estado_desconocido")
-        return cls(texto=d.get("texto", ""), estado=estado,
-                   fuentes=[Source.from_dict(s) for s in d.get("fuentes") or []],
+        texto = d.get("texto", "")
+        fuentes = [Source.from_dict(s) for s in d.get("fuentes") or []]
+        if estado == STATUS_OK and (
+            not isinstance(texto, str) or not texto.strip()
+            or not fuentes or any(not fuente.citable for fuente in fuentes)
+        ):
+            return cls(texto=UNVERIFIED_SOURCE, estado=STATUS_ERROR, fuentes=[],
+                       trace_id=d.get("trace_id", ""), codigo_error="error_verificacion",
+                       conversacion_id=d.get("conversacion_id", ""))
+        return cls(texto=texto if isinstance(texto, str) else "", estado=estado,
+                   fuentes=[fuente for fuente in fuentes if fuente.citable],
                    trace_id=d.get("trace_id", ""), codigo_error=d.get("codigo_error", ""),
                    conversacion_id=d.get("conversacion_id", ""))

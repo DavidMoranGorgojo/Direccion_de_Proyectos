@@ -65,6 +65,7 @@ def setup_qt_harness() -> None:
         ElideRight = 1
         TextSelectableByMouse = 1
         WA_TransparentForMouseEvents = 1
+        NoFocus = 0
 
     class QSize:
         def __init__(self, w=0, h=0):
@@ -218,7 +219,19 @@ def setup_qt_harness() -> None:
         def setAttribute(self, attr, value):
             pass
 
+        def setFocusPolicy(self, policy):
+            pass
+
+        def setFixedSize(self, w, h):
+            pass
+
         def setSizePolicy(self, h, v):
+            pass
+
+        def setToolTip(self, text):
+            pass
+
+        def setAccessibleName(self, text):
             pass
 
         def isEnabled(self):
@@ -238,6 +251,12 @@ def setup_qt_harness() -> None:
 
         def hide(self):
             self._visible = False
+
+        def setVisible(self, visible):
+            self._visible = bool(visible)
+
+        def isHidden(self):
+            return not self._visible
 
         def close(self):
             self._visible = False
@@ -629,6 +648,8 @@ def setup_qt_harness() -> None:
         Warning = 2
         Retry = 1
         Cancel = 2
+        Yes = 3
+        No = 4
 
         @classmethod
         def information(cls, parent, title, text, *args):
@@ -637,6 +658,15 @@ def setup_qt_harness() -> None:
         @classmethod
         def warning(cls, parent, title, text, *args):
             return cls.Cancel
+
+        @classmethod
+        def question(cls, parent, title, text, *args):
+            return cls.No
+
+    class QInputDialog:
+        @classmethod
+        def getText(cls, parent, title, label, *args):
+            return "", False
 
     class QApplication:
         def __init__(self, argv=None):
@@ -663,6 +693,7 @@ def setup_qt_harness() -> None:
     qt_widgets.QFrame = QFrame
     qt_widgets.QSizePolicy = QSizePolicy
     qt_widgets.QMessageBox = QMessageBox
+    qt_widgets.QInputDialog = QInputDialog
     qt_widgets.QApplication = QApplication
 
     # ------------------------------------------------------------- QtUiTools

@@ -4,6 +4,7 @@ import logging
 import os
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Annotated, Literal
 from uuid import uuid4
 
@@ -13,9 +14,9 @@ from arsoft_http import GENERIC_ERROR, invalid_question
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import HTTPBearer
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .conocimiento import router as knowledge
@@ -30,7 +31,16 @@ from .sesiones import usuario_actual
 from .valoracion import router as valoracion
 from .vectorial import crear_router as crear_router_vectorial
 
-AGENT_TIMEOUT_SECONDS = 25.0
+AGENT_TIMEOUT_SECONDS = float(os.environ.get("ARSOFT_AGENT_TIMEOUT_SECONDS", "25.0"))
+CODIGOS_ERROR_CTR001 = frozenset({
+    "entrada_invalida",
+    "modelo_no_disponible",
+    "modelo_incompatible",
+    "indice_no_disponible",
+    "tiempo_agotado",
+    "error_verificacion",
+    "servicio_no_disponible",
+})
 bearer = HTTPBearer(auto_error=False)
 log = logging.getLogger("arsoft.backend")
 
@@ -56,6 +66,12 @@ app.include_router(registro)
 app.include_router(valoracion)  # POST /valoracion (CTR-001)
 
 
+@app.get("/", include_in_schema=False)
+def web_client():
+    """Interfaz web sencilla para el prototipo del reto ARSOFT."""
+    return FileResponse(Path(__file__).with_name("web_client.html"), media_type="text/html")
+
+
 class Pregunta(BaseModel):
     conversacion_id: str = Field(max_length=128)
     pregunta: str
@@ -63,11 +79,27 @@ class Pregunta(BaseModel):
 
 class Fuente(BaseModel):
     chunk_id: str = Field(min_length=1)
-    documento: str
-    seccion: str
-    pagina: int = Field(ge=0, strict=True)
+    documento: str = Field(min_length=1)
+    seccion: str = Field(min_length=1)
+    pagina: int = Field(ge=1, strict=True)
     versiones: list[str]
     obsoleto: bool
+
+    @field_validator("chunk_id")
+    @classmethod
+    def id_fragmento_completo(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("La fuente necesita un identificador de fragmento.")
+        return value
+
+    @field_validator("documento", "seccion")
+    @classmethod
+    def cita_texto_completo(cls, value: str) -> str:
+        value = value.strip()
+        if not value or value.casefold() in {"doc_desconocido", "documento sin nombre"}:
+            raise ValueError("La fuente necesita documento y sección verificables.")
+        return value
 
 
 class RespuestaAgentes(BaseModel):
@@ -76,6 +108,19 @@ class RespuestaAgentes(BaseModel):
     texto: str
     fuentes: list[Fuente]
     codigo_error: str
+
+    @model_validator(mode="after")
+    def contrato_estado_fuentes_y_error(self):
+        if self.estado == "respuesta" and not self.texto.strip():
+            raise ValueError("Una respuesta verificada necesita texto.")
+        if (self.estado == "respuesta") != bool(self.fuentes):
+            raise ValueError("Una respuesta necesita fuentes completas; los demás estados no llevan fuentes.")
+        if self.estado == "error":
+            if self.codigo_error not in CODIGOS_ERROR_CTR001:
+                raise ValueError("La respuesta de error necesita un código CTR-001 reconocido.")
+        elif self.codigo_error:
+            raise ValueError("Los estados distintos de error no llevan codigo_error.")
+        return self
 
 
 class RespuestaConsulta(RespuestaAgentes):
@@ -110,7 +155,12 @@ async def internal_error(request: Request, error: Exception):
 
 @app.exception_handler(psycopg.Error)
 async def postgres_error(request: Request, error: psycopg.Error):
-    return JSONResponse({"codigo": "indice_no_disponible"}, status_code=503)
+    mensaje = "La base de datos o el índice no están disponibles."
+    if request.url.path.startswith(("/conocimiento", "/catalogos/")):
+        body = {"codigo": "indice_no_disponible", "mensaje": mensaje}
+    else:
+        body = {"codigo_error": "servicio_no_disponible", "mensaje": mensaje}
+    return JSONResponse(body, status_code=503)
 
 
 @app.exception_handler(RequestValidationError)
@@ -192,8 +242,6 @@ async def consultar_agentes(cid: str, pregunta: str, client: httpx.AsyncClient) 
                                      json={"conversacion_id": cid, "pregunta": pregunta})
         upstream.raise_for_status()
         result = RespuestaAgentes.model_validate(upstream.json())
-        if (result.estado == "respuesta") != bool(result.fuentes):
-            raise ValueError("Fuentes incompatibles con el estado")
     except httpx.TimeoutException:
         try:
             await client.delete(f"{agents_url()}/agentes/conversaciones/{cid}",
@@ -201,8 +249,10 @@ async def consultar_agentes(cid: str, pregunta: str, client: httpx.AsyncClient) 
         except httpx.HTTPError:
             pass
         return failed(cid, "tiempo_agotado")
-    except (httpx.HTTPError, ValueError):
+    except httpx.HTTPError:
         return failed(cid, "servicio_no_disponible")
+    except (ValidationError, ValueError):
+        return failed(cid, "error_verificacion")
     return RespuestaConsulta(**result.model_dump(), conversacion_id=cid)
 
 

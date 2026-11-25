@@ -15,6 +15,8 @@ o bien:
 """
 
 from __future__ import annotations
+
+from copy import deepcopy
 import os
 import sys
 import unittest
@@ -50,10 +52,14 @@ from models.source import Source
 from services import api, auth, session
 import config
 
+MOCK_CHATS_BASELINE = deepcopy(api._MOCK_CHATS)
+
+
 class BaseFrontendTestCase(unittest.TestCase):
     """Configuración base para aislar las pruebas de variables de entorno y retardos."""
 
     def setUp(self):
+        api._MOCK_CHATS[:] = deepcopy(MOCK_CHATS_BASELINE)
         # Desactivar ARSOFT_API_URL para forzar el modo simulado por defecto
         self._orig_api_url = os.environ.get("ARSOFT_API_URL")
         if "ARSOFT_API_URL" in os.environ:
@@ -72,6 +78,7 @@ class BaseFrontendTestCase(unittest.TestCase):
 
     def tearDown(self):
         self._sleep_patcher.stop()
+        api._MOCK_CHATS[:] = deepcopy(MOCK_CHATS_BASELINE)
         if self._orig_api_url is not None:
             os.environ["ARSOFT_API_URL"] = self._orig_api_url
             api.API_URL = self._orig_api_url.rstrip("/")
@@ -231,6 +238,56 @@ class TestCTR006LecturaHistorial(BaseFrontendTestCase):
         self.assertGreaterEqual(len(m_bot.sources), 1)
         self.assertEqual(m_bot.sources[0].chunk_id, "c45")
 
+    @staticmethod
+    def _chat(i: int) -> dict:
+        return {"conversacion_id": f"c-{i:04d}", "titulo": f"Chat {i}",
+                "created_at": "2026-01-15T10:00:00Z", "updated_at": "2026-01-15T10:00:00Z", "mensajes": []}
+
+    def test_ctr006_historial_paginado_recorre_todas_las_paginas(self):
+        """Con más chats que el límite de página, el Frontend pide limit/offset hasta cubrir `total`."""
+        todos = [self._chat(i) for i in range(450)]
+        peticiones = []
+
+        def servidor(method, path, body=None):
+            peticiones.append(path)
+            consulta = dict(p.split("=") for p in path.split("?", 1)[1].split("&"))
+            limit, offset = int(consulta["limit"]), int(consulta["offset"])
+            return 200, {"chats": todos[offset:offset + limit], "total": len(todos)}
+
+        with patch.object(api, "call", side_effect=servidor):
+            hist = api.fetch_history()
+
+        self.assertTrue(hist.ok)
+        self.assertEqual([c.id for c in hist.conversations], [c["conversacion_id"] for c in todos])
+        self.assertEqual(len(peticiones), 3)
+        self.assertTrue(all(p.startswith(f"{api.HISTORIAL_PATH}?limit={api.HISTORY_PAGE_SIZE}&offset=")
+                            for p in peticiones))
+
+    def test_ctr006_historial_servidor_sin_paginacion_hace_una_sola_peticion(self):
+        """Un servidor que ignora limit/offset y devuelve todo con total == len(chats) no provoca más llamadas."""
+        todos = [self._chat(i) for i in range(5)]
+        with patch.object(api, "call", return_value=(200, {"chats": todos, "total": len(todos)})) as llamada:
+            hist = api.fetch_history()
+        self.assertTrue(hist.ok)
+        self.assertEqual(len(hist.conversations), 5)
+        self.assertEqual(llamada.call_count, 1)
+
+    def test_ctr006_historial_total_incoherente_no_entra_en_bucle(self):
+        """Si el servidor devuelve siempre la misma página y un total enorme, se corta por el tope de páginas."""
+        pagina = [self._chat(i) for i in range(2)]
+        with patch.object(api, "call", return_value=(200, {"chats": pagina, "total": 10**9})) as llamada:
+            hist = api.fetch_history()
+        self.assertFalse(hist.ok)
+        self.assertEqual(llamada.call_count, api.HISTORY_MAX_PAGES)
+
+    def test_ctr006_historial_error_en_una_pagina_posterior_falla_sin_resultados_parciales(self):
+        respuestas = iter([(200, {"chats": [self._chat(i) for i in range(200)], "total": 400}), (401, None)])
+        with patch.object(api, "call", side_effect=lambda *a, **k: next(respuestas)):
+            hist = api.fetch_history()
+        self.assertFalse(hist.ok)
+        self.assertTrue(hist.session_expired)
+        self.assertEqual(hist.conversations, [])
+
     def test_ctr006_historial_vacio_por_entorno(self):
         """Con ARSOFT_MOCK_EMPTY_HISTORY=1 el simulador devuelve lista vacía."""
         with patch.object(api, "_MOCK_EMPTY_HISTORY", True):
@@ -248,6 +305,56 @@ class TestCTR006LecturaHistorial(BaseFrontendTestCase):
         self.assertIn("chats", data)
         self.assertIn("total", data)
         self.assertEqual(len(data["chats"]), data["total"])
+
+    def test_ctr006_renombrar_chat_usa_patch_y_parsea_respuesta(self):
+        response = {
+            "conversacion_id": "chat-1",
+            "titulo": "Nuevo título",
+            "updated_at": "2026-11-24T10:00:00Z",
+            "mensajes": [],
+        }
+        with patch("services.api.call", return_value=(200, response)) as request:
+            result = api.rename_chat("chat-1", "Nuevo título")
+
+        request.assert_called_once_with("PATCH", "/chats/chat-1", {"titulo": "Nuevo título"})
+        self.assertTrue(result.ok)
+        self.assertEqual(result.conversation.title, "Nuevo título")
+
+    def test_ctr006_eliminar_chat_usa_delete_y_acepta_204(self):
+        with patch("services.api.call", return_value=(204, None)) as request:
+            result = api.delete_chat("chat-1")
+
+        request.assert_called_once_with("DELETE", "/chats/chat-1")
+        self.assertTrue(result.ok)
+
+    def test_ctr006_renombrar_rechaza_titulo_vacio_o_demasiado_largo(self):
+        with patch("services.api.call") as request:
+            empty = api.rename_chat("chat-1", "  ")
+            long = api.rename_chat("chat-1", "x" * 201)
+
+        request.assert_not_called()
+        self.assertFalse(empty.ok)
+        self.assertFalse(long.ok)
+
+    def test_ctr006_acciones_del_simulador_persisten_en_el_historial(self):
+        chats = [{
+            "conversacion_id": "chat-demo",
+            "titulo": "Anterior",
+            "created_at": "2026-01-15T10:00:00Z",
+            "updated_at": "2026-01-15T10:00:00Z",
+            "mensajes": [],
+        }]
+        with patch.object(api, "_MOCK_CHATS", chats):
+            renamed = api._mock_call("PATCH", "/chats/chat-demo", {"titulo": "Nuevo"})
+            history = api._mock_call("GET", api.HISTORIAL_PATH, None)
+            deleted = api._mock_call("DELETE", "/chats/chat-demo", None)
+            empty_history = api._mock_call("GET", api.HISTORIAL_PATH, None)
+
+        self.assertEqual(renamed[0], 200)
+        self.assertEqual(renamed[1]["titulo"], "Nuevo")
+        self.assertEqual(history[1]["chats"][0]["titulo"], "Nuevo")
+        self.assertEqual(deleted, (204, None))
+        self.assertEqual(empty_history[1]["chats"], [])
 
     def test_ctr006_conversation_deserializacion(self):
         """Comprueba el parseo de Conversation mediante from_dict conservando campos y mensajes."""
@@ -327,7 +434,9 @@ class TestCTR006LecturaHistorial(BaseFrontendTestCase):
             "conversacion_id": "conv-sin-mid",
             "mensajes": [
                 {"role": ROLE_USER, "contenido": "¿Presión de aceite?"},
-                {"role": ROLE_BOT, "contenido": "Entre 2 y 4 bar.", "estado": "respuesta"},
+                {"role": ROLE_BOT, "contenido": "Entre 2 y 4 bar.", "estado": "respuesta",
+                 "fuentes": [{"documento": "Manual del motor", "seccion": "Lubricación",
+                              "pagina": 1, "chunk_id": "manual-aceite-p1"}]},
             ],
         })
 

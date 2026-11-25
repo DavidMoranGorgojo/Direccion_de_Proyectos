@@ -30,8 +30,7 @@ from unittest.mock import patch
 DB = os.getenv("ARSOFT_TEST_DATABASE_URL")
 RAIZ = Path(__file__).resolve().parents[2]
 TOKEN_SERVICIO = "arsoft-integracion-token"
-SQL_CONOCIMIENTO = (RAIZ / "Backend" / "db" / "init" / "01_conocimiento.sql").read_text(encoding="utf-8")
-SQL_USUARIOS = (RAIZ / "Backend" / "db" / "init" / "02_usuarios.sql").read_text(encoding="utf-8")
+SQL_ESQUEMA = (RAIZ / "Backend" / "db" / "init" / "01_conocimiento.sql").read_text(encoding="utf-8")
 CATALOGOS = RAIZ / "Agents" / "Agent_2" / "fixtures" / "catalogos"
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -87,7 +86,7 @@ class RerankerFalso:
         return [puntuacion(q, p) for q, p in pares]
 
 
-def llm_falso(agente, mensajes):
+def llm_falso(agente, mensajes, *args, **kwargs):  # core.py pasa también modelo= y rol=
     """LLM del Agente 1: genera la consulta (CTR-004) o redacta copiando la evidencia citada."""
     todo = "\n".join(m["content"] for m in mensajes)
     if "EVIDENCIA [" in todo:  # redacción: copia literal de la primera evidencia, con su cita
@@ -116,8 +115,7 @@ CHUNKS = [
 def sembrar(conn) -> None:
     conn.execute("DROP SCHEMA IF EXISTS conocimiento CASCADE")
     conn.execute("DROP SCHEMA IF EXISTS aplicacion CASCADE")
-    conn.execute(SQL_CONOCIMIENTO)
-    conn.execute(SQL_USUARIOS)
+    conn.execute(SQL_ESQUEMA)
     conn.execute("""INSERT INTO conocimiento.indice_version (version, modelo_embeddings, dimensiones,
         prefijo_passage, tokenizador, n_chunks, activo) VALUES ('v-integracion', 'BAAI/bge-m3', 1024,
         'passage: ', 'bm25', %s, true)""", (len(CHUNKS),))
@@ -213,7 +211,10 @@ class FrontendBackendAgentes(unittest.TestCase):
             cls.consultas_agentes.append(agente.conversacion_id)
             return real(pregunta, agente, agente2=agente2)
 
-        cls.parches += [patch.object(core.Agente1, "_consultar_llm", llm_falso),
+        # El cliente de Agentes usa BACKEND_URL (por defecto http://localhost:8000): sin esto hablaría con
+        # cualquier Backend que haya en ese puerto en lugar de con el de esta prueba.
+        cls.parches += [patch.dict(os.environ, {"BACKEND_URL": cls.backend_url}),
+                        patch.object(core.Agente1, "_consultar_llm", llm_falso),
                         patch.object(core, "registrar_turno_auditoria"),
                         patch.object(service, "consultar_asistente", consultar)]
         for p in cls.parches[1:]:
