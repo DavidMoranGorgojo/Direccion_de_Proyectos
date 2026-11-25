@@ -187,6 +187,8 @@ def fetch_history() -> HistoryResult:
     for _ in range(HISTORY_MAX_PAGES):
         try:
             status, data = call("GET", f"{HISTORIAL_PATH}?limit={HISTORY_PAGE_SIZE}&offset={offset}")
+        except ConfigError as e:
+            return HistoryResult(False, error=str(e))
         except ConnectionFailed:
             return HistoryResult(False, error="No se ha podido contactar con el servidor.")
         if status in (401, 403):
@@ -279,6 +281,8 @@ def rename_chat(conversation_id: str, title: str) -> HistoryActionResult:
         return HistoryActionResult(False, error="El título debe tener entre 1 y 200 caracteres.")
     try:
         status, data = call("PATCH", _history_item_path(conversation_id), {"titulo": title})
+    except ConfigError as e:
+        return HistoryActionResult(False, error=str(e))
     except ConnectionFailed:
         return HistoryActionResult(False, error="No se ha podido contactar con el servidor.")
     if status in (401, 403):
@@ -298,6 +302,8 @@ def rename_chat(conversation_id: str, title: str) -> HistoryActionResult:
 def delete_chat(conversation_id: str) -> HistoryActionResult:
     try:
         status, _ = call("DELETE", _history_item_path(conversation_id))
+    except ConfigError as e:
+        return HistoryActionResult(False, error=str(e))
     except ConnectionFailed:
         return HistoryActionResult(False, error="No se ha podido contactar con el servidor.")
     if status in (401, 403):

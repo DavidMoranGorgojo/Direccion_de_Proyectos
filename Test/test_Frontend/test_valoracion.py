@@ -30,7 +30,7 @@ from components.chat_message import ChatMessage  # noqa: E402
 from models.conversation import Conversation  # noqa: E402
 from models.message import Message, ROLE_BOT, ROLE_USER  # noqa: E402
 from models.response import (STATUS_CLARIFY, STATUS_ERROR, STATUS_OK)  # noqa: E402
-from services import api, auth, session  # noqa: E402
+from services import api, auth  # noqa: E402
 from Test.test_Frontend.test_conexion_simulada import BaseFrontendTestCase  # noqa: E402
 from views.main_window import MainWindow  # noqa: E402
 
