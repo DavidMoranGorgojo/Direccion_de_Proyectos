@@ -72,3 +72,10 @@ sbatch apptainer/cluster/agentes.sbatch
 ```
 
 [Enlaces y notas para los contratos](INTEGRACION_CONTRATOS.md)
+
+## Probar el paquete contra el servidor real
+
+1. Comprobar el servidor sin abrir la interfaz: `ARSOFT_API_URL=https://servidor bash apptainer/probar-servidor-real.sh [usuario] [contraseña]` (con credenciales también prueba login, historial y una consulta).
+2. En el equipo limpio, descomprimir el paquete y ejecutar `bash verificar.sh`.
+3. Arrancar: `ARSOFT_API_URL=https://servidor bash run-frontend.sh`.
+4. Pasar el checklist y anotar los resultados en [`Frontend/CHECKLIST_MANUAL_RESULTADOS.md`](../Frontend/CHECKLIST_MANUAL_RESULTADOS.md).
