@@ -19,7 +19,7 @@ Los pasos y el comportamiento esperado de cada caso están en el checklist; aqu�
 
 ## Cómo rellenarla
 
-- **Resultado**: `OK`, `FALLO` o `N/A` (con motivo en Observaciones). `OK*` = comprobado el 24-11 arrancando la interfaz real (PySide6, sin pantalla, modo simulado) y mirando las capturas: **pendiente de confirmar a ojo y, cuando haya servidor, con el servidor real**. Un `OK` sin asterisco solo se marca tras verlo en pantalla.
+- **Resultado**: `OK`, `FALLO` o `N/A` (con motivo en Observaciones). `OK*` = comprobado el 24-11 y repetido el 25-11 con el `main` actual arrancando la interfaz real (PySide6, sin pantalla, modo simulado) y mirando las capturas: **pendiente de confirmar a ojo y, cuando haya servidor, con el servidor real**. Un `OK` sin asterisco solo se marca tras verlo en pantalla.
 - **Cobertura automática**: indica qué test de `Test/test_Frontend` ya cubre la lógica del caso. **No sustituye** la prueba manual: los tests no miran el aspecto real de la ventana ni usan el servidor real. Los tests de ventanas y componentes usan un sustituto de Qt (no dibujan nada): por eso los casos visuales se han comprobado además arrancando la interfaz real sin pantalla.
 - **Condición**: lo que hace falta preparar antes. Agrupa los casos para ejecutarlos por tandas (ver el orden recomendado más abajo).
 - Cada `FALLO` lleva su incidencia en la tabla final (pantalla, pasos, esperado, obtenido, captura).
@@ -47,6 +47,8 @@ Los pasos y el comportamiento esperado de cada caso están en el checklist; aqu�
 | WN-04 | Usuario con chats | `test_main_window_ordenacion_conversaciones_por_fecha`, `test_ctr006_lectura_historial_por_defecto` | OK* | OK solo en simulado: lista «Temperatura del motor» (15/01/2026) y los chats nuevos por fecha, el más reciente primero. Falta con servidor real. |
 | WN-05 | Usuario con 2 o más chats | `test_main_window_seleccion_conversacion_actualiza_interfaz` | | |
 | WN-06 | Ninguna | `test_main_window_nuevo_chat_crea_uno_si_el_actual_tiene_mensajes`, `test_main_window_nuevo_chat_reutiliza_vacio_existente` | | |
+| WN-07 | Chat persistido (en simulado, «Temperatura del motor»; en real, uno del servidor) | `test_main_window_renombrar_y_borrar_actualizan_el_historial`, `test_ctr006_renombrar_chat_usa_patch_y_parsea_respuesta`, `test_ctr006_renombrar_rechaza_titulo_vacio_o_demasiado_largo` | | Los iconos de editar y borrar se ven en la lista (captura del 25-11). Falta probar la acción. |
+| WN-08 | Chat persistido | `test_main_window_renombrar_y_borrar_actualizan_el_historial`, `test_ctr006_eliminar_chat_usa_delete_y_acepta_204`, `test_renombrar_y_borrar_chat_desde_cliente_frontend` | | Probar primero cancelar y luego confirmar. |
 
 ## 3. Envío y flujo de consultas
 
@@ -89,13 +91,13 @@ Los pasos y el comportamiento esperado de cada caso están en el checklist; aqu�
 | ID | Condición | Cobertura automática | Resultado | Observaciones |
 |---|---|---|:---:|---|
 | SS-01 | Ninguna | `test_app_flujo_login_a_chat_y_logout` | | |
-| SS-02 | Respuesta lenta | `test_main_window_logout_bloqueado_si_ocupado` | | |
+| SS-02 | Respuesta lenta, o renombrado o borrado en curso | `test_main_window_logout_bloqueado_si_ocupado` | | |
 | SS-03 | Invalidar el token | `test_sesion_caducada_avisa_y_cierra_sesion`, `test_error_401_en_consulta_indica_sesion_caducada`, `test_token_manipulado_da_sesion_caducada` | | |
 | SS-04 | Dos usuarios en el servidor | `test_chat_de_otro_usuario_no_se_puede_usar` | | |
 
 ## Orden de ejecución recomendado
 
-1. **Sin servidor** (modo simulado, usuario `demo` / `demo1234`): LG-01 a LG-04, LG-07, WN-01 a WN-03, WN-06, CH-01 a CH-05.
+1. **Sin servidor** (modo simulado, usuario `demo` / `demo1234`): LG-01 a LG-04, LG-07, WN-01 a WN-03, WN-06 a WN-08, CH-01 a CH-05.
 2. **Con servidor y LLM real**: LG-05, LG-08, WN-04, WN-05, CH-06 a CH-08, RS-01 a RS-05, VL-01 a VL-04, SS-01, SS-02, SS-04.
 3. **Casos que alteran el servidor o el usuario** (hacerlos al final): LG-06 (bloquea el login), VL-06 (límite de valoraciones), SS-03 y VL-07 (invalidar token), RS-06 y VL-05 (parar Backend o Agentes).
 
@@ -108,7 +110,7 @@ Capturas de pantalla finales para el manual: login, historial, respuesta con cit
 | OK | |
 | FALLO | |
 | N/A | |
-| Total | 39 |
+| Total | 41 |
 
 ## Incidencias
 
