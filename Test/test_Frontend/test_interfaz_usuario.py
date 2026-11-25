@@ -432,6 +432,83 @@ class TestMainWindowUI(unittest.TestCase):
             start.assert_called_once()
         self.window._history_action_worker = None
 
+    def test_main_window_historial_en_curso_deshabilita_envio_y_bloquea_logout(self):
+        """Mientras se descarga el historial, no se permite enviar consultas ni cerrar sesión."""
+        emisiones_logout = []
+        self.window.logged_out.connect(lambda: emisiones_logout.append(True))
+
+        self.window._hist_worker = MagicMock()
+        self.window.prompt.setPlainText("¿Pregunta mientras carga historial?")
+
+        with patch("views.main_window.QMessageBox.information") as mock_info:
+            self.window.send()
+            self.assertIsNone(self.window._worker)
+
+            self.window._logout()
+            self.assertEqual(len(emisiones_logout), 0)
+            mock_info.assert_called_once()
+        self.window._hist_worker = None
+
+    def test_main_window_historial_error_red_muestra_dialogo_reintentar_y_cancelar(self):
+        """Un fallo de red al pedir el historial muestra diálogo con opción de reintentar o cancelar."""
+        self.window._hist_worker = None
+        res_error = api.HistoryResult(ok=False, error="Error de conexión al servidor", session_expired=False)
+
+        # Caso Cancelar: muestra error y reactiva controles
+        with patch("views.main_window.QMessageBox.warning", return_value=QMessageBox.Cancel):
+            self.window._on_history(res_error)
+            self.assertEqual(self.window.mode_label.text(), "No se ha podido cargar el historial.")
+            self.assertTrue(self.window.btn_send.isEnabled())
+
+        # Caso Reintentar: vuelve a invocar _load_history
+        with patch("views.main_window.QMessageBox.warning", return_value=QMessageBox.Retry):
+            with patch.object(self.window, "_load_history") as mock_reload:
+                self.window._on_history(res_error)
+                mock_reload.assert_called_once()
+
+    def test_main_window_consulta_sesion_caducada_cierra_sesion(self):
+        """Si la consulta responde con sesion_caducada, se avisa al usuario y se emite logged_out."""
+        emisiones_logout = []
+        self.window.logged_out.connect(lambda: emisiones_logout.append(True))
+
+        conv = Conversation()
+        self.window.conversations = [conv]
+        self.window.current = conv
+
+        resp_caducada = Response(
+            texto="Tu sesión ha caducado. Cierra sesión y vuelve a entrar.",
+            estado=STATUS_ERROR,
+            codigo_error="sesion_caducada",
+        )
+
+        with patch("views.main_window.QMessageBox.information") as mock_info:
+            self.window._on_response(conv, resp_caducada)
+            mock_info.assert_called_once()
+            self.assertEqual(len(emisiones_logout), 1)
+
+    def test_main_window_multiturno_mantiene_server_id(self):
+        """La primera consulta obtiene server_id del Backend y la siguiente consulta lo propaga."""
+        conv = Conversation()
+        self.window.conversations = [conv]
+        self.window.current = conv
+
+        # Primer turno
+        resp_t1 = Response(
+            texto="Respuesta primer turno",
+            estado=STATUS_OK,
+            conversacion_id="chat-servidor-42",
+        )
+        self.window._on_response(conv, resp_t1)
+        self.assertEqual(conv.server_id, "chat-servidor-42")
+
+        # Segundo turno
+        self.window.prompt.setPlainText("Segunda pregunta en el mismo chat")
+        with patch("services.api.ChatWorker.start"):
+            self.window.send()
+            self.assertIsNotNone(self.window._worker)
+            self.assertEqual(self.window._worker._args[0], "chat-servidor-42")
+            self.assertEqual(self.window._worker._args[1], "Segunda pregunta en el mismo chat")
+
 
 # ==============================================================================
 # 3. PRUEBAS DE COMPONENTES VISUALES (ChatMessage, SourceCard, ConversationItem)
@@ -528,6 +605,45 @@ class TestComponentesVisuales(unittest.TestCase):
         obs_lbl = card_obs.findChild(None, "sourceObsolete")
         self.assertIsNotNone(obs_lbl)
         self.assertIn("obsoleto", obs_lbl.text().lower())
+
+    def test_chat_message_distincion_citas_vs_abstencion(self):
+        """Distingue visualmente respuestas fundamentadas (con citas y valoración) de abstenciones/aclaraciones."""
+        # 1. Respuesta fundamentada con citas y trace_id
+        fuente = Source("Manual_Frenos", "3.1", 15, ["V1.0"], False, "c_15")
+        msg_ok = Message(ROLE_BOT, "El par de apriete es 85 Nm.", status=STATUS_OK,
+                         sources=[fuente], trace_id="trace-ok-1")
+        w_ok = ChatMessage(msg_ok)
+        self.assertIsNotNone(w_ok.btn_up)
+        self.assertIsNotNone(w_ok.btn_down)
+        self.assertEqual(len(w_ok.bubble.findChildren(SourceCard)), 1)
+        self.assertEqual(len(w_ok.bubble.findChildren(None, "badge")), 0)
+
+        # 2. Aclaración / Repregunta: sin citas ni botones de valorar
+        msg_clarify = Message(ROLE_BOT, "¿De qué año es el modelo?", status=STATUS_CLARIFY, trace_id="trace-clarify")
+        w_clarify = ChatMessage(msg_clarify)
+        self.assertIsNone(w_clarify.btn_up)
+        self.assertIsNone(w_clarify.btn_down)
+        self.assertEqual(len(w_clarify.bubble.findChildren(SourceCard)), 0)
+        badges_clarify = [b for b in w_clarify.bubble.findChildren(None, "badge") if b.text() == "Necesito más datos"]
+        self.assertEqual(len(badges_clarify), 1)
+
+        # 3. Sin evidencia: sin citas ni botones de valorar
+        msg_no_evi = Message(ROLE_BOT, "No hay datos en los manuales.", status=STATUS_NO_EVIDENCE, trace_id="trace-noevi")
+        w_no_evi = ChatMessage(msg_no_evi)
+        self.assertIsNone(w_no_evi.btn_up)
+        self.assertIsNone(w_no_evi.btn_down)
+        self.assertEqual(len(w_no_evi.bubble.findChildren(SourceCard)), 0)
+        badges_no_evi = [b for b in w_no_evi.bubble.findChildren(None, "badge") if b.text() == "Sin evidencia en la documentación"]
+        self.assertEqual(len(badges_no_evi), 1)
+
+        # 4. Fuera de ámbito: sin citas ni botones de valorar
+        msg_out = Message(ROLE_BOT, "Solo respondo sobre mecánica.", status=STATUS_OUT_OF_SCOPE, trace_id="trace-out")
+        w_out = ChatMessage(msg_out)
+        self.assertIsNone(w_out.btn_up)
+        self.assertIsNone(w_out.btn_down)
+        self.assertEqual(len(w_out.bubble.findChildren(SourceCard)), 0)
+        badges_out = [b for b in w_out.bubble.findChildren(None, "badge") if b.text() == "Fuera de ámbito"]
+        self.assertEqual(len(badges_out), 1)
 
     def test_conversation_item_formato_fecha(self):
         """_fmt formatea como 'Hoy HH:MM' para fechas de hoy y 'DD/MM/AAAA' para fechas anteriores."""

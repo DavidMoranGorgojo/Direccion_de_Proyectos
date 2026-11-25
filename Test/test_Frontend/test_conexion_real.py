@@ -18,7 +18,6 @@ import socket
 import sys
 import threading
 import time
-import types
 import unittest
 from contextlib import contextmanager
 from pathlib import Path

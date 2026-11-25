@@ -228,9 +228,6 @@ def setup_qt_harness() -> None:
         def setSizePolicy(self, h, v):
             pass
 
-        def setToolTip(self, text):
-            pass
-
         def setAccessibleName(self, text):
             pass
 

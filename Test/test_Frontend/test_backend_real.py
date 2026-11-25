@@ -68,7 +68,7 @@ try:
     import httpx
     import psycopg
     import uvicorn
-    from Backend.api.app import historial, registro, sesiones
+    from Backend.api.app import historial, links, registro, sesiones, valoracion
     from Backend.api.app import main as backend
     FALTA_BACKEND = ""
 except ImportError as error:  # dependencias de Backend/api/requirements.txt no instaladas
@@ -99,6 +99,7 @@ class BaseDatosEnMemoria:
         self.chats: dict[str, dict] = {}
         self.mensajes: list[dict] = []
         self.registro: list[tuple] = []
+        self.valoraciones: dict[tuple, bool] = {}
         self.fallo: Exception | None = None  # si se fija, connect() lo lanza
 
     def connect(self):
@@ -183,6 +184,19 @@ class _ConexionEnMemoria:
             filas = []
         elif q.startswith("SELECT") and "FROM aplicacion.registro_consulta" in q:
             filas = list(db.registro)
+        elif "aplicacion.valoracion" in q:
+            t = params.get("t") if isinstance(params, dict) else params[0]
+            u = params.get("u") if isinstance(params, dict) else params[1]
+            util = params.get("util") if isinstance(params, dict) else params[2]
+            existe = any(
+                r["trace_id"] == t and r["usuario_id"] == u and r["tipo"] == "consulta" and r["estado"] == "respuesta"
+                for r in db.registro
+            )
+            if existe:
+                db.valoraciones[(u, t)] = util
+                filas = [{"util": util}]
+            else:
+                filas = []
         else:
             raise AssertionError(f"Sentencia SQL no prevista en la base en memoria: {q[:90]}")
         return _Cursor(filas)
@@ -251,7 +265,7 @@ class TestFrontendContraBackendReal(unittest.TestCase):
         ]
         cls.db = BaseDatosEnMemoria(cls.usuarios)
         cls._patches = [patch.object(modulo, "connect", lambda: cls.db.connect())
-                        for modulo in (sesiones, historial, registro, backend)]
+                        for modulo in (sesiones, historial, registro, backend, valoracion, links)]
         for p in cls._patches:
             p.start()
         cls._servidor = servidor(backend.app)
@@ -570,6 +584,71 @@ class TestFrontendContraBackendReal(unittest.TestCase):
         self.assertEqual(auth.login("usuario1", "usuario123").error, "No se pudo conectar con el servidor.")
         self.assertEqual(api.fetch_history().error, "No se ha podido contactar con el servidor.")
         self.assertEqual(api.send_message("", PREGUNTA_OK).texto, GENERIC_ERROR)
+
+    def test_valoracion_401_sin_sesion(self):
+        """POST /valoracion sin sesión activa devuelve 401 y se mapea a sesión caducada."""
+        session.clear()
+        res = api.send_rating("t-test", True)
+        self.assertFalse(res.ok)
+        self.assertTrue(res.session_expired)
+        self.assertEqual(res.error, api.SESSION_EXPIRED)
+
+    def test_valoracion_envia_util_y_recibe_confirmacion(self):
+        """Un usuario con sesión puede valorar una respuesta obtenida y cambiar su valoración."""
+        self.entrar()
+        resp = api.send_message("", PREGUNTA_OK)
+        self.assertEqual(resp.estado, STATUS_OK)
+        self.assertTrue(resp.trace_id)
+
+        # 1. Valorar útil
+        res1 = api.send_rating(resp.trace_id, True)
+        self.assertTrue(res1.ok)
+        self.assertEqual(res1.trace_id, resp.trace_id)
+        self.assertTrue(res1.util)
+
+        # 2. Cambiar valoración a no útil
+        res2 = api.send_rating(resp.trace_id, False)
+        self.assertTrue(res2.ok)
+        self.assertEqual(res2.trace_id, resp.trace_id)
+        self.assertFalse(res2.util)
+
+    def test_valoracion_404_si_no_existe_o_es_de_otro_o_no_es_respuesta(self):
+        """No se puede valorar un trace_id inexistente o que no sea del tipo 'respuesta'."""
+        self.entrar()
+        # Inexistente
+        res = api.send_rating("trace-inexistente", True)
+        self.assertFalse(res.ok)
+        self.assertEqual(res.error, api.RATING_NOT_FOUND)
+
+        # Pregunta fuera de ámbito (estado != 'respuesta')
+        resp_fuera = api.send_message("", "Dame una receta de tarta de manzana")
+        self.assertEqual(resp_fuera.estado, STATUS_OUT_OF_SCOPE)
+        self.assertTrue(resp_fuera.trace_id)
+        res_fuera = api.send_rating(resp_fuera.trace_id, True)
+        self.assertFalse(res_fuera.ok)
+        self.assertEqual(res_fuera.error, api.RATING_NOT_FOUND)
+
+    def test_valoracion_429_demasiadas_valoraciones(self):
+        """Superar el límite de valoraciones devuelve 429 con mensaje informativo."""
+        self.entrar()
+        resp = api.send_message("", PREGUNTA_OK)
+        self.assertTrue(resp.trace_id)
+
+        from Backend.api.app import limite_consultas
+        with patch.object(limite_consultas, "admitir", return_value=15):
+            res = api.send_rating(resp.trace_id, True)
+            self.assertFalse(res.ok)
+            self.assertEqual(res.error, api.RATING_TOO_MANY)
+
+    def test_consulta_429_demasiadas_consultas(self):
+        """Superar el límite de consultas en el Backend devuelve 429 con mensaje controlado."""
+        self.entrar()
+        from Backend.api.app import limite_consultas
+        with patch.object(limite_consultas, "admitir", return_value=30):
+            resp = api.send_message("", PREGUNTA_OK)
+            self.assertEqual(resp.estado, STATUS_ERROR)
+            self.assertEqual(resp.codigo_error, "demasiadas_consultas")
+            self.assertEqual(resp.texto, api.TOO_MANY_REQUESTS)
 
 
 # ============================================================================= 2. Despliegue completo
