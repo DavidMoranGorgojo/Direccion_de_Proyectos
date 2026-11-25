@@ -9,7 +9,7 @@ URL="${ARSOFT_API_URL:-}"
 [[ -n "$URL" ]] || { echo "Define ARSOFT_API_URL (sin barra final)."; exit 2; }
 URL="${URL%/}"
 USUARIO="${1:-}"; CLAVE="${2:-}"
-TO="${ARSOFT_TIMEOUT_S:-30}"
+TO="${ARSOFT_TIMEOUT_S:-60}"
 fallos=0
 ok()  { echo "  [OK]    $*"; }
 mal() { echo "  [FALLO] $*"; fallos=$((fallos + 1)); }
@@ -32,8 +32,17 @@ if [[ -n "$USUARIO" && -n "$CLAVE" ]]; then
     [[ "$c" == 200 ]] && ok "GET /chats -> 200" || mal "GET /chats -> $c"
     c="$(curl_code "$tmp" "${H[@]}" -X POST "$URL/consulta" -H 'Content-Type: application/json' \
          --data '{"conversacion_id":"","pregunta":"¿Cada cuánto se cambia el refrigerante?"}')"
-    [[ "$c" == 200 ]] && ok "POST /consulta -> 200 (respuesta con estado: $(sed -n 's/.*"estado"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$tmp" | head -1))" \
-                      || mal "POST /consulta -> $c"
+    if [[ "$c" == 200 ]]; then
+      estado="$(sed -n 's/.*"estado"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$tmp" | head -1)"
+      if [[ "$estado" == "error" ]]; then
+        codigo="$(sed -n 's/.*"codigo_error"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$tmp" | head -1)"
+        mal "POST /consulta -> 200 pero estado: error (codigo_error: ${codigo:-desconocido})"
+      else
+        ok "POST /consulta -> 200 (respuesta con estado: ${estado:-desconocido})"
+      fi
+    else
+      mal "POST /consulta -> $c"
+    fi
   else
     mal "POST /auth/login -> $c"
   fi
